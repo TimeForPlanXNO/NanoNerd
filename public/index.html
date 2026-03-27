@@ -17,7 +17,6 @@
       user-select: none;
     }
 
-    /* ─── APP SHELL (iPhone 16 width) ─── */
     .app-shell {
       width: 393px;
       max-width: 100vw;
@@ -37,70 +36,76 @@
           #2e9020 70%, #1e7818 82%, #166014 100%);
     }
 
-    /* ─── DESKTOP AREA ─── */
-    .desktop {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      overflow: hidden;
-    }
+    /* ── DESKTOP ── */
+    .desktop { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
 
-    /* ─── ICON COLUMN ─── */
+    /* ── ICON COLUMN ── */
     .icon-col {
-      width: 78px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 8px 3px;
-      position: relative;
-      z-index: 1;
+      width: 78px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      gap: 8px; padding: 8px 3px;
+      position: relative; z-index: 1;
     }
 
     .desk-icon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 5px 3px;
-      border-radius: 4px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      padding: 5px 3px; border-radius: 4px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
       transition: background .15s;
     }
 
     .desk-icon:hover  { background: rgba(49,106,197,.45); outline: 1px solid rgba(255,255,255,.5); }
     .desk-icon:active { background: rgba(49,106,197,.6); }
 
-    .desk-icon .di-img {
-      width: 38px; height: 38px;
-      object-fit: contain;
-      filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5));
-    }
+    .desk-icon .di-img   { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5)); }
+    .desk-icon .di-emoji { font-size: 32px; line-height: 1; filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5)); }
 
-    .desk-icon .di-emoji {
-      font-size: 32px;
-      line-height: 1;
-      filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5));
-    }
-
-    .desk-icon span.label {
-      font-size: 10px;
-      color: #fff;
-      text-align: center;
+    .desk-icon .label {
+      font-size: 10px; color: #fff; text-align: center;
       text-shadow: 1px 1px 2px rgba(0,0,0,.9), -1px -1px 2px rgba(0,0,0,.7);
-      line-height: 1.2;
-      word-break: break-word;
+      line-height: 1.2; word-break: break-word;
     }
 
-    /* ─── WINDOW AREA ─── */
-    .win-area {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
+    /* ── WINDOW AREA ── */
+    .win-area { flex: 1; position: relative; overflow: hidden; }
+
+    /* ═══════════════════════════
+       WINDOW ANIMATIONS
+    ═══════════════════════════ */
+    @keyframes win-open {
+      from { transform: scale(.82) translateY(8px); opacity: 0; }
+      to   { transform: scale(1)   translateY(0);   opacity: 1; }
     }
 
-    /* ─── WINXP WINDOW ─── */
+    @keyframes win-minimize {
+      0%   { transform: scale(1,1)   translateY(0);    opacity: 1; transform-origin: bottom center; }
+      100% { transform: scale(.15,.05) translateY(160px); opacity: 0; transform-origin: bottom center; }
+    }
+
+    @keyframes win-restore {
+      0%   { transform: scale(.15,.05) translateY(160px); opacity: 0; transform-origin: bottom center; }
+      100% { transform: scale(1,1)   translateY(0);    opacity: 1; transform-origin: bottom center; }
+    }
+
+    @keyframes win-close {
+      from { transform: scale(1);   opacity: 1; }
+      to   { transform: scale(.80); opacity: 0; }
+    }
+
+    @keyframes win-focus {
+      0%   { box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 6px 24px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+      50%  { box-shadow: 0 0 0 2px rgba(0,160,255,.9), 0 8px 32px rgba(0,100,255,.5), inset 0 1px 0 rgba(255,255,255,.3); }
+      100% { box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 6px 24px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+    }
+
+    @keyframes maximize-pulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.015); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── XP WINDOW ── */
     .xp-win {
       position: absolute;
       top: 4px; left: 0; right: 4px; bottom: 4px;
@@ -110,14 +115,34 @@
       overflow: hidden;
       box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 6px 24px rgba(0,0,0,.55),
                   inset 0 1px 0 rgba(255,255,255,.3);
-      transition: box-shadow .15s;
+      /* Smooth maximize/restore transitions */
+      transition: top .22s cubic-bezier(.2,.8,.2,1),
+                  left .22s cubic-bezier(.2,.8,.2,1),
+                  right .22s cubic-bezier(.2,.8,.2,1),
+                  bottom .22s cubic-bezier(.2,.8,.2,1),
+                  border-radius .22s ease;
+      will-change: transform;
+    }
+
+    .xp-win.animating {
+      /* Disable position transitions during keyframe animations */
+      transition: none;
     }
 
     .xp-win.maximized {
-      top: 0 !important; left: -78px !important;
-      right: 0 !important; bottom: 0 !important;
+      top: 0 !important;
+      left: -78px !important;
+      right: 0 !important;
+      bottom: 0 !important;
       border-radius: 0;
     }
+
+    .xp-win.anim-open     { animation: win-open     .22s cubic-bezier(.18,.89,.32,1.28) forwards; }
+    .xp-win.anim-minimize { animation: win-minimize  .2s  ease-in  forwards; }
+    .xp-win.anim-restore  { animation: win-restore   .22s cubic-bezier(.18,.89,.32,1.28) forwards; }
+    .xp-win.anim-close    { animation: win-close     .16s ease-in  forwards; }
+    .xp-win.anim-focus    { animation: win-focus     .3s  ease     forwards; }
+    .xp-win.anim-maximize { animation: maximize-pulse .25s ease   forwards; }
 
     /* Luna blue title bar */
     .xp-titlebar {
@@ -125,26 +150,16 @@
         #2259c8 0%, #1e4ec0 6%, #1a50c8 45%,
         #144abf 50%, #0f43b5 51%, #0d40b0 55%, #1248bc 100%);
       padding: 3px 4px 4px 7px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      min-height: 26px;
-      border-bottom: 1px solid #0a36a0;
-      cursor: default;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; min-height: 26px;
+      border-bottom: 1px solid #0a36a0; cursor: default;
     }
 
     .xp-win-title {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      color: #fff;
-      font-size: 11px;
-      font-weight: bold;
+      display: flex; align-items: center; gap: 5px;
+      color: #fff; font-size: 11px; font-weight: bold;
       text-shadow: 1px 1px 2px rgba(0,0,0,.6);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     .xp-win-title img  { width: 14px; height: 14px; object-fit: contain; }
@@ -158,13 +173,12 @@
       font-size: 10px; font-weight: bold;
       cursor: pointer; display: flex;
       align-items: center; justify-content: center;
-      color: #fff;
-      text-shadow: 0 1px 1px rgba(0,0,0,.5);
+      color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.5);
       transition: filter .1s;
     }
 
-    .xp-btn:hover  { filter: brightness(1.25); }
-    .xp-btn:active { filter: brightness(.8); }
+    .xp-btn:hover  { filter: brightness(1.28); }
+    .xp-btn:active { filter: brightness(.78); }
 
     .xp-btn.min, .xp-btn.max {
       background: linear-gradient(180deg, #4a9be0 0%, #2070c0 100%);
@@ -176,205 +190,121 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 1px 2px rgba(0,0,0,.4);
     }
 
-    /* ─── WINDOW CONTENT ─── */
+    /* Window content */
     .xp-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #1a1f2e;
-      overflow: hidden;
-      border: 2px solid #0d40b0;
-      border-top: none;
-      border-radius: 0 0 4px 4px;
+      flex: 1; display: flex; flex-direction: column;
+      background: #1a1f2e; overflow: hidden;
+      border: 2px solid #0d40b0; border-top: none; border-radius: 0 0 4px 4px;
     }
 
-    /* ─── BROWSER WINDOW ─── */
+    /* ── BROWSER WINDOW ── */
     .browser-bar {
-      background: #d4d0c8;
-      border-bottom: 2px solid #999;
-      padding: 3px 5px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      flex-shrink: 0;
+      background: #d4d0c8; border-bottom: 2px solid #999;
+      padding: 3px 5px; display: flex; align-items: center; gap: 4px; flex-shrink: 0;
     }
 
     .browser-nav { display: flex; gap: 2px; }
 
     .browser-nav button {
       width: 22px; height: 20px;
-      background: linear-gradient(180deg, #fff 0%, #d4d0c8 100%);
+      background: linear-gradient(180deg,#fff 0%,#d4d0c8 100%);
       border: 1px solid #888; border-radius: 2px;
       font-size: 10px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: #333;
+      display: flex; align-items: center; justify-content: center; color: #333;
     }
 
     .browser-address {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      background: #fff;
-      border: 1px solid #7b7b7b;
-      border-radius: 2px;
-      padding: 1px 5px;
-      font-size: 11px;
-      color: #1a0080;
-      cursor: pointer;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-decoration: underline;
-      font-family: "Tahoma", sans-serif;
+      flex: 1; display: flex; align-items: center;
+      background: #fff; border: 1px solid #7b7b7b; border-radius: 2px;
+      padding: 1px 5px; font-size: 11px; color: #1a0080;
+      cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-decoration: underline; font-family: "Tahoma", sans-serif;
     }
 
     .browser-go {
       padding: 1px 6px; font-size: 10px;
-      background: linear-gradient(180deg, #fff 0%, #d4d0c8 100%);
+      background: linear-gradient(180deg,#fff 0%,#d4d0c8 100%);
       border: 1px solid #888; border-radius: 2px;
-      cursor: pointer; color: #000;
-      font-family: "Tahoma", sans-serif;
+      cursor: pointer; color: #000; font-family: "Tahoma", sans-serif;
     }
 
-    .browser-frame {
-      flex: 1;
-      position: relative;
-      background: #f0f0f0;
-      overflow: hidden;
-    }
-
-    .browser-frame iframe {
-      width: 100%; height: 100%;
-      border: none;
-    }
+    .browser-frame { flex: 1; position: relative; background: #f0f0f0; overflow: hidden; }
+    .browser-frame iframe { width: 100%; height: 100%; border: none; }
 
     .browser-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f0ede5;
-      text-align: center;
-      padding: 20px;
-      gap: 12px;
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #f0ede5; text-align: center; padding: 20px; gap: 12px;
     }
 
     .browser-overlay .site-icon { font-size: 48px; }
 
-    .browser-overlay h3 {
-      font-size: 14px;
-      font-family: "Tahoma", sans-serif;
-      color: #003399;
-    }
+    .browser-overlay h3 { font-size: 14px; font-family: "Tahoma", sans-serif; color: #003399; }
 
-    .browser-overlay p {
-      font-size: 11px;
-      color: #555;
-      font-family: "Tahoma", sans-serif;
-      line-height: 1.5;
-    }
+    .browser-overlay p { font-size: 11px; color: #555; font-family: "Tahoma", sans-serif; line-height: 1.5; }
 
     .visit-btn {
-      background: linear-gradient(180deg, #4a90e2 0%, #1a5cb0 100%);
-      color: #fff; border: none;
-      padding: 6px 16px; border-radius: 4px;
-      font-size: 12px; cursor: pointer;
-      font-family: "Tahoma", sans-serif;
-      box-shadow: 0 2px 4px rgba(0,0,0,.3);
+      background: linear-gradient(180deg,#4a90e2 0%,#1a5cb0 100%);
+      color: #fff; border: none; padding: 6px 16px; border-radius: 4px;
+      font-size: 12px; cursor: pointer; font-family: "Tahoma", sans-serif;
+      box-shadow: 0 2px 4px rgba(0,0,0,.3); transition: filter .15s;
     }
 
     .visit-btn:hover { filter: brightness(1.1); }
 
-    /* ─── CHAT STYLES ─── */
+    /* ── CHAT ── */
     :root {
-      --nd: #1a1f2e;
-      --np: #232939;
-      --nb: #2e3650;
-      --nt: #e8eaf0;
-      --nm: #8892aa;
-      --na: #00C9FF;
-      --nu: #1d3a5c;
-      --nai: #1e2840;
+      --nd: #1a1f2e; --np: #232939; --nb: #2e3650;
+      --nt: #e8eaf0; --nm: #8892aa; --na: #00C9FF;
+      --nu: #1d3a5c; --nai: #1e2840;
     }
 
-    .chat-wrap {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    .chat-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
     .chat-msgs {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px 7px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      scroll-behavior: smooth;
+      flex: 1; overflow-y: auto; padding: 8px 7px;
+      display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth;
     }
 
     .chat-msgs::-webkit-scrollbar { width: 3px; }
     .chat-msgs::-webkit-scrollbar-thumb { background: var(--nb); border-radius: 2px; }
 
-    .msg {
-      display: flex; gap: 5px;
-      width: 100%;
-      animation: fi .2s ease;
-    }
+    .msg { display: flex; gap: 5px; width: 100%; animation: fi .2s ease; }
 
     @keyframes fi {
       from { opacity: 0; transform: translateY(4px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .msg.user      { align-self: flex-end; flex-direction: row-reverse; }
+    .msg.user      { align-self: flex-end;   flex-direction: row-reverse; }
     .msg.assistant { align-self: flex-start; }
 
     .av {
-      width: 24px; height: 24px;
-      border-radius: 50%;
+      width: 24px; height: 24px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 10px; font-weight: 700;
-      flex-shrink: 0; margin-top: 2px;
+      font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
     }
 
     .msg.user .av      { background: linear-gradient(135deg,#3b5bdb,#4A90E2); color:#fff; }
     .msg.assistant .av { background: linear-gradient(135deg,#00C9FF,#0080c0); font-size: 13px; }
 
     .bbl {
-      padding: 7px 10px;
-      border-radius: 10px;
+      padding: 7px 10px; border-radius: 10px;
       font-size: 12px; line-height: 1.55;
       max-width: calc(100% - 30px);
-      word-break: break-word;
-      color: var(--nt);
+      word-break: break-word; color: var(--nt);
     }
 
-    .msg.user .bbl {
-      background: var(--nu);
-      border: 1px solid rgba(74,144,226,.25);
-      border-bottom-right-radius: 3px;
-    }
-
-    .msg.assistant .bbl {
-      background: var(--nai);
-      border: 1px solid rgba(0,201,255,.15);
-      border-bottom-left-radius: 3px;
-    }
+    .msg.user .bbl      { background: var(--nu); border: 1px solid rgba(74,144,226,.25); border-bottom-right-radius: 3px; }
+    .msg.assistant .bbl { background: var(--nai); border: 1px solid rgba(0,201,255,.15); border-bottom-left-radius: 3px; }
 
     .bbl p { margin: 0; }
     .bbl p + p { margin-top: 7px; }
     .bbl strong { color: var(--na); }
 
     .typing { display: flex; gap: 4px; padding: 5px 2px; align-items: center; }
-    .typing span {
-      width: 6px; height: 6px;
-      background: var(--na); border-radius: 50%;
-      animation: bounce 1.2s infinite;
-    }
+    .typing span { width: 6px; height: 6px; background: var(--na); border-radius: 50%; animation: bounce 1.2s infinite; }
     .typing span:nth-child(2) { animation-delay: .2s; }
     .typing span:nth-child(3) { animation-delay: .4s; }
 
@@ -383,51 +313,30 @@
       30%         { transform: translateY(-6px); }
     }
 
-    /* Welcome */
-    .welcome {
-      align-self: center; text-align: center;
-      padding: 12px 8px; max-width: 100%;
-    }
-
+    .welcome { align-self: center; text-align: center; padding: 12px 8px; }
     .welcome .wi { font-size: 24px; margin-bottom: 6px; }
-
-    .welcome h2 {
-      font-size: 13px; font-weight: 700;
-      color: var(--na); margin-bottom: 5px;
-    }
-
-    .welcome p {
-      font-size: 11px; color: var(--nm);
-      line-height: 1.5; margin-bottom: 10px;
-    }
+    .welcome h2 { font-size: 13px; font-weight: 700; color: var(--na); margin-bottom: 5px; }
+    .welcome p  { font-size: 11px; color: var(--nm); line-height: 1.5; margin-bottom: 10px; }
 
     .sugg { display: flex; flex-direction: column; gap: 4px; }
 
     .sq {
-      background: var(--np); border: 1px solid var(--nb);
-      color: var(--nt); padding: 6px 9px;
-      border-radius: 7px; cursor: pointer;
-      font-size: 11px; text-align: left;
-      font-family: "Tahoma", sans-serif;
-      transition: all .15s;
+      background: var(--np); border: 1px solid var(--nb); color: var(--nt);
+      padding: 6px 9px; border-radius: 7px; cursor: pointer;
+      font-size: 11px; text-align: left; font-family: "Tahoma", sans-serif; transition: all .15s;
     }
 
     .sq:hover { border-color: var(--na); background: rgba(0,201,255,.07); color: var(--na); }
 
-    /* Chat input */
     .chat-input {
-      padding: 5px 6px 7px;
-      background: var(--np);
-      border-top: 1px solid var(--nb);
-      flex-shrink: 0;
+      padding: 5px 6px 7px; background: var(--np);
+      border-top: 1px solid var(--nb); flex-shrink: 0;
     }
 
     .input-row {
       display: flex; gap: 5px; align-items: flex-end;
-      background: var(--nd);
-      border: 1px solid var(--nb);
-      border-radius: 9px; padding: 6px 7px;
-      transition: border-color .2s;
+      background: var(--nd); border: 1px solid var(--nb);
+      border-radius: 9px; padding: 6px 7px; transition: border-color .2s;
     }
 
     .input-row:focus-within { border-color: var(--na); box-shadow: 0 0 0 2px rgba(0,201,255,.1); }
@@ -442,8 +351,7 @@
     textarea#userInput::placeholder { color: var(--nm); }
 
     #sendBtn {
-      width: 28px; height: 28px;
-      border-radius: 7px; border: none;
+      width: 28px; height: 28px; border-radius: 7px; border: none;
       background: linear-gradient(135deg,#00C9FF,#4A90E2);
       color: #fff; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -454,15 +362,16 @@
     #sendBtn:disabled { opacity: .4; cursor: not-allowed; }
     #sendBtn svg { width: 13px; height: 13px; }
 
-    /* ─── TASKBAR ─── */
+    /* ═══════════════════════════
+       TASKBAR
+    ═══════════════════════════ */
     .taskbar {
       height: 34px;
       background: linear-gradient(180deg,#245cdb 0%,#1a50d0 4%,#1550d4 50%,#0e46c4 51%,#0c40bc 100%);
       border-top: 1px solid #5888f8;
       display: flex; align-items: center;
       padding: 0 4px; gap: 3px;
-      flex-shrink: 0;
-      overflow: hidden;
+      flex-shrink: 0; overflow: hidden; position: relative; z-index: 500;
     }
 
     .start-btn {
@@ -473,32 +382,24 @@
       font-family: "Tahoma", sans-serif; cursor: pointer;
       display: flex; align-items: center; gap: 3px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 3px rgba(0,0,0,.4);
-      text-shadow: 0 1px 1px rgba(0,0,0,.5);
-      flex-shrink: 0;
+      text-shadow: 0 1px 1px rgba(0,0,0,.5); flex-shrink: 0;
+      transition: filter .1s;
     }
 
-    .start-btn:hover { filter: brightness(1.1); }
+    .start-btn:hover  { filter: brightness(1.1); }
+    .start-btn.active { filter: brightness(.88); box-shadow: inset 0 2px 3px rgba(0,0,0,.3); }
 
-    .taskbar-apps {
-      flex: 1; display: flex; gap: 2px;
-      overflow: hidden; align-items: center;
-      min-width: 0;
-    }
+    .taskbar-apps { flex: 1; display: flex; gap: 2px; overflow: hidden; align-items: center; min-width: 0; }
 
     .tb-btn {
-      height: 22px;
-      min-width: 0; flex: 1;
-      max-width: 100px;
+      height: 22px; min-width: 0; flex: 1; max-width: 100px;
       background: linear-gradient(180deg,#1a4ab0 0%,#1e58cc 100%);
       border: 1px solid #0a3090; border-radius: 3px;
-      color: #fff; font-size: 10px;
-      font-family: "Tahoma", sans-serif;
-      display: flex; align-items: center; gap: 3px;
-      padding: 0 5px;
+      color: #fff; font-size: 10px; font-family: "Tahoma", sans-serif;
+      display: flex; align-items: center; gap: 3px; padding: 0 5px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
-      cursor: pointer; overflow: hidden;
-      white-space: nowrap; text-overflow: ellipsis;
-      transition: background .1s;
+      cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+      transition: background .12s, box-shadow .12s, opacity .12s;
     }
 
     .tb-btn.active {
@@ -506,100 +407,212 @@
       box-shadow: inset 0 2px 3px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
     }
 
-    .tb-btn.minimized { opacity: .7; }
-
+    .tb-btn.minimized { opacity: .65; }
     .tb-btn img  { width: 12px; height: 12px; object-fit: contain; }
     .tb-btn span { font-size: 12px; line-height: 1; }
 
     .tb-clock {
       font-size: 10px; color: #fff;
       text-shadow: 0 1px 2px rgba(0,0,0,.5);
-      white-space: nowrap; flex-shrink: 0;
-      padding: 0 4px;
+      white-space: nowrap; flex-shrink: 0; padding: 0 4px;
     }
+
+    /* ═══════════════════════════
+       START MENU / QR POPUP
+    ═══════════════════════════ */
+    @keyframes start-menu-in  {
+      from { transform: translateY(20px) scale(.95); opacity: 0; }
+      to   { transform: translateY(0)    scale(1);   opacity: 1; }
+    }
+
+    @keyframes start-menu-out {
+      from { transform: translateY(0)    scale(1);   opacity: 1; }
+      to   { transform: translateY(20px) scale(.95); opacity: 0; }
+    }
+
+    .start-menu {
+      position: absolute;
+      bottom: 38px; left: 4px;
+      width: 238px;
+      background: #d4d0c8;
+      border: 2px solid #0055e5;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 3px -2px 12px rgba(0,0,0,.45);
+      z-index: 9999;
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+      transform-origin: bottom left;
+    }
+
+    .start-menu.visible {
+      display: flex;
+      animation: start-menu-in .2s cubic-bezier(.18,.89,.32,1.28) forwards;
+    }
+
+    .start-menu.hiding {
+      display: flex;
+      animation: start-menu-out .15s ease-in forwards;
+    }
+
+    .sm-header {
+      background: linear-gradient(90deg, #1a50d0 0%, #1e6cf0 60%, #2080ff 100%);
+      padding: 10px 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+
+    .sm-header h2 {
+      color: #fff; font-size: 13px; font-weight: bold;
+      text-shadow: 0 1px 3px rgba(0,0,0,.6);
+    }
+
+    .sm-header p {
+      color: rgba(255,255,255,.8); font-size: 10px;
+      font-style: italic; text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    }
+
+    .sm-body {
+      padding: 14px 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      background: #f0ede8;
+    }
+
+    .sm-qr {
+      border: 3px solid #1a50d0;
+      border-radius: 6px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    .sm-qr img { display: block; width: 180px; height: 180px; }
+
+    .sm-addr {
+      font-size: 9px; color: #333;
+      text-align: center; word-break: break-all;
+      font-family: monospace;
+      background: #fff;
+      padding: 5px 7px; border-radius: 4px;
+      border: 1px solid #bbb;
+      width: 100%;
+    }
+
+    .sm-footer {
+      background: #e8e4de;
+      border-top: 1px solid #bbb;
+      padding: 6px 10px;
+      display: flex; justify-content: flex-end;
+    }
+
+    .sm-close-btn {
+      font-size: 10px; padding: 3px 10px;
+      background: linear-gradient(180deg,#fff 0%,#d4d0c8 100%);
+      border: 1px solid #888; border-radius: 3px;
+      cursor: pointer; font-family: "Tahoma", sans-serif;
+      transition: filter .1s;
+    }
+
+    .sm-close-btn:hover { filter: brightness(.92); }
+
+    /* Click-outside overlay */
+    .menu-overlay {
+      position: absolute; inset: 0;
+      z-index: 9998; display: none;
+    }
+
+    .menu-overlay.visible { display: block; }
   </style>
 </head>
 <body>
-<div class="app-shell">
+<div class="app-shell" id="app-shell">
 
   <div class="desktop">
-    <!-- Desktop icons (left column) -->
-    <div class="icon-col" id="icon-col">
-      <div class="desk-icon" ondblclick="wm.open('nanonerd')" onclick="wm.open('nanonerd')">
+    <div class="icon-col">
+      <div class="desk-icon" onclick="wm.open('nanonerd')">
         <div class="di-emoji">🧠</div>
         <span class="label">NanoNerd</span>
       </div>
       <div class="desk-icon" onclick="wm.open('nano_org')">
         <img class="di-img"
           src="https://www.google.com/s2/favicons?domain=nano.org&sz=64"
-          onerror="this.outerHTML='<div class=di-emoji>🔵</div>'"
-          alt="nano.org" />
+          onerror="this.outerHTML='<div class=di-emoji>🔵</div>'" alt="nano.org" />
         <span class="label">nano.org</span>
       </div>
       <div class="desk-icon" onclick="wm.open('nano_gpt')">
         <img class="di-img"
           src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=64"
-          onerror="this.outerHTML='<div class=di-emoji>⚡</div>'"
-          alt="NanoGPT" />
+          onerror="this.outerHTML='<div class=di-emoji>⚡</div>'" alt="NanoGPT" />
         <span class="label">NanoGPT</span>
       </div>
     </div>
-
-    <!-- Window area -->
     <div class="win-area" id="win-area"></div>
   </div>
 
   <!-- Taskbar -->
   <div class="taskbar">
-    <button class="start-btn">⊞ start</button>
+    <button class="start-btn" id="start-btn">⊞ start</button>
     <div class="taskbar-apps" id="tb-apps"></div>
     <div class="tb-clock" id="clock">00:00</div>
+  </div>
+
+  <!-- Click-outside overlay for start menu -->
+  <div class="menu-overlay" id="menu-overlay" onclick="closeStartMenu()"></div>
+
+  <!-- Start Menu / QR Donate -->
+  <div class="start-menu" id="start-menu">
+    <div class="sm-header">
+      <h2>💰 Donate Nano hard-money</h2>
+      <p>Scan to send XNO</p>
+    </div>
+    <div class="sm-body">
+      <div class="sm-qr">
+        <img
+          src="https://api.qrserver.com/v1/create-qr-code/?data=nano_1z67kr1o6dyb3sdafc87asua9eegdfxcpsqg7qihb49zmrmorncy1fnki84z&size=180x180&color=1a3c6c&bgcolor=ffffff&margin=8"
+          alt="Nano QR Code"
+        />
+      </div>
+      <div class="sm-addr">nano_1z67kr1o6dyb3sdafc87asua9eegdfxcpsqg7qihb49zmrmorncy1fnki84z</div>
+    </div>
+    <div class="sm-footer">
+      <button class="sm-close-btn" onclick="closeStartMenu()">Close</button>
+    </div>
   </div>
 
 </div>
 
 <script>
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════════
    APP CONFIGS
-═══════════════════════════════════════ */
+══════════════════════════════════════════ */
 const APPS = {
   nanonerd: {
-    id: 'nanonerd',
-    title: 'NanoNerd 🧠',
-    iconHtml: '<span>🧠</span>',
-    tbIconHtml: '<span>🧠</span>',
-    type: 'chat',
-    url: null,
+    id: 'nanonerd', title: 'NanoNerd 🧠',
+    iconHtml: '<span>🧠</span>', tbIconHtml: '<span>🧠</span>',
+    type: 'chat', url: null,
   },
   nano_org: {
-    id: 'nano_org',
-    title: 'nano.org',
+    id: 'nano_org', title: 'nano.org',
     iconHtml: '<img src="https://www.google.com/s2/favicons?domain=nano.org&sz=64" onerror="this.outerHTML=\'🔵\'">',
     tbIconHtml: '<img src="https://www.google.com/s2/favicons?domain=nano.org&sz=16" onerror="this.outerHTML=\'🔵\'">',
-    type: 'browser',
-    url: 'https://nano.org',
-    emoji: '🔵',
-    desc: 'The official Nano cryptocurrency website',
+    type: 'browser', url: 'https://nano.org',
+    emoji: '🔵', desc: 'The official Nano cryptocurrency website',
   },
   nano_gpt: {
-    id: 'nano_gpt',
-    title: 'NanoGPT',
+    id: 'nano_gpt', title: 'NanoGPT',
     iconHtml: '<img src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=64" onerror="this.outerHTML=\'⚡\'">',
     tbIconHtml: '<img src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=16" onerror="this.outerHTML=\'⚡\'">',
-    type: 'browser',
-    url: 'https://nano-gpt.com/',
-    emoji: '⚡',
-    desc: 'AI-powered tools powered by Nano (XNO)',
+    type: 'browser', url: 'https://nano-gpt.com/',
+    emoji: '⚡', desc: 'AI-powered tools powered by Nano (XNO)',
   },
 };
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════════
    WINDOW MANAGER
-═══════════════════════════════════════ */
+══════════════════════════════════════════ */
 const wm = {
-  state: {},   // id -> 'closed' | 'open' | 'minimized'
-  els: {},     // id -> { win, tbBtn }
+  state: {},  // 'closed' | 'open' | 'minimized'
+  els: {},    // { win, tbBtn }
   z: 100,
+  ANIM_MS: 210,
 
   init() {
     for (const id of Object.keys(APPS)) {
@@ -614,55 +627,69 @@ const wm = {
     const { win } = this.els[id];
 
     if (s === 'closed') {
+      win.classList.add('animating');
       win.style.display = 'flex';
       this._addTbBtn(id);
       this.state[id] = 'open';
+      void win.offsetWidth; // reflow
+      win.classList.remove('animating');
+      this._runAnim(win, 'anim-open');
     } else if (s === 'minimized') {
+      win.classList.add('animating');
       win.style.display = 'flex';
       this.state[id] = 'open';
+      void win.offsetWidth;
+      win.classList.remove('animating');
+      this._runAnim(win, 'anim-restore');
+      this._updateTbBtn(id);
     }
-    // always focus
     this.focus(id);
   },
 
   close(id) {
     const { win } = this.els[id];
-    win.style.display = 'none';
-    win.classList.remove('maximized');
+    this._runAnim(win, 'anim-close', () => {
+      win.style.display = 'none';
+      win.classList.remove('maximized');
+    });
     this._removeTbBtn(id);
     this.state[id] = 'closed';
   },
 
   minimize(id) {
-    const { win, tbBtn } = this.els[id];
-    win.style.display = 'none';
-    if (tbBtn) tbBtn.classList.replace('active', 'minimized');
+    const { win } = this.els[id];
+    this._runAnim(win, 'anim-minimize', () => {
+      win.style.display = 'none';
+    });
     this.state[id] = 'minimized';
+    this._updateTbBtn(id);
   },
 
   maximize(id) {
     const app = APPS[id];
     if (app.type === 'browser') {
       window.open(app.url, '_blank');
-    } else {
-      const { win } = this.els[id];
-      win.classList.toggle('maximized');
+      return;
     }
+    const { win } = this.els[id];
+    const wasMaximized = win.classList.contains('maximized');
+    win.classList.toggle('maximized');
+    // Small pulse animation after transition
+    setTimeout(() => this._runAnim(win, 'anim-maximize'), wasMaximized ? 0 : 230);
   },
 
   focus(id) {
     this.z++;
-    const { win, tbBtn } = this.els[id];
+    const { win } = this.els[id];
     win.style.zIndex = this.z;
-
-    // Update all taskbar buttons
-    for (const [wId, { tbBtn: btn }] of Object.entries(this.els)) {
-      if (!btn) continue;
-      btn.classList.remove('active', 'minimized');
-      if (this.state[wId] === 'open')      btn.classList.add('active');
-      if (this.state[wId] === 'minimized') btn.classList.add('minimized');
+    this._runAnim(win, 'anim-focus');
+    // Sync all taskbar button states
+    for (const [wId, { tbBtn }] of Object.entries(this.els)) {
+      if (!tbBtn) continue;
+      tbBtn.classList.remove('active', 'minimized');
+      if (this.state[wId] === 'open')      tbBtn.classList.add('active');
+      if (this.state[wId] === 'minimized') tbBtn.classList.add('minimized');
     }
-    if (tbBtn) tbBtn.classList.add('active');
   },
 
   clickTb(id) {
@@ -673,7 +700,18 @@ const wm = {
     }
   },
 
-  /* ── Internal helpers ── */
+  /* Helpers */
+  _runAnim(win, cls, onEnd) {
+    win.classList.remove('anim-open','anim-minimize','anim-restore','anim-close','anim-focus','anim-maximize');
+    void win.offsetWidth;
+    win.classList.add(cls);
+    const done = () => {
+      win.classList.remove(cls);
+      if (onEnd) onEnd();
+    };
+    win.addEventListener('animationend', done, { once: true });
+  },
+
   _addTbBtn(id) {
     if (this.els[id].tbBtn) return;
     const app = APPS[id];
@@ -690,6 +728,14 @@ const wm = {
     if (tbBtn) { tbBtn.remove(); this.els[id].tbBtn = null; }
   },
 
+  _updateTbBtn(id) {
+    const { tbBtn } = this.els[id];
+    if (!tbBtn) return;
+    tbBtn.classList.remove('active', 'minimized');
+    if (this.state[id] === 'open')      tbBtn.classList.add('active');
+    if (this.state[id] === 'minimized') tbBtn.classList.add('minimized');
+  },
+
   _createWindow(id) {
     const app = APPS[id];
     const area = document.getElementById('win-area');
@@ -699,34 +745,30 @@ const wm = {
     win.id = `win-${id}`;
     win.style.zIndex = 10;
 
+    /* Bring to front on any interaction */
+    win.addEventListener('mousedown',  () => { if (this.state[id]==='open') this.focus(id); });
+    win.addEventListener('touchstart', () => { if (this.state[id]==='open') this.focus(id); }, {passive:true});
+
     /* Title bar */
     const tb = document.createElement('div');
     tb.className = 'xp-titlebar';
+    const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
       <div class="xp-btns">
         <button class="xp-btn min" title="Minimize">&#8211;</button>
-        <button class="xp-btn max" title="${app.type === 'browser' ? 'Open in browser' : 'Maximize'}">&#9633;</button>
+        <button class="xp-btn max" title="${maxTitle}">&#9633;</button>
         <button class="xp-btn cls" title="Close">&#10005;</button>
       </div>
     `;
-    tb.querySelector('.min').onclick = () => this.minimize(id);
-    tb.querySelector('.max').onclick = () => this.maximize(id);
-    tb.querySelector('.cls').onclick = () => this.close(id);
-
-    /* Bring to front on click */
-    win.addEventListener('mousedown',  () => { if (this.state[id]==='open') this.focus(id); });
-    win.addEventListener('touchstart', () => { if (this.state[id]==='open') this.focus(id); }, {passive:true});
+    tb.querySelector('.min').onclick = (e) => { e.stopPropagation(); this.minimize(id); };
+    tb.querySelector('.max').onclick = (e) => { e.stopPropagation(); this.maximize(id); };
+    tb.querySelector('.cls').onclick = (e) => { e.stopPropagation(); this.close(id); };
 
     /* Content */
     const content = document.createElement('div');
     content.className = 'xp-content';
-
-    if (app.type === 'chat') {
-      content.appendChild(this._buildChatContent());
-    } else {
-      content.appendChild(this._buildBrowserContent(app));
-    }
+    content.appendChild(app.type === 'chat' ? this._buildChat() : this._buildBrowser(app));
 
     win.appendChild(tb);
     win.appendChild(content);
@@ -734,10 +776,9 @@ const wm = {
     this.els[id].win = win;
   },
 
-  _buildBrowserContent(app) {
+  _buildBrowser(app) {
     const wrap = document.createElement('div');
     wrap.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;';
-
     wrap.innerHTML = `
       <div class="browser-bar">
         <div class="browser-nav">
@@ -753,7 +794,7 @@ const wm = {
           <h3>${app.title}</h3>
           <p>${app.desc}</p>
           <p style="font-size:10px;color:#888;margin-top:4px">
-            This site cannot be displayed in a window frame.<br>Click below to open it.
+            This site cannot be displayed in a frame.<br>Click below or the &#9633; button to open it.
           </p>
           <button class="visit-btn" onclick="window.open('${app.url}','_blank')">
             🌐 Open ${app.title}
@@ -764,7 +805,7 @@ const wm = {
     return wrap;
   },
 
-  _buildChatContent() {
+  _buildChat() {
     const wrap = document.createElement('div');
     wrap.className = 'chat-wrap';
     wrap.innerHTML = `
@@ -786,9 +827,45 @@ const wm = {
   },
 };
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════════
+   START MENU
+══════════════════════════════════════════ */
+let startMenuOpen = false;
+
+function toggleStartMenu() {
+  if (startMenuOpen) { closeStartMenu(); return; }
+  const menu = document.getElementById('start-menu');
+  const overlay = document.getElementById('menu-overlay');
+  const btn = document.getElementById('start-btn');
+  menu.classList.remove('hiding');
+  menu.classList.add('visible');
+  overlay.classList.add('visible');
+  btn.classList.add('active');
+  startMenuOpen = true;
+}
+
+function closeStartMenu() {
+  if (!startMenuOpen) return;
+  const menu = document.getElementById('start-menu');
+  const overlay = document.getElementById('menu-overlay');
+  const btn = document.getElementById('start-btn');
+  menu.classList.add('hiding');
+  overlay.classList.remove('visible');
+  btn.classList.remove('active');
+  startMenuOpen = false;
+  menu.addEventListener('animationend', () => {
+    menu.classList.remove('visible', 'hiding');
+  }, { once: true });
+}
+
+document.getElementById('start-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  toggleStartMenu();
+});
+
+/* ══════════════════════════════════════════
    CHAT ENGINE
-═══════════════════════════════════════ */
+══════════════════════════════════════════ */
 let conversationHistory = [];
 let isStreaming = false;
 
@@ -806,65 +883,44 @@ function showWelcome() {
   const chat = getEl('chat');
   if (!chat) return;
   const w = document.createElement('div');
-  w.className = 'welcome';
-  w.id = 'welcome';
+  w.className = 'welcome'; w.id = 'welcome';
   w.innerHTML = `
     <div class="wi">⚡</div>
     <h2>Welcome to NanoNerd 🧠</h2>
     <p>Your dedicated Nano (XNO) expert.<br>Ask me anything!</p>
     <div class="sugg">
-      ${SUGGESTIONS.map(q => `<button class="sq">${q}</button>`).join('')}
+      ${SUGGESTIONS.map(q=>`<button class="sq">${q}</button>`).join('')}
     </div>
   `;
   chat.appendChild(w);
   w.querySelectorAll('.sq').forEach(btn => btn.addEventListener('click', () => sendMsg(btn.textContent)));
 }
 
-function removeWelcome() {
-  const el = getEl('welcome');
-  if (el) el.remove();
-}
+function removeWelcome() { const el=getEl('welcome'); if(el) el.remove(); }
 
 function addMsg(role, text) {
   const chat = getEl('chat');
   if (!chat) return null;
-  const msg = document.createElement('div');
-  msg.className = `msg ${role}`;
-  const av = document.createElement('div');
-  av.className = 'av';
-  av.textContent = role === 'user' ? 'You' : '🧠';
-  const bbl = document.createElement('div');
-  bbl.className = 'bbl';
+  const msg = document.createElement('div'); msg.className=`msg ${role}`;
+  const av = document.createElement('div'); av.className='av';
+  av.textContent = role==='user'?'You':'🧠';
+  const bbl = document.createElement('div'); bbl.className='bbl';
   bbl.innerHTML = fmt(text);
-  msg.appendChild(av);
-  msg.appendChild(bbl);
-  chat.appendChild(msg);
-  scrollBot();
+  msg.appendChild(av); msg.appendChild(bbl);
+  chat.appendChild(msg); scrollBot();
   return bbl;
 }
 
 function addTyping() {
-  const chat = getEl('chat');
-  if (!chat) return;
-  const msg = document.createElement('div');
-  msg.className = 'msg assistant';
-  msg.id = 'typing';
-  const av = document.createElement('div');
-  av.className = 'av';
-  av.textContent = '🧠';
-  const bbl = document.createElement('div');
-  bbl.className = 'bbl';
-  bbl.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
-  msg.appendChild(av);
-  msg.appendChild(bbl);
-  chat.appendChild(msg);
-  scrollBot();
+  const chat = getEl('chat'); if (!chat) return;
+  const msg = document.createElement('div'); msg.className='msg assistant'; msg.id='typing';
+  const av = document.createElement('div'); av.className='av'; av.textContent='🧠';
+  const bbl = document.createElement('div'); bbl.className='bbl';
+  bbl.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  msg.appendChild(av); msg.appendChild(bbl); chat.appendChild(msg); scrollBot();
 }
 
-function removeTyping() {
-  const el = getEl('typing');
-  if (el) el.remove();
-}
+function removeTyping() { const el=getEl('typing'); if(el) el.remove(); }
 
 function fmt(text) {
   return text
@@ -876,122 +932,79 @@ function fmt(text) {
 }
 
 function scrollBot() {
-  requestAnimationFrame(() => {
-    const c = getEl('chat');
-    if (c) c.scrollTop = c.scrollHeight;
-  });
+  requestAnimationFrame(() => { const c=getEl('chat'); if(c) c.scrollTop=c.scrollHeight; });
 }
 
 async function sendMsg(text) {
   if (isStreaming || !text.trim()) return;
-
-  const inputEl  = getEl('userInput');
-  const sendEl   = getEl('sendBtn');
-  if (!inputEl || !sendEl) return;
-
-  removeWelcome();
-  isStreaming = true;
-  sendEl.disabled = true;
-  inputEl.value = '';
-  inputEl.style.height = 'auto';
-
-  const userText = text.trim();
-  addMsg('user', userText);
-  conversationHistory.push({ role: 'user', content: userText });
+  const inputEl=getEl('userInput'), sendEl=getEl('sendBtn');
+  if (!inputEl||!sendEl) return;
+  removeWelcome(); isStreaming=true; sendEl.disabled=true;
+  inputEl.value=''; inputEl.style.height='auto';
+  const userText=text.trim();
+  addMsg('user',userText);
+  conversationHistory.push({role:'user',content:userText});
   addTyping();
-
-  let fullResponse = '';
-
+  let fullResponse='';
   try {
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: conversationHistory }),
-    });
-
-    if (!res.ok) throw new Error('Request failed');
-
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conversationHistory})});
+    if (!res.ok) throw new Error('fail');
     removeTyping();
-    const bbl = addMsg('assistant', '');
-    if (bbl) bbl.innerHTML = '';
-
-    const reader = res.body.getReader();
-    const dec = new TextDecoder();
-    let buf = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        try {
-          const ev = JSON.parse(line.slice(6));
-          if (ev.done) break;
-          if (ev.content && bbl) {
-            fullResponse += ev.content;
-            bbl.innerHTML = fmt(fullResponse);
-            scrollBot();
-          }
-        } catch {}
+    const bbl=addMsg('assistant','');
+    if(bbl) bbl.innerHTML='';
+    const reader=res.body.getReader(); const dec=new TextDecoder(); let buf='';
+    while(true){
+      const {done,value}=await reader.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop()||'';
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        try{
+          const ev=JSON.parse(line.slice(6));
+          if(ev.done)break;
+          if(ev.content&&bbl){fullResponse+=ev.content;bbl.innerHTML=fmt(fullResponse);scrollBot();}
+        }catch{}
       }
     }
-
-    conversationHistory.push({ role: 'assistant', content: fullResponse });
-  } catch (err) {
-    removeTyping();
-    addMsg('assistant', 'Something went wrong. Please try again.');
-    console.error(err);
+    conversationHistory.push({role:'assistant',content:fullResponse});
+  } catch(err) {
+    removeTyping(); addMsg('assistant','Something went wrong. Please try again.');
   } finally {
-    isStreaming = false;
-    if (sendEl) sendEl.disabled = false;
+    isStreaming=false; if(sendEl) sendEl.disabled=false;
   }
 }
 
-/* ═══════════════════════════════════════
-   CLOCK
-═══════════════════════════════════════ */
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours().toString().padStart(2,'0');
-  const m = now.getMinutes().toString().padStart(2,'0');
-  const el = getEl('clock');
-  if (el) el.textContent = `${h}:${m}`;
-}
-
-/* ═══════════════════════════════════════
-   BOOT
-═══════════════════════════════════════ */
-wm.init();
-
-// Wire up chat input events (elements exist in DOM now)
+/* Input events */
 document.addEventListener('input', e => {
-  if (e.target && e.target.id === 'userInput') {
-    e.target.style.height = 'auto';
-    e.target.style.height = Math.min(e.target.scrollHeight, 70) + 'px';
+  if (e.target?.id==='userInput') {
+    e.target.style.height='auto';
+    e.target.style.height=Math.min(e.target.scrollHeight,70)+'px';
   }
 });
-
 document.addEventListener('keydown', e => {
-  if (e.target && e.target.id === 'userInput' && e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMsg(e.target.value);
+  if (e.target?.id==='userInput'&&e.key==='Enter'&&!e.shiftKey) {
+    e.preventDefault(); sendMsg(e.target.value);
   }
 });
-
 document.addEventListener('click', e => {
-  if (e.target && e.target.id === 'sendBtn') {
-    const inp = getEl('userInput');
-    if (inp) sendMsg(inp.value);
-  }
+  if (e.target?.id==='sendBtn') { const inp=getEl('userInput'); if(inp) sendMsg(inp.value); }
 });
 
-// Open NanoNerd on load and show welcome
+/* ══════════════════════════════════════════
+   CLOCK
+══════════════════════════════════════════ */
+function updateClock() {
+  const n=new Date();
+  const el=getEl('clock');
+  if(el) el.textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+wm.init();
 wm.open('nanonerd');
 showWelcome();
-
 updateClock();
 setInterval(updateClock, 10000);
 </script>
