@@ -11,27 +11,13 @@
       padding: 0;
     }
 
-    :root {
-      --nano-blue: #4A90E2;
-      --nano-dark: #1a1f2e;
-      --nano-panel: #232939;
-      --nano-border: #2e3650;
-      --nano-text: #e8eaf0;
-      --nano-muted: #8892aa;
-      --nano-accent: #00C9FF;
-      --nano-user-bg: #1d3a5c;
-      --nano-ai-bg: #1e2840;
-      --radius: 16px;
-    }
-
     body {
-      background: #111318;
-      color: var(--nano-text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100dvh;
       display: flex;
       justify-content: center;
+      background: #1a1a1a;
       overflow: hidden;
+      font-family: "Tahoma", "Segoe UI", sans-serif;
     }
 
     .app-shell {
@@ -40,86 +26,213 @@
       height: 100dvh;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      background: var(--nano-dark);
       position: relative;
+      overflow: hidden;
+      /* Windows XP Bliss wallpaper — CSS approximation */
+      background:
+        radial-gradient(ellipse 130px 55px at 18% 20%, rgba(255,255,255,0.72) 0%, transparent 100%),
+        radial-gradient(ellipse 80px 38px at 60% 13%, rgba(255,255,255,0.58) 0%, transparent 100%),
+        radial-gradient(ellipse 55px 28px at 82% 24%, rgba(255,255,255,0.45) 0%, transparent 100%),
+        radial-gradient(ellipse 40px 22px at 43% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        linear-gradient(180deg,
+          #1e6bbf 0%,
+          #2e82d8 12%,
+          #4fa0f0 28%,
+          #78bef8 40%,
+          #90d060 47%,
+          #6cc040 53%,
+          #4aaa30 60%,
+          #2e9020 70%,
+          #1e7818 82%,
+          #166014 100%
+        );
     }
 
-    header {
-      background: var(--nano-panel);
-      border-bottom: 1px solid var(--nano-border);
-      padding: 14px 20px;
+    /* ===== DESKTOP LAYOUT ===== */
+    .desktop {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      padding: 8px 4px 4px 4px;
+      gap: 4px;
+    }
+
+    /* ===== DESKTOP ICONS (left column) ===== */
+    .desktop-icons {
+      width: 78px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .desktop-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      padding: 4px 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .desktop-icon:hover,
+    .desktop-icon:active {
+      background: rgba(49, 106, 197, 0.45);
+      outline: 1px solid rgba(255,255,255,0.55);
+    }
+
+    .desktop-icon img {
+      width: 40px;
+      height: 40px;
+      image-rendering: pixelated;
+      filter: drop-shadow(1px 2px 3px rgba(0,0,0,0.5));
+    }
+
+    .desktop-icon span {
+      font-size: 10px;
+      color: #fff;
+      text-align: center;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.7);
+      line-height: 1.2;
+      word-break: break-word;
+      max-width: 72px;
+    }
+
+    /* ===== NANONERD WINDOW (right side) ===== */
+    .winxp-window {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px 8px 4px 4px;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,0.6),
+        0 4px 20px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.35);
+      min-width: 0;
+    }
+
+    /* WinXP Luna Blue title bar */
+    .winxp-titlebar {
+      background: linear-gradient(180deg,
+        #2259c8 0%,
+        #1e4ec0 6%,
+        #1a50c8 45%,
+        #144abf 50%,
+        #0f43b5 51%,
+        #0d40b0 55%,
+        #1248bc 100%
+      );
+      padding: 3px 4px 4px 6px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-bottom: 1px solid #0a36a0;
+      min-height: 26px;
+    }
+
+    .winxp-title {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .winxp-title-icon {
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .winxp-controls {
+      display: flex;
+      gap: 2px;
       flex-shrink: 0;
     }
 
-    .logo {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(135deg, #00C9FF, #4A90E2);
-      border-radius: 50%;
+    .winxp-btn {
+      width: 22px;
+      height: 18px;
+      border: none;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+      transition: filter 0.1s;
     }
 
-    .header-text h1 {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--nano-accent);
+    .winxp-btn:hover { filter: brightness(1.2); }
+    .winxp-btn:active { filter: brightness(0.85); }
+
+    .winxp-btn.min {
+      background: linear-gradient(180deg, #4a9be0 0%, #2070c0 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.4);
     }
 
-    .header-text p {
-      font-size: 12px;
-      color: var(--nano-muted);
-      margin-top: 1px;
+    .winxp-btn.max {
+      background: linear-gradient(180deg, #4a9be0 0%, #2070c0 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.4);
     }
 
-    .status-dot {
-      margin-left: auto;
+    .winxp-btn.close {
+      background: linear-gradient(180deg, #e05040 0%, #c02010 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 1px 2px rgba(0,0,0,0.4);
+    }
+
+    /* Window content area */
+    .winxp-content {
+      flex: 1;
       display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: #4ade80;
+      flex-direction: column;
+      background: #1a1f2e;
+      overflow: hidden;
+      border: 2px solid #0d40b0;
+      border-top: none;
+      border-radius: 0 0 4px 4px;
     }
 
-    .status-dot::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #4ade80;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    /* ===== CHAT STYLES ===== */
+    :root {
+      --nano-dark: #1a1f2e;
+      --nano-panel: #232939;
+      --nano-border: #2e3650;
+      --nano-text: #e8eaf0;
+      --nano-muted: #8892aa;
+      --nano-accent: #00C9FF;
+      --nano-user-bg: #1d3a5c;
+      --nano-ai-bg: #1e2840;
+      --radius: 12px;
     }
 
     .chat-container {
       flex: 1;
       overflow-y: auto;
-      padding: 20px 16px;
+      padding: 10px 8px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 10px;
       scroll-behavior: smooth;
     }
 
-    .chat-container::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    .chat-container::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
+    .chat-container::-webkit-scrollbar { width: 3px; }
+    .chat-container::-webkit-scrollbar-track { background: transparent; }
     .chat-container::-webkit-scrollbar-thumb {
       background: var(--nano-border);
       border-radius: 2px;
@@ -127,34 +240,27 @@
 
     .message {
       display: flex;
-      gap: 10px;
-      max-width: 760px;
+      gap: 6px;
       width: 100%;
-      animation: fadeIn 0.25s ease;
+      animation: fadeIn 0.2s ease;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .message.user {
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-
-    .message.assistant {
-      align-self: flex-start;
-    }
+    .message.user      { align-self: flex-end; flex-direction: row-reverse; }
+    .message.assistant { align-self: flex-start; }
 
     .avatar {
-      width: 32px;
-      height: 32px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       flex-shrink: 0;
       margin-top: 2px;
@@ -167,47 +273,45 @@
 
     .message.assistant .avatar {
       background: linear-gradient(135deg, #00C9FF, #0080c0);
-      color: #fff;
+      font-size: 13px;
     }
 
     .bubble {
-      padding: 12px 16px;
+      padding: 8px 11px;
       border-radius: var(--radius);
-      font-size: 14.5px;
-      line-height: 1.65;
-      max-width: calc(100% - 44px);
+      font-size: 12.5px;
+      line-height: 1.6;
+      max-width: calc(100% - 34px);
       word-break: break-word;
+      color: var(--nano-text);
     }
 
     .message.user .bubble {
       background: var(--nano-user-bg);
-      border: 1px solid rgba(74, 144, 226, 0.25);
-      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(74,144,226,0.25);
+      border-bottom-right-radius: 3px;
     }
 
     .message.assistant .bubble {
       background: var(--nano-ai-bg);
-      border: 1px solid rgba(0, 201, 255, 0.15);
-      border-bottom-left-radius: 4px;
+      border: 1px solid rgba(0,201,255,0.15);
+      border-bottom-left-radius: 3px;
     }
 
     .bubble p { margin: 0; }
-    .bubble p + p { margin-top: 10px; }
-
-    .bubble strong {
-      color: var(--nano-accent);
-    }
+    .bubble p + p { margin-top: 8px; }
+    .bubble strong { color: var(--nano-accent); }
 
     .typing-indicator {
       display: flex;
-      gap: 5px;
-      padding: 8px 4px;
+      gap: 4px;
+      padding: 6px 2px;
       align-items: center;
     }
 
     .typing-indicator span {
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       background: var(--nano-accent);
       border-radius: 50%;
       animation: bounce 1.2s infinite;
@@ -218,69 +322,64 @@
 
     @keyframes bounce {
       0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-8px); }
+      30%           { transform: translateY(-6px); }
     }
 
+    /* ===== WELCOME SCREEN ===== */
     .welcome {
       align-self: center;
       text-align: center;
-      max-width: 480px;
-      padding: 32px 20px;
+      padding: 16px 10px;
+      max-width: 100%;
     }
 
     .welcome .icon {
-      width: 64px;
-      height: 64px;
-      background: linear-gradient(135deg, #00C9FF, #4A90E2);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin: 0 auto 16px;
+      font-size: 26px;
+      margin-bottom: 8px;
     }
 
     .welcome h2 {
-      font-size: 22px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--nano-accent);
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .welcome p {
-      font-size: 14px;
+      font-size: 11px;
       color: var(--nano-muted);
-      line-height: 1.6;
-      margin-bottom: 20px;
+      line-height: 1.5;
+      margin-bottom: 12px;
     }
 
     .suggested-questions {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      width: 100%;
+      gap: 5px;
     }
 
     .suggestion-btn {
       background: var(--nano-panel);
       border: 1px solid var(--nano-border);
       color: var(--nano-text);
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 7px 10px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 11px;
       text-align: left;
+      font-family: "Tahoma", sans-serif;
       transition: all 0.15s ease;
     }
 
     .suggestion-btn:hover {
       border-color: var(--nano-accent);
-      background: rgba(0, 201, 255, 0.07);
+      background: rgba(0,201,255,0.07);
       color: var(--nano-accent);
     }
 
+    /* ===== INPUT AREA ===== */
     .input-area {
-      padding: 12px 16px 16px;
+      padding: 6px 7px 8px;
       background: var(--nano-panel);
       border-top: 1px solid var(--nano-border);
       flex-shrink: 0;
@@ -288,20 +387,18 @@
 
     .input-wrapper {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       align-items: flex-end;
-      max-width: 760px;
-      margin: 0 auto;
       background: var(--nano-dark);
       border: 1px solid var(--nano-border);
-      border-radius: 14px;
-      padding: 10px 12px;
+      border-radius: 10px;
+      padding: 7px 8px;
       transition: border-color 0.2s;
     }
 
     .input-wrapper:focus-within {
       border-color: var(--nano-accent);
-      box-shadow: 0 0 0 2px rgba(0, 201, 255, 0.1);
+      box-shadow: 0 0 0 2px rgba(0,201,255,0.1);
     }
 
     textarea {
@@ -310,23 +407,21 @@
       border: none;
       outline: none;
       color: var(--nano-text);
-      font-size: 14px;
-      font-family: inherit;
+      font-size: 12px;
+      font-family: "Tahoma", sans-serif;
       resize: none;
-      max-height: 120px;
-      min-height: 24px;
-      line-height: 1.5;
+      max-height: 80px;
+      min-height: 18px;
+      line-height: 1.4;
       overflow-y: auto;
     }
 
-    textarea::placeholder {
-      color: var(--nano-muted);
-    }
+    textarea::placeholder { color: var(--nano-muted); }
 
     .send-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
       border: none;
       background: linear-gradient(135deg, #00C9FF, #4A90E2);
       color: #fff;
@@ -338,258 +433,340 @@
       transition: opacity 0.2s, transform 0.1s;
     }
 
-    .send-btn:hover:not(:disabled) {
-      opacity: 0.85;
-      transform: scale(1.05);
+    .send-btn:hover:not(:disabled) { opacity: 0.85; transform: scale(1.05); }
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .send-btn svg { width: 14px; height: 14px; }
+
+    /* ===== WinXP TASKBAR ===== */
+    .taskbar {
+      height: 34px;
+      background: linear-gradient(180deg, #245cdb 0%, #1a50d0 4%, #1550d4 50%, #0e46c4 51%, #0c40bc 100%);
+      border-top: 1px solid #5888f8;
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      gap: 4px;
+      flex-shrink: 0;
     }
 
-    .send-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    .start-btn {
+      height: 26px;
+      padding: 0 10px 0 6px;
+      background: linear-gradient(180deg, #5aad3a 0%, #3d9020 50%, #2e8010 51%, #227010 100%);
+      border: 1px solid #1a6010;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      font-family: "Tahoma", sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.4);
+      text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+      flex-shrink: 0;
     }
 
-    .send-btn svg {
-      width: 17px;
-      height: 17px;
+    .start-btn:hover { filter: brightness(1.1); }
+
+    .start-icon {
+      font-size: 14px;
     }
 
-    .input-hint {
-      text-align: center;
+    .taskbar-app {
+      flex: 1;
+      height: 22px;
+      background: linear-gradient(180deg, #1440a8 0%, #1e56c8 100%);
+      border: 1px solid #0a3090;
+      border-radius: 3px;
+      color: #fff;
       font-size: 11px;
-      color: var(--nano-muted);
-      margin-top: 8px;
+      font-family: "Tahoma", sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 7px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: default;
     }
 
-    @media (max-width: 600px) {
-      .message {
-        max-width: 100%;
-      }
+    .taskbar-clock {
+      font-size: 10px;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+      white-space: nowrap;
+      flex-shrink: 0;
+      padding: 0 4px;
     }
   </style>
 </head>
 <body>
 <div class="app-shell">
-  <header>
-    <div class="logo">🧠</div>
-    <div class="header-text">
-      <h1>NanoNerd 🧠</h1>
-      <p>Your Nano cryptocurrency expert</p>
-    </div>
-    <div class="status-dot">Online</div>
-  </header>
 
-  <div class="chat-container" id="chat"></div>
-
-  <div class="input-area">
-    <div class="input-wrapper">
-      <textarea
-        id="userInput"
-        placeholder="Ask anything about Nano (XNO)..."
-        rows="1"
-      ></textarea>
-      <button class="send-btn" id="sendBtn" title="Send message">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"></line>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
-      </button>
+  <div class="desktop">
+    <!-- Left: Desktop Icons -->
+    <div class="desktop-icons">
+      <a href="https://nano.org" target="_blank" class="desktop-icon">
+        <img
+          src="https://www.google.com/s2/favicons?domain=nano.org&sz=64"
+          alt="Nano.org"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%228%22 fill=%22%231a3a6c%22/><text y=%2248%22 font-size=%2244%22 text-anchor=%22middle%22 x=%2232%22>🔵</text></svg>'"
+        />
+        <span>nano.org</span>
+      </a>
+      <a href="https://nano-gpt.com/" target="_blank" class="desktop-icon">
+        <img
+          src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=64"
+          alt="NanoGPT"
+          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%228%22 fill=%22%23222%22/><text y=%2248%22 font-size=%2244%22 text-anchor=%22middle%22 x=%2232%22>🧠</text></svg>'"
+        />
+        <span>NanoGPT</span>
+      </a>
     </div>
-    <div class="input-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+
+    <!-- Right: NanoNerd as a WinXP window -->
+    <div class="winxp-window">
+      <div class="winxp-titlebar">
+        <div class="winxp-title">
+          <span class="winxp-title-icon">🧠</span>
+          NanoNerd 🧠
+        </div>
+        <div class="winxp-controls">
+          <button class="winxp-btn min" title="Minimize">&#8211;</button>
+          <button class="winxp-btn max" title="Maximize">&#9633;</button>
+          <button class="winxp-btn close" title="Close">&#10005;</button>
+        </div>
+      </div>
+
+      <div class="winxp-content">
+        <div class="chat-container" id="chat"></div>
+        <div class="input-area">
+          <div class="input-wrapper">
+            <textarea
+              id="userInput"
+              placeholder="Ask about Nano (XNO)..."
+              rows="1"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- WinXP Taskbar -->
+  <div class="taskbar">
+    <button class="start-btn">
+      <span class="start-icon">⊞</span> start
+    </button>
+    <div class="taskbar-app">
+      <span>🧠</span> NanoNerd
+    </div>
+    <div class="taskbar-clock" id="clock">12:00</div>
+  </div>
+
 </div>
 
-  <script>
-    const chat = document.getElementById("chat");
-    const userInput = document.getElementById("userInput");
-    const sendBtn = document.getElementById("sendBtn");
+<script>
+  const chat = document.getElementById("chat");
+  const userInput = document.getElementById("userInput");
+  const sendBtn = document.getElementById("sendBtn");
 
-    let conversationHistory = [];
-    let isStreaming = false;
+  let conversationHistory = [];
+  let isStreaming = false;
 
-    const suggestions = [
-      "What makes Nano (XNO) different from Bitcoin?",
-      "How does Nano achieve zero transaction fees?",
-      "What is the block-lattice structure in Nano?",
-      "How fast are Nano transactions compared to other cryptos?",
-      "What is Open Representative Voting (ORV) in Nano?",
-    ];
+  const suggestions = [
+    "What makes Nano different from Bitcoin?",
+    "How does Nano achieve zero transaction fees?",
+    "What is the block-lattice structure?",
+    "How fast are Nano transactions?",
+    "What is Open Representative Voting?",
+  ];
 
-    function showWelcome() {
-      const welcome = document.createElement("div");
-      welcome.className = "welcome";
-      welcome.id = "welcome";
-      welcome.innerHTML = `
-        <div class="icon">⚡</div>
-        <h2>Welcome to NanoNerd 🧠</h2>
-        <p>I'm your dedicated Nano (XNO) cryptocurrency assistant. Ask me anything — I'll always bring it back to Nano.</p>
-        <div class="suggested-questions">
-          ${suggestions.map(q => `<button class="suggestion-btn">${q}</button>`).join("")}
-        </div>
-      `;
-      chat.appendChild(welcome);
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, "0");
+    const m = now.getMinutes().toString().padStart(2, "0");
+    document.getElementById("clock").textContent = `${h}:${m}`;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
 
-      welcome.querySelectorAll(".suggestion-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          sendMessage(btn.textContent);
-        });
+  function showWelcome() {
+    const welcome = document.createElement("div");
+    welcome.className = "welcome";
+    welcome.id = "welcome";
+    welcome.innerHTML = `
+      <div class="icon">⚡</div>
+      <h2>Welcome to NanoNerd 🧠</h2>
+      <p>Your dedicated Nano (XNO) expert. Ask me anything!</p>
+      <div class="suggested-questions">
+        ${suggestions.map(q => `<button class="suggestion-btn">${q}</button>`).join("")}
+      </div>
+    `;
+    chat.appendChild(welcome);
+    welcome.querySelectorAll(".suggestion-btn").forEach(btn => {
+      btn.addEventListener("click", () => sendMessage(btn.textContent));
+    });
+  }
+
+  function removeWelcome() {
+    const el = document.getElementById("welcome");
+    if (el) el.remove();
+  }
+
+  function addMessage(role, text) {
+    const msg = document.createElement("div");
+    msg.className = `message ${role}`;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = role === "user" ? "You" : "🧠";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = formatText(text);
+
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
+    scrollToBottom();
+    return bubble;
+  }
+
+  function addTypingIndicator() {
+    const msg = document.createElement("div");
+    msg.className = "message assistant";
+    msg.id = "typing";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.textContent = "🧠";
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
+    scrollToBottom();
+    return msg;
+  }
+
+  function removeTypingIndicator() {
+    const el = document.getElementById("typing");
+    if (el) el.remove();
+  }
+
+  function formatText(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      .replace(/\n\n/g, "</p><p>")
+      .replace(/\n/g, "<br>")
+      .replace(/^/, "<p>")
+      .replace(/$/, "</p>");
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+  }
+
+  async function sendMessage(text) {
+    if (isStreaming || !text.trim()) return;
+
+    removeWelcome();
+    isStreaming = true;
+    sendBtn.disabled = true;
+    userInput.value = "";
+    autoResize();
+
+    const userText = text.trim();
+    addMessage("user", userText);
+    conversationHistory.push({ role: "user", content: userText });
+
+    addTypingIndicator();
+    let fullResponse = "";
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: conversationHistory }),
       });
-    }
 
-    function removeWelcome() {
-      const welcome = document.getElementById("welcome");
-      if (welcome) welcome.remove();
-    }
+      if (!response.ok) throw new Error("Request failed");
 
-    function addMessage(role, text) {
-      const msg = document.createElement("div");
-      msg.className = `message ${role}`;
+      removeTypingIndicator();
+      const assistantBubble = addMessage("assistant", "").parentElement.querySelector(".bubble");
+      assistantBubble.innerHTML = "";
 
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.textContent = role === "user" ? "You" : "🧠";
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.innerHTML = formatText(text);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
 
-      msg.appendChild(avatar);
-      msg.appendChild(bubble);
-      chat.appendChild(msg);
-      scrollToBottom();
-      return bubble;
-    }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
 
-    function addTypingIndicator() {
-      const msg = document.createElement("div");
-      msg.className = "message assistant";
-      msg.id = "typing";
-
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.textContent = "🧠";
-
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
-
-      msg.appendChild(avatar);
-      msg.appendChild(bubble);
-      chat.appendChild(msg);
-      scrollToBottom();
-      return msg;
-    }
-
-    function removeTypingIndicator() {
-      const el = document.getElementById("typing");
-      if (el) el.remove();
-    }
-
-    function formatText(text) {
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*(.*?)\*/g, "<em>$1</em>")
-        .replace(/\n\n/g, "</p><p>")
-        .replace(/\n/g, "<br>")
-        .replace(/^/, "<p>")
-        .replace(/$/, "</p>");
-    }
-
-    function scrollToBottom() {
-      requestAnimationFrame(() => {
-        chat.scrollTop = chat.scrollHeight;
-      });
-    }
-
-    async function sendMessage(text) {
-      if (isStreaming || !text.trim()) return;
-
-      removeWelcome();
-      isStreaming = true;
-      sendBtn.disabled = true;
-      userInput.value = "";
-      autoResize();
-
-      const userText = text.trim();
-      addMessage("user", userText);
-
-      conversationHistory.push({ role: "user", content: userText });
-
-      const typingEl = addTypingIndicator();
-      let fullResponse = "";
-
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: conversationHistory }),
-        });
-
-        if (!response.ok) throw new Error("Request failed");
-
-        removeTypingIndicator();
-        const assistantBubble = addMessage("assistant", "").parentElement.querySelector(".bubble");
-        assistantBubble.innerHTML = "";
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            try {
-              const event = JSON.parse(line.slice(6));
-              if (event.done) break;
-              if (event.content) {
-                fullResponse += event.content;
-                assistantBubble.innerHTML = formatText(fullResponse);
-                scrollToBottom();
-              }
-            } catch {}
-          }
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.done) break;
+            if (event.content) {
+              fullResponse += event.content;
+              assistantBubble.innerHTML = formatText(fullResponse);
+              scrollToBottom();
+            }
+          } catch {}
         }
-
-        conversationHistory.push({ role: "assistant", content: fullResponse });
-      } catch (err) {
-        removeTypingIndicator();
-        addMessage("assistant", "Sorry, something went wrong. Please try again.");
-        console.error(err);
-      } finally {
-        isStreaming = false;
-        sendBtn.disabled = false;
-        userInput.focus();
       }
+
+      conversationHistory.push({ role: "assistant", content: fullResponse });
+    } catch (err) {
+      removeTypingIndicator();
+      addMessage("assistant", "Sorry, something went wrong. Please try again.");
+      console.error(err);
+    } finally {
+      isStreaming = false;
+      sendBtn.disabled = false;
+      userInput.focus();
     }
+  }
 
-    function autoResize() {
-      userInput.style.height = "auto";
-      userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
-    }
+  function autoResize() {
+    userInput.style.height = "auto";
+    userInput.style.height = Math.min(userInput.scrollHeight, 80) + "px";
+  }
 
-    userInput.addEventListener("input", autoResize);
-
-    userInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage(userInput.value);
-      }
-    });
-
-    sendBtn.addEventListener("click", () => {
+  userInput.addEventListener("input", autoResize);
+  userInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       sendMessage(userInput.value);
-    });
+    }
+  });
+  sendBtn.addEventListener("click", () => sendMessage(userInput.value));
 
-    showWelcome();
-  </script>
+  showWelcome();
+</script>
 </body>
 </html>
