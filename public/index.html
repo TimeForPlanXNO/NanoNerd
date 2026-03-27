@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>XNO Guide — Nano Chat</title>
+  <title>NanoNerd 🧠</title>
   <style>
     * {
       box-sizing: border-box;
@@ -25,13 +25,24 @@
     }
 
     body {
-      background: var(--nano-dark);
+      background: #111318;
       color: var(--nano-text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       height: 100dvh;
       display: flex;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .app-shell {
+      width: 393px;
+      max-width: 100vw;
+      height: 100dvh;
+      display: flex;
       flex-direction: column;
       overflow: hidden;
+      background: var(--nano-dark);
+      position: relative;
     }
 
     header {
@@ -52,9 +63,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 16px;
-      color: #fff;
+      font-size: 20px;
       flex-shrink: 0;
     }
 
@@ -359,10 +368,11 @@
   </style>
 </head>
 <body>
+<div class="app-shell">
   <header>
-    <div class="logo">N</div>
+    <div class="logo">🧠</div>
     <div class="header-text">
-      <h1>XNO Guide</h1>
+      <h1>NanoNerd 🧠</h1>
       <p>Your Nano cryptocurrency expert</p>
     </div>
     <div class="status-dot">Online</div>
@@ -386,6 +396,7 @@
     </div>
     <div class="input-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
   </div>
+</div>
 
   <script>
     const chat = document.getElementById("chat");
@@ -409,7 +420,7 @@
       welcome.id = "welcome";
       welcome.innerHTML = `
         <div class="icon">⚡</div>
-        <h2>Welcome to XNO Guide</h2>
+        <h2>Welcome to NanoNerd 🧠</h2>
         <p>I'm your dedicated Nano (XNO) cryptocurrency assistant. Ask me anything — I'll always bring it back to Nano.</p>
         <div class="suggested-questions">
           ${suggestions.map(q => `<button class="suggestion-btn">${q}</button>`).join("")}
@@ -435,7 +446,7 @@
 
       const avatar = document.createElement("div");
       avatar.className = "avatar";
-      avatar.textContent = role === "user" ? "You" : "XNO";
+      avatar.textContent = role === "user" ? "You" : "🧠";
 
       const bubble = document.createElement("div");
       bubble.className = "bubble";
@@ -455,7 +466,7 @@
 
       const avatar = document.createElement("div");
       avatar.className = "avatar";
-      avatar.textContent = "XNO";
+      avatar.textContent = "🧠";
 
       const bubble = document.createElement("div");
       bubble.className = "bubble";

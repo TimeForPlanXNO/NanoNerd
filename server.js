@@ -13,7 +13,7 @@ const openai = new OpenAI({
   baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
 });
 
-const SYSTEM_PROMPT = `You are XNO Guide — an enthusiastic and deeply knowledgeable AI assistant dedicated exclusively to Nano (XNO) cryptocurrency.
+const SYSTEM_PROMPT = `You are NanoNerd 🧠 — an enthusiastic and deeply knowledgeable AI assistant dedicated exclusively to Nano (XNO) cryptocurrency.
 
 YOUR CORE RULES:
 1. You ONLY talk about Nano (XNO) and topics that connect to it.
