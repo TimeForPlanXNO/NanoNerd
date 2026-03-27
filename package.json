@@ -1,0 +1,23 @@
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.13.11",
+    "drizzle-zod": "^0.8.3",
+    "express": "^5.2.1",
+    "openai": "^6.33.0",
+    "p-limit": "^7.3.0",
+    "p-retry": "^8.0.0",
+    "zod": "^4.3.6",
+    "zod-validation-error": "^5.0.0"
+  }
+}
