@@ -258,25 +258,25 @@
 
     /* ── SCROLL ARROW ── */
     @keyframes arrow-pulse {
-      0%,100% { box-shadow: 0 2px 8px rgba(0,0,0,.4); }
-      50%      { box-shadow: 0 2px 8px rgba(0,201,255,.9), 0 0 14px rgba(0,201,255,.55); }
+      0%,100% { opacity: 1;  transform: translateY(0); }
+      50%      { opacity: .6; transform: translateY(3px); }
     }
 
     #scroll-arrow {
-      position: absolute; right: 9px; bottom: 58px;
-      width: 30px; height: 30px; border-radius: 50%; border: none;
-      background: linear-gradient(135deg,#00C9FF,#4A90E2);
-      color: #fff; font-size: 13px; line-height: 1;
+      position: absolute; right: 10px; bottom: 58px;
+      background: none; border: none; padding: 0;
+      font-size: 26px; line-height: 1;
       cursor: pointer; z-index: 50;
       display: none; align-items: center; justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      color: #00C9FF;
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,.55));
       transition: transform .15s, opacity .2s;
       opacity: 0;
     }
 
     #scroll-arrow.visible   { display: flex; opacity: 1; }
     #scroll-arrow.streaming { animation: arrow-pulse .75s ease infinite; }
-    #scroll-arrow:hover     { transform: scale(1.12); }
+    #scroll-arrow:hover     { transform: scale(1.18) translateY(2px); }
     #scroll-arrow:active    { transform: scale(.9); }
 
     .chat-msgs {
@@ -909,7 +909,7 @@ const wm = {
     wrap.className = 'chat-wrap';
     wrap.innerHTML = `
       <div class="chat-msgs" id="chat"></div>
-      <button id="scroll-arrow" onclick="clickScrollArrow()" title="Scroll to bottom">⬇</button>
+      <button id="scroll-arrow" onclick="clickScrollArrow()" title="Scroll to bottom">⬇️</button>
       <div class="chat-input">
         <div class="input-row">
           <textarea id="userInput" placeholder="Ask about Nano (XNO)..." rows="1"></textarea>
@@ -1186,10 +1186,10 @@ async function sendMsg(text) {
   if (!inputEl||!sendEl) return;
   removeWelcome();
   isStreaming=true; sendEl.disabled=true;
-  autoScroll=true;                         /* reset: follow the new reply */
   inputEl.value=''; inputEl.style.height='auto';
   const userText=text.trim();
-  addMsg('user', userText);                /* user message → always scroll */
+  autoScroll=true;                          /* scroll to show user msg + typing */
+  addMsg('user', userText);
   conversationHistory.push({role:'user',content:userText});
   addTyping();
 
@@ -1200,9 +1200,11 @@ async function sendMsg(text) {
     const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conversationHistory})});
     if (!res.ok) throw new Error('fail');
     removeTyping();
+    autoScroll=false;                        /* LOCK: reply scroll locked until arrow click */
     const bbl=addMsg('assistant','',true);   /* no auto-scroll on insert */
     if(bbl) bbl.innerHTML='';
     if(arrow) arrow.classList.add('streaming');
+    updateScrollArrow();                     /* show arrow immediately */
 
     const reader=res.body.getReader(); const dec=new TextDecoder(); let buf='';
     while(true){
@@ -1247,7 +1249,7 @@ document.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('click', e => {
-  if (e.target?.id==='sendBtn') { const inp=getEl('userInput'); if(inp) sendMsg(inp.value); }
+  if (e.target?.closest('#sendBtn')) { const inp=getEl('userInput'); if(inp) sendMsg(inp.value); }
 });
 
 /* ══════════════════════════════════════════
