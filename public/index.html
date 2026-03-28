@@ -25,15 +25,7 @@
       flex-direction: column;
       position: relative;
       overflow: hidden;
-      background:
-        radial-gradient(ellipse 130px 55px at 18% 20%, rgba(255,255,255,.72) 0%, transparent 100%),
-        radial-gradient(ellipse 80px 38px at 60% 13%, rgba(255,255,255,.58) 0%, transparent 100%),
-        radial-gradient(ellipse 55px 28px at 82% 24%, rgba(255,255,255,.45) 0%, transparent 100%),
-        radial-gradient(ellipse 40px 22px at 43% 30%, rgba(255,255,255,.30) 0%, transparent 100%),
-        linear-gradient(180deg,
-          #1e6bbf 0%, #2e82d8 12%, #4fa0f0 28%, #78bef8 40%,
-          #90d060 47%, #6cc040 53%, #4aaa30 60%,
-          #2e9020 70%, #1e7818 82%, #166014 100%);
+      background: url('/wallpaper.jpg') center/cover no-repeat;
     }
 
     /* ── DESKTOP ── */
@@ -262,7 +254,30 @@
       --nu: #1d3a5c; --nai: #1e2840;
     }
 
-    .chat-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+    /* ── SCROLL ARROW ── */
+    @keyframes arrow-pulse {
+      0%,100% { box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+      50%      { box-shadow: 0 2px 8px rgba(0,201,255,.9), 0 0 14px rgba(0,201,255,.55); }
+    }
+
+    #scroll-arrow {
+      position: absolute; right: 9px; bottom: 58px;
+      width: 30px; height: 30px; border-radius: 50%; border: none;
+      background: linear-gradient(135deg,#00C9FF,#4A90E2);
+      color: #fff; font-size: 13px; line-height: 1;
+      cursor: pointer; z-index: 50;
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      transition: transform .15s, opacity .2s;
+      opacity: 0;
+    }
+
+    #scroll-arrow.visible   { display: flex; opacity: 1; }
+    #scroll-arrow.streaming { animation: arrow-pulse .75s ease infinite; }
+    #scroll-arrow:hover     { transform: scale(1.12); }
+    #scroll-arrow:active    { transform: scale(.9); }
 
     .chat-msgs {
       flex: 1; overflow-y: auto; padding: 8px 7px;
@@ -894,6 +909,7 @@ const wm = {
     wrap.className = 'chat-wrap';
     wrap.innerHTML = `
       <div class="chat-msgs" id="chat"></div>
+      <button id="scroll-arrow" onclick="clickScrollArrow()" title="Scroll to bottom">⬇</button>
       <div class="chat-input">
         <div class="input-row">
           <textarea id="userInput" placeholder="Ask about Nano (XNO)..." rows="1"></textarea>
@@ -1057,7 +1073,8 @@ function showCopyToast(msg) {
    CHAT ENGINE
 ══════════════════════════════════════════ */
 let conversationHistory = [];
-let isStreaming = false;
+let isStreaming  = false;
+let autoScroll   = true;  /* tracks whether to follow stream */
 
 const SUGGESTIONS = [
   "What makes Nano different from Bitcoin?",
@@ -1069,6 +1086,43 @@ const SUGGESTIONS = [
 
 function getEl(id) { return document.getElementById(id); }
 
+/* ── Scroll-arrow helpers ── */
+function isAtBottom(chat) {
+  return chat.scrollHeight - chat.scrollTop - chat.clientHeight < 15;
+}
+
+function updateScrollArrow() {
+  const chat  = getEl('chat');
+  const arrow = getEl('scroll-arrow');
+  if (!chat || !arrow) return;
+  const overflows = chat.scrollHeight > chat.clientHeight + 5;
+  if (overflows && !isAtBottom(chat)) {
+    arrow.classList.add('visible');
+  } else {
+    arrow.classList.remove('visible');
+  }
+}
+
+function clickScrollArrow() {
+  const chat = getEl('chat');
+  if (!chat) return;
+  autoScroll = true;
+  chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+  updateScrollArrow();
+}
+
+/* Called once after the NanoNerd window opens */
+function setupChatScroll() {
+  const chat = getEl('chat');
+  if (!chat || chat._scrollBound) return;
+  chat._scrollBound = true;
+  chat.addEventListener('scroll', () => {
+    autoScroll = isAtBottom(chat);
+    updateScrollArrow();
+  });
+}
+
+/* ── Chat helpers ── */
 function showWelcome() {
   const chat = getEl('chat');
   if (!chat) return;
@@ -1088,26 +1142,31 @@ function showWelcome() {
 
 function removeWelcome() { const el=getEl('welcome'); if(el) el.remove(); }
 
-function addMsg(role, text) {
+function addMsg(role, text, noScroll) {
   const chat = getEl('chat');
   if (!chat) return null;
   const msg = document.createElement('div'); msg.className=`msg ${role}`;
-  const av = document.createElement('div'); av.className='av';
-  av.textContent = role==='user'?'You':'🧠';
+  const av  = document.createElement('div'); av.className='av';
+  av.textContent = role==='user' ? 'You' : '🧠';
   const bbl = document.createElement('div'); bbl.className='bbl';
   bbl.innerHTML = fmt(text);
   msg.appendChild(av); msg.appendChild(bbl);
-  chat.appendChild(msg); scrollBot();
+  chat.appendChild(msg);
+  if (!noScroll) { chat.scrollTop = chat.scrollHeight; }
+  updateScrollArrow();
   return bbl;
 }
 
 function addTyping() {
   const chat = getEl('chat'); if (!chat) return;
   const msg = document.createElement('div'); msg.className='msg assistant'; msg.id='typing';
-  const av = document.createElement('div'); av.className='av'; av.textContent='🧠';
+  const av  = document.createElement('div'); av.className='av'; av.textContent='🧠';
   const bbl = document.createElement('div'); bbl.className='bbl';
   bbl.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
-  msg.appendChild(av); msg.appendChild(bbl); chat.appendChild(msg); scrollBot();
+  msg.appendChild(av); msg.appendChild(bbl);
+  chat.appendChild(msg);
+  chat.scrollTop = chat.scrollHeight;   /* always show typing indicator */
+  updateScrollArrow();
 }
 
 function removeTyping() { const el=getEl('typing'); if(el) el.remove(); }
@@ -1121,27 +1180,30 @@ function fmt(text) {
     .replace(/^/,'<p>').replace(/$/,'</p>');
 }
 
-function scrollBot() {
-  requestAnimationFrame(() => { const c=getEl('chat'); if(c) c.scrollTop=c.scrollHeight; });
-}
-
 async function sendMsg(text) {
   if (isStreaming || !text.trim()) return;
   const inputEl=getEl('userInput'), sendEl=getEl('sendBtn');
   if (!inputEl||!sendEl) return;
-  removeWelcome(); isStreaming=true; sendEl.disabled=true;
+  removeWelcome();
+  isStreaming=true; sendEl.disabled=true;
+  autoScroll=true;                         /* reset: follow the new reply */
   inputEl.value=''; inputEl.style.height='auto';
   const userText=text.trim();
-  addMsg('user',userText);
+  addMsg('user', userText);                /* user message → always scroll */
   conversationHistory.push({role:'user',content:userText});
   addTyping();
+
+  const arrow = getEl('scroll-arrow');
+
   let fullResponse='';
   try {
     const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conversationHistory})});
     if (!res.ok) throw new Error('fail');
     removeTyping();
-    const bbl=addMsg('assistant','');
+    const bbl=addMsg('assistant','',true);   /* no auto-scroll on insert */
     if(bbl) bbl.innerHTML='';
+    if(arrow) arrow.classList.add('streaming');
+
     const reader=res.body.getReader(); const dec=new TextDecoder(); let buf='';
     while(true){
       const {done,value}=await reader.read(); if(done)break;
@@ -1151,8 +1213,14 @@ async function sendMsg(text) {
         if(!line.startsWith('data: '))continue;
         try{
           const ev=JSON.parse(line.slice(6));
-          if(ev.done)break;
-          if(ev.content&&bbl){fullResponse+=ev.content;bbl.innerHTML=fmt(fullResponse);scrollBot();}
+          if(ev.done) break;
+          if(ev.content && bbl){
+            fullResponse+=ev.content;
+            bbl.innerHTML=fmt(fullResponse);
+            const chat=getEl('chat');
+            if(chat && autoScroll) chat.scrollTop=chat.scrollHeight;
+            updateScrollArrow();
+          }
         }catch{}
       }
     }
@@ -1161,6 +1229,8 @@ async function sendMsg(text) {
     removeTyping(); addMsg('assistant','Something went wrong. Please try again.');
   } finally {
     isStreaming=false; if(sendEl) sendEl.disabled=false;
+    if(arrow) arrow.classList.remove('streaming');
+    updateScrollArrow();
   }
 }
 
@@ -1195,6 +1265,7 @@ function updateClock() {
 wm.init();
 wm.open('nanonerd');
 showWelcome();
+setupChatScroll();
 updateClock();
 setInterval(updateClock, 10000);
 </script>
