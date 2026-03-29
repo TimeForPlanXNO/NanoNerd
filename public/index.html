@@ -1300,6 +1300,121 @@
     .nhub-view-more { text-align:center; padding:10px 14px 22px; }
     .nhub-view-more a { color:#4a9fd4; font-size:12.5px; text-decoration:none; font-weight:600; }
     .nhub-view-more a:hover { text-decoration:underline; }
+
+    /* ── WALLPAPER BUTTON ── */
+    .wp-btn {
+      position: absolute; top: 8px; right: 10px; z-index: 500;
+      background: linear-gradient(180deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.10) 100%);
+      border: 1px solid rgba(255,255,255,.38); border-radius: 5px;
+      color: #fff; font-size: 11px; font-weight: bold; font-family: "Tahoma", sans-serif;
+      padding: 4px 9px; cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0,0,0,.7);
+      box-shadow: 0 2px 6px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      transition: filter .12s, background .12s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .wp-btn:hover  { filter: brightness(1.25); }
+    .wp-btn:active { filter: brightness(.85); }
+
+    /* ── WALLPAPER PICKER DIALOG ── */
+    .wp-dialog {
+      position: absolute; top: 38px; right: 10px; z-index: 9500;
+      width: 320px; max-height: 420px;
+      background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
+      border: 2px solid #0a36a0; border-top: 3px solid #2259c8;
+      border-radius: 6px 6px 4px 4px;
+      box-shadow: 4px 4px 14px rgba(0,0,0,.55);
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    .wp-dialog.open { display: flex; }
+    .wp-dialog-head {
+      background: linear-gradient(180deg, #2259c8 0%, #0d40b0 100%);
+      padding: 4px 8px 5px; color: #fff; font-size: 11px; font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0,0,0,.5); flex-shrink: 0;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .wp-dialog-body {
+      flex: 1; overflow-y: auto; padding: 10px;
+    }
+    .wp-dialog-body::-webkit-scrollbar { width: 8px; }
+    .wp-dialog-body::-webkit-scrollbar-track { background: #d4d0c8; }
+    .wp-dialog-body::-webkit-scrollbar-thumb { background: #8a8676; border-radius: 2px; }
+    .wp-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
+    }
+    .wp-thumb {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; padding: 3px; border-radius: 4px;
+      border: 2px solid transparent; transition: border-color .12s, background .12s;
+    }
+    .wp-thumb:hover  { border-color: #316ac5; background: rgba(49,106,197,.12); }
+    .wp-thumb.active { border-color: #316ac5; background: rgba(49,106,197,.22); }
+    .wp-thumb img {
+      width: 100%; aspect-ratio: 4/3; object-fit: cover;
+      border-radius: 2px; border: 1px solid #a0a0a0;
+      display: block;
+    }
+    .wp-thumb-label {
+      font-size: 9px; color: #333; text-align: center;
+      line-height: 1.2; word-break: break-word; font-family: "Tahoma", sans-serif;
+    }
+    .wp-dialog-foot {
+      padding: 6px 10px; border-top: 1px solid #b0aa98; flex-shrink: 0;
+      display: flex; justify-content: flex-end; gap: 6px;
+      background: linear-gradient(180deg, #e0ddd0 0%, #cac7b8 100%);
+    }
+    .wp-foot-btn {
+      padding: 3px 14px; font-size: 11px; font-family: "Tahoma", sans-serif;
+      background: linear-gradient(180deg, #fff 0%, #d4d0c8 100%);
+      border: 1px solid #7a7672; border-radius: 3px;
+      cursor: pointer; color: #111;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+      transition: filter .1s;
+    }
+    .wp-foot-btn:hover { filter: brightness(.93); }
+
+    /* ── LANGUAGE BUTTON (NanoNerd titlebar) ── */
+    .xp-lang-btn {
+      background: linear-gradient(180deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.10) 100%);
+      border: 1px solid rgba(255,255,255,.4); border-radius: 3px;
+      color: #fff; font-size: 10px; font-weight: bold; font-family: "Tahoma", sans-serif;
+      padding: 1px 6px; cursor: pointer; height: 18px;
+      text-shadow: 0 1px 1px rgba(0,0,0,.5);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+      display: flex; align-items: center; gap: 3px;
+      white-space: nowrap; flex-shrink: 0;
+      transition: filter .1s;
+    }
+    .xp-lang-btn:hover  { filter: brightness(1.25); }
+    .xp-lang-btn:active { filter: brightness(.8); }
+
+    /* ── LANGUAGE PICKER DROPDOWN ── */
+    .lang-picker {
+      position: fixed; z-index: 99999;
+      width: 220px; max-height: 320px;
+      background: #fff; border: 1px solid #316ac5;
+      border-radius: 0 0 4px 4px;
+      box-shadow: 3px 5px 14px rgba(0,0,0,.45);
+      display: none; flex-direction: column; overflow: hidden;
+    }
+    .lang-picker.open { display: flex; }
+    .lang-search {
+      padding: 5px 8px; border: none; border-bottom: 1px solid #ddd;
+      font-size: 11px; font-family: "Tahoma", sans-serif; outline: none;
+      background: #f0f4ff; color: #111; flex-shrink: 0;
+    }
+    .lang-list {
+      flex: 1; overflow-y: auto; max-height: 270px;
+    }
+    .lang-list::-webkit-scrollbar { width: 6px; }
+    .lang-list::-webkit-scrollbar-thumb { background: #aaa; border-radius: 3px; }
+    .lang-item {
+      padding: 5px 10px; font-size: 11px; font-family: "Tahoma", sans-serif;
+      color: #111; cursor: pointer; user-select: none;
+      transition: background .08s;
+    }
+    .lang-item:hover  { background: #316ac5; color: #fff; }
+    .lang-item.active { background: #4a80d4; color: #fff; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -1339,6 +1454,28 @@
       </div>
     </div>
     <div class="win-area" id="win-area"></div>
+  </div>
+
+  <!-- Wallpaper Button -->
+  <button class="wp-btn" id="wp-btn" onclick="toggleWpPicker(event)" title="Change wallpaper">
+    🖼️ Wallpaper
+  </button>
+
+  <!-- Wallpaper Picker Dialog -->
+  <div class="wp-dialog" id="wp-dialog">
+    <div class="wp-dialog-head">🖼️ Display Properties — Wallpaper</div>
+    <div class="wp-dialog-body">
+      <div class="wp-grid" id="wp-grid"></div>
+    </div>
+    <div class="wp-dialog-foot">
+      <button class="wp-foot-btn" onclick="closeWpPicker()">Close</button>
+    </div>
+  </div>
+
+  <!-- Language Picker Dropdown (portal, repositioned by JS) -->
+  <div class="lang-picker" id="lang-picker">
+    <input class="lang-search" id="lang-search" type="text" placeholder="Search language…" oninput="filterLangs(this.value)" />
+    <div class="lang-list" id="lang-list"></div>
   </div>
 
   <!-- Taskbar -->
@@ -1476,6 +1613,193 @@ const APPS = {
     type: 'folder',
   },
 };
+
+/* ══════════════════════════════════════════
+   WALLPAPERS
+══════════════════════════════════════════ */
+const WALLPAPERS = [
+  { name: 'Bliss',            src: '/wallpapers/Bliss.webp' },
+  { name: 'Ascent',           src: '/wallpapers/Ascent.jpg' },
+  { name: 'Autumn',           src: '/wallpapers/Autumn.jpg' },
+  { name: 'Azul',             src: '/wallpapers/Azul.jpg' },
+  { name: 'Beach',            src: '/wallpapers/Beach.jpg' },
+  { name: 'Crystal',          src: '/wallpapers/Crystal.jpg' },
+  { name: 'Desert',           src: '/wallpapers/Desert.jpg' },
+  { name: 'Follow',           src: '/wallpapers/Follow.jpg' },
+  { name: 'Friend',           src: '/wallpapers/Friend.jpg' },
+  { name: 'Home',             src: '/wallpapers/Home.jpg' },
+  { name: 'Pink Flower',      src: '/wallpapers/Pink_flower.jpg' },
+  { name: 'Purple Flower',    src: '/wallpapers/Purple_flower.jpg' },
+  { name: 'Radiance',         src: '/wallpapers/Radiance.jpg' },
+  { name: 'Red Moon Desert',  src: '/wallpapers/Red_moon_desert.jpg' },
+  { name: 'Ripple',           src: '/wallpapers/Ripple.jpg' },
+  { name: 'Stonehenge',       src: '/wallpapers/Stonehenge.jpg' },
+  { name: 'Surf',             src: '/wallpapers/Surf.jpg' },
+  { name: 'Tulips',           src: '/wallpapers/Tulips.jpg' },
+  { name: 'Vortec Space',     src: '/wallpapers/Vortec_space.jpg' },
+  { name: 'Wind',             src: '/wallpapers/Wind.jpg' },
+];
+
+let _currentWallpaper = localStorage.getItem('xp-wallpaper') || '/wallpapers/Bliss.webp';
+let _wpPickerOpen = false;
+
+function _applyWallpaper(src) {
+  document.getElementById('app-shell').style.backgroundImage = `url('${src}')`;
+  _currentWallpaper = src;
+  localStorage.setItem('xp-wallpaper', src);
+  /* Refresh active state in grid */
+  document.querySelectorAll('.wp-thumb').forEach(el => {
+    el.classList.toggle('active', el.dataset.src === src);
+  });
+}
+
+function _buildWpGrid() {
+  const grid = document.getElementById('wp-grid');
+  if (!grid || grid.children.length > 0) return;
+  WALLPAPERS.forEach(wp => {
+    const item = document.createElement('div');
+    item.className = 'wp-thumb' + (wp.src === _currentWallpaper ? ' active' : '');
+    item.dataset.src = wp.src;
+    item.innerHTML = `<img src="${wp.src}" alt="${wp.name}" loading="lazy"><div class="wp-thumb-label">${wp.name}</div>`;
+    item.onclick = () => _applyWallpaper(wp.src);
+    grid.appendChild(item);
+  });
+}
+
+function toggleWpPicker(e) {
+  if (e) e.stopPropagation();
+  const dlg = document.getElementById('wp-dialog');
+  if (_wpPickerOpen) {
+    closeWpPicker();
+  } else {
+    _buildWpGrid();
+    dlg.classList.add('open');
+    _wpPickerOpen = true;
+  }
+}
+
+function closeWpPicker() {
+  document.getElementById('wp-dialog').classList.remove('open');
+  _wpPickerOpen = false;
+}
+
+/* Close wallpaper picker on outside click */
+document.addEventListener('click', e => {
+  if (_wpPickerOpen && !e.target.closest('#wp-dialog') && !e.target.closest('#wp-btn')) {
+    closeWpPicker();
+  }
+});
+
+/* ══════════════════════════════════════════
+   LANGUAGES
+══════════════════════════════════════════ */
+const LANGUAGES = [
+  'Afrikaans','Albanian','Amharic','Arabic','Armenian','Azerbaijani',
+  'Basque','Belarusian','Bengali','Bosnian','Bulgarian','Burmese',
+  'Catalan','Chinese (Simplified)','Chinese (Traditional)','Croatian','Czech',
+  'Danish','Dutch',
+  'English','Estonian',
+  'Faroese','Filipino','Finnish','French',
+  'Galician','Georgian','German','Greek','Gujarati',
+  'Hausa','Hebrew','Hindi','Hungarian',
+  'Icelandic','Igbo','Indonesian','Irish','Italian',
+  'Japanese',
+  'Kannada','Kazakh','Khmer','Korean',
+  'Lao','Latin','Latvian','Lithuanian','Luxembourgish',
+  'Macedonian','Malay','Malayalam','Maltese','Marathi','Mongolian',
+  'Nepali','Norwegian',
+  'Persian (Farsi)','Polish','Portuguese','Punjabi',
+  'Romanian','Russian',
+  'Scottish Gaelic','Serbian','Sinhala','Slovak','Slovenian','Somali','Spanish','Swahili','Swedish',
+  'Tamil','Telugu','Thai','Turkish',
+  'Ukrainian','Urdu','Uzbek',
+  'Vietnamese',
+  'Welsh',
+  'Yoruba',
+  'Zulu',
+];
+
+let currentLang = localStorage.getItem('xp-lang') || 'English';
+let _langPickerOpen = false;
+
+function _langCode(lang) {
+  const map = {
+    'English':'EN','Spanish':'ES','French':'FR','German':'DE','Italian':'IT',
+    'Portuguese':'PT','Dutch':'NL','Russian':'RU','Chinese (Simplified)':'ZH',
+    'Chinese (Traditional)':'ZH','Japanese':'JA','Korean':'KO','Arabic':'AR',
+    'Hindi':'HI','Bengali':'BN','Turkish':'TR','Persian (Farsi)':'FA','Polish':'PL',
+    'Swedish':'SV','Norwegian':'NO','Danish':'DA','Finnish':'FI','Greek':'EL',
+    'Czech':'CS','Romanian':'RO','Hungarian':'HU','Ukrainian':'UK','Thai':'TH',
+    'Vietnamese':'VI','Indonesian':'ID','Malay':'MS','Filipino':'TL','Swahili':'SW',
+    'Hebrew':'HE','Serbian':'SR','Croatian':'HR','Bulgarian':'BG','Slovak':'SK',
+    'Slovenian':'SL','Estonian':'ET','Latvian':'LV','Lithuanian':'LT','Catalan':'CA',
+    'Afrikaans':'AF','Welsh':'CY','Irish':'GA','Icelandic':'IS','Maltese':'MT',
+  };
+  return map[lang] || lang.slice(0,2).toUpperCase();
+}
+
+function _buildLangList(filter) {
+  const list = document.getElementById('lang-list');
+  list.innerHTML = '';
+  const q = (filter || '').toLowerCase();
+  LANGUAGES.filter(l => l.toLowerCase().includes(q)).forEach(lang => {
+    const item = document.createElement('div');
+    item.className = 'lang-item' + (lang === currentLang ? ' active' : '');
+    item.textContent = lang;
+    item.onclick = () => setLanguage(lang);
+    list.appendChild(item);
+  });
+}
+
+function filterLangs(q) { _buildLangList(q); }
+
+function toggleLangPicker(e) {
+  if (e) e.stopPropagation();
+  const picker = document.getElementById('lang-picker');
+  if (_langPickerOpen) {
+    closeLangPicker();
+  } else {
+    /* Position below the language button */
+    const btn = document.getElementById('lang-btn');
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      picker.style.left = r.left + 'px';
+      picker.style.top  = (r.bottom + 2) + 'px';
+    }
+    _buildLangList('');
+    picker.classList.add('open');
+    _langPickerOpen = true;
+    const s = document.getElementById('lang-search');
+    if (s) { s.value = ''; s.focus(); }
+  }
+}
+
+function closeLangPicker() {
+  document.getElementById('lang-picker').classList.remove('open');
+  _langPickerOpen = false;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('xp-lang', lang);
+  closeLangPicker();
+  /* Update button label */
+  const lbl = document.getElementById('lang-btn-label');
+  if (lbl) lbl.textContent = _langCode(lang);
+  /* Reset conversation and show a new welcome */
+  conversationHistory = [];
+  const chat = getEl('chat');
+  if (chat) { chat.innerHTML = ''; showWelcome(); }
+  /* Notify user */
+  showCopyToast(`🌐 Language: ${lang}`);
+}
+
+/* Close language picker on outside click */
+document.addEventListener('click', e => {
+  if (_langPickerOpen && !e.target.closest('#lang-picker') && !e.target.closest('#lang-btn')) {
+    closeLangPicker();
+  }
+});
 
 /* ══════════════════════════════════════════
    WINDOW MANAGER
@@ -1645,6 +1969,7 @@ const wm = {
     const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
+      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)">🌐 <span id="lang-btn-label">${_langCode(currentLang)}</span></button>` : ''}
       <div class="xp-btns">
         <button class="xp-btn min" title="Minimize">&#8211;</button>
         <button class="xp-btn max" title="${maxTitle}">&#9633;</button>
@@ -3383,7 +3708,7 @@ async function sendMsg(text) {
 
   let fullResponse='';
   try {
-    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conversationHistory})});
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conversationHistory,lang:currentLang})});
     if (!res.ok) throw new Error('fail');
     removeTyping();
     autoScroll=false;                        /* LOCK: reply scroll locked until arrow click */
@@ -3598,6 +3923,15 @@ showWelcome();
 setupChatScroll();
 updateClock();
 setInterval(updateClock, 10000);
+
+/* Apply saved wallpaper on load */
+(function() {
+  const saved = localStorage.getItem('xp-wallpaper');
+  if (saved) {
+    document.getElementById('app-shell').style.backgroundImage = `url('${saved}')`;
+    _currentWallpaper = saved;
+  }
+})();
 </script>
 </body>
 </html>

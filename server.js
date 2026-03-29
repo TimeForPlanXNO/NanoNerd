@@ -303,7 +303,7 @@ app.get("/api/nano-reps", (req, res) => {
 
 /* ── Chat streaming ── */
 app.post("/api/chat", async (req, res) => {
-  const { messages } = req.body;
+  const { messages, lang } = req.body;
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: "Messages array is required" });
   }
@@ -312,10 +312,14 @@ app.post("/api/chat", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
+  const langNote = (lang && lang !== 'English')
+    ? `\n\nLANGUAGE RULE: You MUST respond exclusively in ${lang}. Every word of every reply must be in ${lang}, regardless of the language the user writes in.`
+    : '';
+
   try {
     const stream = await openai.chat.completions.create({
       model:                "gpt-5.1",
-      messages:             [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+      messages:             [{ role: "system", content: SYSTEM_PROMPT + langNote }, ...messages],
       stream:               true,
       max_completion_tokens: 8192,
     });
