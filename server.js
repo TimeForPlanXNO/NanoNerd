@@ -189,6 +189,79 @@ Object.entries(PROXY_SITES).forEach(([key, site]) => {
   app.get(`${proxyBase}/*path`, handler);
 });
 
+/* ── Nano Live Stats (background poller) ── */
+let _nanoStats = { tps: null, cemented: 0, blockCount: 0, priceUsd: 0, change24h: 0, marketCap: 0, volume24h: 0, lastUpdated: 0 };
+let _prevCemented = null, _prevCementedTime = null, _lastPriceUpdate = 0;
+
+function postJson(hostname, path, body) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const req = https.request({
+      hostname, path, method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload), 'User-Agent': 'NanoNerd/1.0' }
+    }, res => {
+      const enc = res.headers['content-encoding'] || '';
+      let stream = res;
+      if (enc === 'gzip')    stream = res.pipe(zlib.createGunzip());
+      else if (enc === 'br') stream = res.pipe(zlib.createBrotliDecompress());
+      const chunks = [];
+      stream.on('data', c => chunks.push(c));
+      stream.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString())); } catch(e) { reject(e); } });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+function getJson(hostname, path) {
+  return new Promise((resolve, reject) => {
+    https.get({ hostname, path, headers: { 'User-Agent': 'NanoNerd/1.0', 'Accept': 'application/json' } }, res => {
+      const enc = res.headers['content-encoding'] || '';
+      let stream = res;
+      if (enc === 'gzip')    stream = res.pipe(zlib.createGunzip());
+      else if (enc === 'br') stream = res.pipe(zlib.createBrotliDecompress());
+      const chunks = [];
+      stream.on('data', c => chunks.push(c));
+      stream.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString())); } catch(e) { reject(e); } });
+    }).on('error', reject);
+  });
+}
+
+async function updateNanoStats() {
+  try {
+    const blockData = await postJson('nanoslo.0x.no', '/proxy', { action: 'block_count' });
+    const now = Date.now();
+    const cemented = parseInt(blockData.cemented) || 0;
+    if (_prevCemented !== null && _prevCementedTime !== null) {
+      const dt = (now - _prevCementedTime) / 1000;
+      if (dt > 0) _nanoStats.tps = Math.max(0, (cemented - _prevCemented) / dt);
+    }
+    _prevCemented = cemented;
+    _prevCementedTime = now;
+    _nanoStats.cemented   = cemented;
+    _nanoStats.blockCount = parseInt(blockData.count) || 0;
+    _nanoStats.lastUpdated = now;
+  } catch(e) { /* silent */ }
+
+  /* Price: refresh every 90 seconds */
+  if (Date.now() - _lastPriceUpdate > 90000) {
+    try {
+      const p = await getJson('api.coingecko.com', '/api/v3/simple/price?ids=nano&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true');
+      _nanoStats.priceUsd  = p?.nano?.usd            || 0;
+      _nanoStats.change24h = p?.nano?.usd_24h_change  || 0;
+      _nanoStats.marketCap = p?.nano?.usd_market_cap  || 0;
+      _nanoStats.volume24h = p?.nano?.usd_24h_vol     || 0;
+      _lastPriceUpdate = Date.now();
+    } catch(e) { /* silent */ }
+  }
+}
+
+updateNanoStats();
+setInterval(updateNanoStats, 5000);
+
+app.get('/api/nano-stats', (_req, res) => res.json(_nanoStats));
+
 /* ── Nano Representatives ── */
 app.get("/api/nano-reps", (req, res) => {
   https.get({

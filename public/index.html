@@ -747,10 +747,66 @@
     .tb-btn img  { width: 12px; height: 12px; object-fit: contain; }
     .tb-btn span { font-size: 12px; line-height: 1; }
 
+    /* ═══════════════════════════
+       CLOCK / STATS POPUP
+    ═══════════════════════════ */
     .tb-clock {
       font-size: 10px; color: #fff;
       text-shadow: 0 1px 2px rgba(0,0,0,.5);
-      white-space: nowrap; flex-shrink: 0; padding: 0 4px;
+      white-space: nowrap; flex-shrink: 0; padding: 0 6px;
+      background: none; border: none; cursor: pointer;
+      font-family: "Tahoma", sans-serif; font-weight: bold;
+      border-radius: 3px; transition: background .12s; height: 22px;
+      display: flex; align-items: center;
+    }
+    .tb-clock:hover  { background: rgba(255,255,255,.15); }
+    .tb-clock.active { background: rgba(0,0,0,.25); }
+
+    .stats-popup {
+      display: none; position: fixed; bottom: 38px; right: 4px;
+      width: 260px;
+      background: #ece9d8; border: 1px solid #0055e5;
+      box-shadow: 3px 3px 10px rgba(0,0,0,.5);
+      border-radius: 4px 4px 0 0; z-index: 9999;
+      font-family: "Tahoma", sans-serif; font-size: 11px;
+      animation: wifipop-in .15s ease;
+      flex-direction: column; overflow: hidden;
+    }
+    .stats-popup.open { display: flex; }
+    .stats-popup-head {
+      background: linear-gradient(180deg,#0a5cdf 0%,#0845c0 100%);
+      color: #fff; padding: 5px 9px; font-weight: bold; font-size: 11px;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .stats-popup-head .sp-icon { font-size: 13px; }
+    .stats-section {
+      padding: 8px 10px 6px; border-bottom: 1px solid #d4d0c8;
+    }
+    .stats-section:last-child { border-bottom: none; }
+    .stats-section-title {
+      font-size: 9px; font-weight: bold; color: #6a7a9a;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px;
+    }
+    .stats-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 2px 0;
+    }
+    .stats-label { color: #555; font-size: 10.5px; }
+    .stats-value { font-weight: bold; color: #1a1a1a; font-size: 11px; font-family: monospace; }
+    .stats-value.green  { color: #16a34a; }
+    .stats-value.red    { color: #dc2626; }
+    .stats-value.blue   { color: #0055e5; }
+    .stats-live-dot {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #22c55e; margin-right: 4px;
+      animation: stats-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes stats-pulse {
+      0%,100% { opacity: 1; } 50% { opacity: .3; }
+    }
+    .stats-footer {
+      padding: 4px 10px; font-size: 9px; color: #999; text-align: right;
+      background: #f0ede0; border-top: 1px solid #d4d0c8;
     }
 
     /* ═══════════════════════════
@@ -1148,7 +1204,30 @@
     <button class="start-btn" id="start-btn">Ӿ start</button>
     <div class="taskbar-apps" id="tb-apps"></div>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
-    <div class="tb-clock" id="clock">00:00</div>
+    <button class="tb-clock" id="clock" onclick="toggleStatsPopup()">00:00</button>
+  </div>
+
+  <!-- Stats Popup -->
+  <div class="stats-popup" id="stats-popup">
+    <div class="stats-popup-head">
+      <span class="sp-icon">Ӿ</span>
+      Nano Network · Live Stats
+    </div>
+    <div class="stats-section" id="stats-price-section">
+      <div class="stats-section-title">XNO Price</div>
+      <div class="stats-row"><span class="stats-label">Price (USD)</span><span class="stats-value" id="sp-price">—</span></div>
+      <div class="stats-row"><span class="stats-label">24h Change</span><span class="stats-value" id="sp-change">—</span></div>
+      <div class="stats-row"><span class="stats-label">Market Cap</span><span class="stats-value" id="sp-mcap">—</span></div>
+      <div class="stats-row"><span class="stats-label">24h Volume</span><span class="stats-value" id="sp-vol">—</span></div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-section-title"><span class="stats-live-dot"></span>Network · Live</div>
+      <div class="stats-row"><span class="stats-label">Conf/sec</span><span class="stats-value blue" id="sp-tps">—</span></div>
+      <div class="stats-row"><span class="stats-label">Avg Finality</span><span class="stats-value green" id="sp-finality">&lt; 1 second</span></div>
+      <div class="stats-row"><span class="stats-label">Cemented Blocks</span><span class="stats-value" id="sp-cemented">—</span></div>
+      <div class="stats-row"><span class="stats-label">Total Blocks</span><span class="stats-value" id="sp-blocks">—</span></div>
+    </div>
+    <div class="stats-footer" id="sp-updated">Updating…</div>
   </div>
 
   <!-- WiFi / Reps Popup -->
@@ -2831,7 +2910,95 @@ document.addEventListener('click', e => {
   if (wifiOpen && !e.target.closest('#wifi-popup') && !e.target.closest('#wifi-btn')) {
     closeWifiPopup();
   }
+  if (statsOpen && !e.target.closest('#stats-popup') && !e.target.closest('#clock')) {
+    closeStatsPopup();
+  }
 });
+
+/* ══════════════════════════════════════════
+   STATS POPUP (CLOCK)
+══════════════════════════════════════════ */
+let statsOpen = false;
+let statsTimer = null;
+
+function toggleStatsPopup() {
+  statsOpen = !statsOpen;
+  const popup = document.getElementById('stats-popup');
+  const btn   = document.getElementById('clock');
+  popup.classList.toggle('open', statsOpen);
+  btn.classList.toggle('active', statsOpen);
+  if (statsOpen) {
+    fetchAndRenderStats();
+    statsTimer = setInterval(fetchAndRenderStats, 5000);
+  } else {
+    clearInterval(statsTimer);
+    statsTimer = null;
+  }
+}
+
+function closeStatsPopup() {
+  statsOpen = false;
+  document.getElementById('stats-popup').classList.remove('open');
+  document.getElementById('clock').classList.remove('active');
+  clearInterval(statsTimer);
+  statsTimer = null;
+}
+
+function fmtNum(n) {
+  if (!n && n !== 0) return '—';
+  return Number(n).toLocaleString();
+}
+function fmtUsd(n) {
+  if (!n) return '—';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + n.toFixed(2);
+}
+
+async function fetchAndRenderStats() {
+  try {
+    const data = await fetch('/api/nano-stats').then(r => r.json());
+
+    /* Price */
+    const priceEl  = document.getElementById('sp-price');
+    const changeEl = document.getElementById('sp-change');
+    const mcapEl   = document.getElementById('sp-mcap');
+    const volEl    = document.getElementById('sp-vol');
+    if (priceEl)  priceEl.textContent  = data.priceUsd  ? '$' + Number(data.priceUsd).toFixed(4) : '—';
+    if (changeEl) {
+      const c = data.change24h || 0;
+      changeEl.textContent = (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
+      changeEl.className = 'stats-value ' + (c >= 0 ? 'green' : 'red');
+    }
+    if (mcapEl) mcapEl.textContent = fmtUsd(data.marketCap);
+    if (volEl)  volEl.textContent  = fmtUsd(data.volume24h);
+
+    /* Network */
+    const tpsEl      = document.getElementById('sp-tps');
+    const cementedEl = document.getElementById('sp-cemented');
+    const blocksEl   = document.getElementById('sp-blocks');
+    if (tpsEl) {
+      if (data.tps === null) {
+        tpsEl.textContent = 'warming up…';
+      } else {
+        tpsEl.textContent = data.tps.toFixed(2) + ' conf/s';
+      }
+    }
+    if (cementedEl) cementedEl.textContent = fmtNum(data.cemented);
+    if (blocksEl)   blocksEl.textContent   = fmtNum(data.blockCount);
+
+    /* Footer */
+    const updEl = document.getElementById('sp-updated');
+    if (updEl && data.lastUpdated) {
+      const ago = Math.round((Date.now() - data.lastUpdated) / 1000);
+      updEl.textContent = 'Updated ' + (ago < 3 ? 'just now' : ago + 's ago') + ' · nanoslo.0x.no';
+    }
+  } catch(e) {
+    const updEl = document.getElementById('sp-updated');
+    if (updEl) updEl.textContent = '⚠️ Connection error';
+  }
+}
 
 /* ══════════════════════════════════════════
    CHAT ENGINE
