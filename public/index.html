@@ -477,6 +477,97 @@
     }
     .np-footer-link:hover { color: #fff; }
 
+    /* ── NANO-GPT PAGE REPLICA ── */
+    .ngpt-page {
+      width: 100%; height: 100%; overflow-y: auto;
+      display: flex; flex-direction: column;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(ellipse at 50% 30%, #071830 0%, #040d1a 60%, #020810 100%);
+      position: relative;
+    }
+    .ngpt-page::-webkit-scrollbar { width: 3px; }
+    .ngpt-page::-webkit-scrollbar-thumb { background: #1a3a5a; border-radius: 2px; }
+    .ngpt-page::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(0,200,230,.07) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .ngpt-nav {
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 16px 18px; gap: 10px; flex-shrink: 0; position: relative; z-index: 2;
+    }
+    .ngpt-sign-in {
+      background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4);
+      padding: 7px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .ngpt-launch {
+      background: linear-gradient(135deg, #00d8c8 0%, #00a8e8 100%);
+      color: #fff; border: none; padding: 7px 18px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit;
+      box-shadow: 0 2px 12px rgba(0,200,220,.4);
+    }
+    .ngpt-hero {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 10px 24px 28px; text-align: center; position: relative; z-index: 2;
+    }
+    .ngpt-gem { width: 72px; height: 82px; position: relative; margin-bottom: 20px; }
+    .ngpt-gem-inner {
+      width: 100%; height: 100%;
+      background: linear-gradient(145deg, #00eed8 0%, #00b8f0 40%, #0090d8 70%, #00c8e0 100%);
+      clip-path: polygon(50% 0%, 90% 28%, 75% 100%, 25% 100%, 10% 28%);
+    }
+    .ngpt-gem-inner::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(145deg, rgba(255,255,255,.45) 0%, transparent 55%);
+      clip-path: polygon(50% 0%, 90% 28%, 75% 100%, 25% 100%, 10% 28%);
+    }
+    .ngpt-headline {
+      font-size: 24px; font-weight: 800; color: #fff; line-height: 1.25;
+      margin-bottom: 20px; letter-spacing: -.01em;
+    }
+    .ngpt-headline span { color: #00d8e8; }
+    .ngpt-searchbar {
+      width: 100%; max-width: 300px; margin-bottom: 22px;
+      background: rgba(10,20,40,.8); border: 1px solid rgba(0,200,230,.2);
+      border-radius: 28px; padding: 11px 12px 11px 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ngpt-searchbar-text { flex: 1; font-size: 13px; color: rgba(255,255,255,.55); text-align: left; }
+    .ngpt-searchbar-btn {
+      width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #00d8c8, #00a8e8);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; border: none; cursor: pointer;
+    }
+    .ngpt-actions { display: flex; gap: 14px; margin-bottom: 10px; }
+    .ngpt-action-btn {
+      width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #00d8c8 0%, #0098e0 100%);
+      color: #fff; font-size: 18px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,200,220,.35);
+    }
+    .ngpt-features {
+      padding: 18px 18px 6px; background: rgba(3,10,28,.65);
+      border-top: 1px solid rgba(0,200,230,.1); display: flex; flex-direction: column; gap: 10px;
+      position: relative; z-index: 2;
+    }
+    .ngpt-feat {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(0,200,230,.1);
+      border-radius: 10px; padding: 11px 13px;
+    }
+    .ngpt-feat-icon { font-size: 17px; flex-shrink: 0; line-height: 1.4; }
+    .ngpt-feat-title { font-size: 13px; font-weight: 700; color: #e8f4ff; margin-bottom: 2px; }
+    .ngpt-feat-sub   { font-size: 11px; color: rgba(180,210,240,.6); line-height: 1.4; }
+    .ngpt-visit {
+      display: block; text-align: center; margin: 16px 18px 20px;
+      background: linear-gradient(135deg, #00d8c8 0%, #0098e0 100%);
+      color: #fff; text-decoration: none; padding: 13px; border-radius: 10px;
+      font-size: 14px; font-weight: 700; box-shadow: 0 4px 18px rgba(0,200,220,.3);
+      position: relative; z-index: 2;
+    }
+
     /* ── CHAT ── */
     :root {
       --nd: #1a1f2e; --np: #232939; --nb: #2e3650;
@@ -1111,7 +1202,16 @@ const wm = {
 
           <!-- Header -->
           <div class="np-header">
-            <img src="/nano-logo.jpeg" alt="Nano" style="height:44px;margin:-10px -4px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg width="22" height="26" viewBox="0 0 22 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="2" y1="2" x2="20" y2="24" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="20" y1="2" x2="2" y2="24" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="4.5" y1="16" x2="17.5" y2="16" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="6" y1="20.5" x2="16" y2="20.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+              <div style="width:1.5px;height:20px;background:rgba(255,255,255,.45);"></div>
+              <span style="font-size:17px;font-weight:700;color:#fff;letter-spacing:.1em;font-family:-apple-system,sans-serif;">NANO</span>
+            </div>
             <div class="np-header-right">
               <button class="np-try-btn" onclick="window.open('https://nano.org/get-nano','_blank')">Try Nano</button>
               <div class="np-menu">≡</div>
@@ -1219,7 +1319,14 @@ const wm = {
           <!-- Footer -->
           <div class="np-footer">
             <div class="np-footer-logo">
-              <img src="/nano-logo.jpeg" alt="Nano" style="height:38px;border-radius:4px;">
+              <svg width="20" height="24" viewBox="0 0 22 26" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+                <line x1="2" y1="2" x2="20" y2="24" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="20" y1="2" x2="2" y2="24" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="4.5" y1="16" x2="17.5" y2="16" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="6" y1="20.5" x2="16" y2="20.5" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+              <div style="width:1.5px;height:18px;background:rgba(255,255,255,.35);"></div>
+              <span style="font-size:16px;font-weight:700;color:#fff;letter-spacing:.1em;font-family:-apple-system,sans-serif;">NANO</span>
             </div>
 
             <div class="np-footer-section">
@@ -1247,45 +1354,63 @@ const wm = {
 
         </div>`,
       nano_gpt: `
-        <div class="site-panel">
-          <div class="sp-hero">
-            <div class="sp-icon">⚡</div>
-            <div class="sp-name">NanoGPT</div>
-            <div class="sp-tag">AI Powered by Nano (XNO)</div>
-            <div class="sp-desc">Access top AI models — GPT-4, Claude, Gemini and more — paying only for what you use, with Nano. No subscription. No account needed.</div>
+        <div class="ngpt-page">
+
+          <!-- Nav -->
+          <div class="ngpt-nav">
+            <button class="ngpt-sign-in" onclick="window.open('https://nano-gpt.com/login','_blank')">Sign in</button>
+            <button class="ngpt-launch" onclick="window.open('https://nano-gpt.com','_blank')">Launch</button>
           </div>
-          <div class="sp-divider"></div>
-          <div class="sp-features">
-            <div class="sp-feat">
-              <div class="sp-feat-icon">🤖</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Top AI Models</div>
-                <div class="sp-feat-sub">GPT-4o, Claude 3.5, Gemini, Llama and dozens more in one place.</div>
-              </div>
+
+          <!-- Hero -->
+          <div class="ngpt-hero">
+            <div class="ngpt-gem">
+              <div class="ngpt-gem-inner"></div>
             </div>
-            <div class="sp-feat">
-              <div class="sp-feat-icon">💸</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Pay Per Prompt with XNO</div>
-                <div class="sp-feat-sub">Only pay for what you use. Nano's zero fees make micropayments practical.</div>
-              </div>
+            <div class="ngpt-headline">Ask <span>NanoGPT</span> Anything!</div>
+            <div class="ngpt-searchbar">
+              <div class="ngpt-searchbar-text">Design a logo for a tech startup.</div>
+              <button class="ngpt-searchbar-btn" onclick="window.open('https://nano-gpt.com','_blank')">→</button>
             </div>
-            <div class="sp-feat">
-              <div class="sp-feat-icon">🔓</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">No Account Required</div>
-                <div class="sp-feat-sub">No sign-up, no subscription. Just load a balance and start generating.</div>
-              </div>
-            </div>
-            <div class="sp-feat">
-              <div class="sp-feat-icon">🖼️</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Images & More</div>
-                <div class="sp-feat-sub">Generate images, translate, summarise and more — all powered by XNO.</div>
-              </div>
+            <div class="ngpt-actions">
+              <button class="ngpt-action-btn" onclick="window.open('https://nano-gpt.com','_blank')" title="Explore">⌄</button>
+              <button class="ngpt-action-btn" onclick="window.open('https://nano-gpt.com','_blank')" title="Launch">🚀</button>
             </div>
           </div>
-          <a class="sp-visit" href="https://nano-gpt.com" target="_blank" rel="noopener">↗ &nbsp;Visit nano-gpt.com</a>
+
+          <!-- Features -->
+          <div class="ngpt-features">
+            <div class="ngpt-feat">
+              <div class="ngpt-feat-icon">🤖</div>
+              <div>
+                <div class="ngpt-feat-title">Top AI Models</div>
+                <div class="ngpt-feat-sub">GPT-4o, Claude 3.5, Gemini, Llama and dozens more in one place.</div>
+              </div>
+            </div>
+            <div class="ngpt-feat">
+              <div class="ngpt-feat-icon">💸</div>
+              <div>
+                <div class="ngpt-feat-title">Pay Per Prompt with XNO</div>
+                <div class="ngpt-feat-sub">Only pay for what you use. Nano's zero fees make micropayments practical.</div>
+              </div>
+            </div>
+            <div class="ngpt-feat">
+              <div class="ngpt-feat-icon">🔓</div>
+              <div>
+                <div class="ngpt-feat-title">No Account Required</div>
+                <div class="ngpt-feat-sub">No sign-up, no subscription. Just load a balance and start generating.</div>
+              </div>
+            </div>
+            <div class="ngpt-feat">
+              <div class="ngpt-feat-icon">🖼️</div>
+              <div>
+                <div class="ngpt-feat-title">Images & More</div>
+                <div class="ngpt-feat-sub">Generate images, translate, summarise — all powered by XNO.</div>
+              </div>
+            </div>
+          </div>
+          <a class="ngpt-visit" href="https://nano-gpt.com" target="_blank" rel="noopener">↗ &nbsp;Visit nano-gpt.com</a>
+
         </div>`,
     };
 
