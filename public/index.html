@@ -993,48 +993,65 @@
     .norg-hub-cta-btn { display:inline-block; padding:8px 20px; background:#fff; color:#4a62a8; border-radius:16px; font-size:13px; font-weight:700; text-decoration:none; }
 
     /* ─── Nano Hub Panel ─── */
-    .nhub-page { display:flex; flex-direction:column; height:100%; background:#f5f7ff; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; color:#1a2b4b; }
-    .nhub-header { background:#fff; border-bottom:1.5px solid #e0e7f0; padding:0 14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-height:50px; flex-shrink:0; }
-    .nhub-logo { display:flex; align-items:center; gap:7px; flex-shrink:0; cursor:pointer; }
-    .nhub-logo img { height:26px; }
-    .nhub-nav { display:flex; align-items:center; gap:1px; flex:1; flex-wrap:wrap; min-width:0; }
-    .nhub-nav-link { padding:5px 7px; font-size:11.5px; color:#1a2b4b; border-radius:6px; cursor:pointer; white-space:nowrap; border:none; background:none; font-family:inherit; }
-    .nhub-nav-link:hover { background:#e8efff; color:#4C6FE4; }
-    .nhub-nav-link.nh-active { background:#e8efff; color:#4C6FE4; font-weight:600; }
-    .nhub-suggest-btn { padding:4px 10px; font-size:11px; color:#4C6FE4; border:1.5px solid #4C6FE4; border-radius:14px; background:none; cursor:pointer; white-space:nowrap; flex-shrink:0; font-family:inherit; }
-    .nhub-suggest-btn:hover { background:#4C6FE4; color:#fff; }
+    .nhub-page { display:flex; flex-direction:column; height:100%; background:#e8f4fb; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; color:#1a2b4b; position:relative; overflow:hidden; }
+    .nhub-header { background:#4a9fd4; padding:0 16px; display:flex; align-items:center; min-height:52px; flex-shrink:0; }
+    .nhub-logo { display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; }
+    .nhub-logo-xno { height:26px; mix-blend-mode:screen; }
+    .nhub-logo-div { width:1px; height:20px; background:rgba(255,255,255,.6); }
+    .nhub-logo-text { font-size:16px; color:#fff; letter-spacing:.02em; font-weight:300; }
+    .nhub-logo-text strong { font-weight:800; }
+    .nhub-hamburger { background:none; border:none; cursor:pointer; padding:8px 4px; display:flex; flex-direction:column; gap:5px; flex-shrink:0; }
+    .nhub-hamburger span { display:block; width:22px; height:2px; background:#fff; border-radius:2px; }
+    .nhub-hero { background:#4a9fd4; padding:18px 16px 26px; text-align:center; flex-shrink:0; }
+    .nhub-hero h1 { font-size:30px; font-weight:700; margin:0 0 16px; color:#fff; }
+    .nhub-search-wrap { background:#fff; border-radius:24px; display:flex; align-items:center; gap:8px; padding:10px 16px; }
+    .nhub-search-inp { flex:1; border:none; outline:none; font-size:13.5px; color:#1a2b4b; background:none; font-family:inherit; cursor:pointer; }
+    .nhub-search-inp::placeholder { color:#8a9ab8; }
+    .nhub-search-ico { color:#8a9ab8; font-size:16px; }
     .nhub-body { flex:1; overflow-y:auto; }
+    .nhub-explore-label { font-size:13px; color:#3a5a7a; text-align:center; padding:16px 16px 10px; font-weight:500; }
+    .nhub-cat-list { display:flex; flex-direction:column; gap:10px; padding:4px 12px 24px; }
+    .nhub-cat-row { background:#fff; border-radius:14px; padding:18px 16px; display:flex; align-items:center; gap:14px; cursor:pointer; box-shadow:0 1px 4px rgba(74,159,212,.12); border:none; text-align:left; font-family:inherit; width:100%; }
+    .nhub-cat-row:hover { box-shadow:0 4px 18px rgba(74,159,212,.25); }
+    .nhub-cat-icon-wrap { width:54px; height:54px; border-radius:12px; background:#d2e9f7; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .nhub-cat-icon-wrap img { width:30px; height:30px; object-fit:contain; }
+    .nhub-cat-row-name { font-size:16px; font-weight:700; color:#1a2b4b; margin-bottom:3px; }
+    .nhub-cat-row-desc { font-size:12px; color:#5a7a9a; line-height:1.4; }
+    .nhub-cat-row-arrow { color:#4a9fd4; font-size:18px; flex-shrink:0; margin-left:auto; }
+    .nhub-drawer { position:absolute; top:0; left:0; right:0; bottom:0; background:#4a9fd4; z-index:200; display:none; flex-direction:column; overflow-y:auto; }
+    .nhub-drawer.nh-drawer-open { display:flex; }
+    .nhub-drawer-hdr { padding:0 16px; min-height:52px; display:flex; align-items:center; border-bottom:1px solid rgba(255,255,255,.22); flex-shrink:0; }
+    .nhub-drawer-links { padding:22px 26px; display:flex; flex-direction:column; gap:20px; flex:1; }
+    .nhub-drawer-item { color:#fff; font-size:17px; cursor:pointer; background:none; border:none; text-align:left; font-family:inherit; padding:0; }
+    .nhub-drawer-item:hover { opacity:.75; }
+    .nhub-drawer-sep { height:1px; background:rgba(255,255,255,.25); margin:4px 26px; }
+    .nhub-drawer-about { padding:12px 26px 4px; }
+    .nhub-drawer-about a { color:rgba(255,255,255,.85); font-size:15px; text-decoration:none; }
+    .nhub-drawer-toggle { padding:20px 26px 26px; display:flex; align-items:center; gap:12px; }
+    .nhub-toggle-track { width:44px; height:24px; background:rgba(255,255,255,.35); border-radius:12px; position:relative; cursor:pointer; flex-shrink:0; }
+    .nhub-toggle-dot { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; }
+    .nhub-toggle-icon { font-size:16px; }
     .nhub-view { display:none; flex-direction:column; }
     .nhub-view.nh-visible { display:flex; }
-    .nhub-hero { text-align:center; padding:26px 20px 14px; }
-    .nhub-hero h1 { font-size:24px; font-weight:800; margin:0 0 5px; color:#1a2b4b; }
-    .nhub-hero p { font-size:13px; color:#5a6e8a; margin:0; }
-    .nhub-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:6px 14px 24px; }
-    .nhub-cat-card { background:#fff; border-radius:12px; padding:14px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:7px; cursor:pointer; border:1.5px solid #e0e7f0; transition:box-shadow .15s,transform .15s; }
-    .nhub-cat-card:hover { box-shadow:0 4px 16px rgba(76,111,228,.16); transform:translateY(-2px); border-color:#c5d5f5; }
-    .nhub-cat-card img { width:36px; height:36px; object-fit:contain; }
-    .nhub-cat-name { font-size:11.5px; font-weight:700; color:#1a2b4b; line-height:1.2; }
-    .nhub-cat-desc { font-size:10px; color:#5a6e8a; line-height:1.4; }
-    .nhub-sub-header { padding:16px 14px 6px; }
-    .nhub-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#4C6FE4; cursor:pointer; background:none; border:none; padding:0; margin-bottom:8px; font-family:inherit; }
-    .nhub-sub-header h2 { font-size:20px; font-weight:800; margin:0 0 3px; color:#1a2b4b; }
-    .nhub-sub-header p { font-size:12px; color:#5a6e8a; margin:0; }
-    .nhub-result-count { font-size:11.5px; color:#5a6e8a; padding:4px 14px 8px; }
+    .nhub-sub-header { padding:14px 14px 10px; background:#4a9fd4; flex-shrink:0; }
+    .nhub-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; color:rgba(255,255,255,.9); cursor:pointer; background:none; border:none; padding:0; margin-bottom:8px; font-family:inherit; }
+    .nhub-back-btn:hover { color:#fff; }
+    .nhub-sub-header h2 { font-size:20px; font-weight:800; margin:0 0 3px; color:#fff; }
+    .nhub-sub-header p { font-size:12px; color:rgba(255,255,255,.8); margin:0; }
+    .nhub-result-count { font-size:11.5px; color:#5a7a9a; padding:10px 14px 6px; }
     .nhub-items { display:flex; flex-direction:column; gap:9px; padding:0 14px 8px; }
-    .nhub-item { background:#fff; border-radius:10px; border:1.5px solid #e0e7f0; padding:13px; }
+    .nhub-item { background:#fff; border-radius:10px; border:1.5px solid #cde6f5; padding:13px; }
     .nhub-item-name a { font-size:13.5px; font-weight:700; color:#1a2b4b; text-decoration:none; }
-    .nhub-item-name a:hover { color:#4C6FE4; text-decoration:underline; }
+    .nhub-item-name a:hover { color:#4a9fd4; text-decoration:underline; }
     .nhub-item-desc { font-size:11.5px; color:#5a6e8a; line-height:1.5; margin:5px 0 9px; }
     .nhub-item-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; }
-    .nhub-tag { padding:2px 7px; background:#e8efff; color:#4C6FE4; border-radius:10px; font-size:10px; text-decoration:none; }
-    .nhub-tag:hover { background:#4C6FE4; color:#fff; }
-    .nhub-visit-btn { display:inline-block; padding:4px 13px; border:1.5px solid #4C6FE4; color:#4C6FE4; border-radius:14px; font-size:11.5px; font-weight:600; text-decoration:none; }
-    .nhub-visit-btn:hover { background:#4C6FE4; color:#fff; }
+    .nhub-tag { padding:2px 7px; background:#d2e9f7; color:#2a7aab; border-radius:10px; font-size:10px; text-decoration:none; }
+    .nhub-tag:hover { background:#4a9fd4; color:#fff; }
+    .nhub-visit-btn { display:inline-block; padding:4px 13px; border:1.5px solid #4a9fd4; color:#4a9fd4; border-radius:14px; font-size:11.5px; font-weight:600; text-decoration:none; }
+    .nhub-visit-btn:hover { background:#4a9fd4; color:#fff; }
     .nhub-view-more { text-align:center; padding:10px 14px 22px; }
-    .nhub-view-more a { color:#4C6FE4; font-size:12.5px; text-decoration:none; font-weight:600; }
+    .nhub-view-more a { color:#4a9fd4; font-size:12.5px; text-decoration:none; font-weight:600; }
     .nhub-view-more a:hover { text-decoration:underline; }
-    .nhub-about-link { font-size:11px; color:#5a6e8a; padding:0 14px 2px; }
-    .nhub-about-link a { color:#4C6FE4; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -1833,26 +1850,47 @@ const wm = {
           <!-- HEADER -->
           <div class="nhub-header">
             <div class="nhub-logo" onclick="hubNav('home')">
-              <img src="https://hub.nano.org/images/nano-hub-logo-header.svg" alt="Nano Hub"
-                   onerror="this.outerHTML='<span style=font-weight:800;color:#4C6FE4;font-size:14px>Nano Hub</span>'">
+              <img class="nhub-logo-xno" src="/nano-symbol.png" alt="">
+              <div class="nhub-logo-div"></div>
+              <span class="nhub-logo-text">NANO<strong>HUB</strong></span>
             </div>
-            <nav class="nhub-nav">
-              <button class="nhub-nav-link nh-active" data-page="home" onclick="hubNav('home')">Home</button>
-              <button class="nhub-nav-link" data-page="merchants" onclick="hubNav('merchants')">Merchants</button>
-              <button class="nhub-nav-link" data-page="wallets" onclick="hubNav('wallets')">Wallets</button>
-              <button class="nhub-nav-link" data-page="merchant-solutions" onclick="hubNav('merchant-solutions')">Merchant Solutions</button>
-              <button class="nhub-nav-link" data-page="trading" onclick="hubNav('trading')">Trading</button>
-              <button class="nhub-nav-link" data-page="developer-tools" onclick="hubNav('developer-tools')">Developer Tools</button>
-              <button class="nhub-nav-link" data-page="faucets" onclick="hubNav('faucets')">Faucets</button>
-              <button class="nhub-nav-link" data-page="gaming" onclick="hubNav('gaming')">Gaming</button>
-              <button class="nhub-nav-link" data-page="earn" onclick="hubNav('earn')">Earn</button>
-              <button class="nhub-nav-link" data-page="ai" onclick="hubNav('ai')">AI</button>
-              <button class="nhub-nav-link" data-page="charities" onclick="hubNav('charities')">Charities</button>
-              <button class="nhub-nav-link" data-page="other-services" onclick="hubNav('other-services')">Other Services</button>
-              <button class="nhub-nav-link" data-page="recently-added" onclick="hubNav('recently-added')">Recently Added</button>
-            </nav>
-            <div class="nhub-about-link">| <a href="https://nano.org" target="_blank" rel="noopener">About Nano</a></div>
-            <button class="nhub-suggest-btn" onclick="window.open('https://forms.gle/qCQRahAoFcNZxtST6','_blank')">+ Suggest Item</button>
+            <button class="nhub-hamburger" onclick="nhubToggleMenu()">
+              <span></span><span></span><span></span>
+            </button>
+          </div>
+
+          <!-- SLIDE-IN DRAWER -->
+          <div class="nhub-drawer" id="nhub-drawer">
+            <div class="nhub-drawer-hdr">
+              <div class="nhub-logo" onclick="hubNav('home');nhubToggleMenu()">
+                <img class="nhub-logo-xno" src="/nano-symbol.png" alt="">
+                <div class="nhub-logo-div"></div>
+                <span class="nhub-logo-text">NANO<strong>HUB</strong></span>
+              </div>
+              <button class="nhub-hamburger" onclick="nhubToggleMenu()">
+                <span></span><span></span><span></span>
+              </button>
+            </div>
+            <div class="nhub-drawer-links">
+              <button class="nhub-drawer-item" onclick="hubNav('merchants');nhubToggleMenu()">- Merchants</button>
+              <button class="nhub-drawer-item" onclick="hubNav('wallets');nhubToggleMenu()">- Wallets</button>
+              <button class="nhub-drawer-item" onclick="hubNav('merchant-solutions');nhubToggleMenu()">- Merchant Solutions</button>
+              <button class="nhub-drawer-item" onclick="hubNav('trading');nhubToggleMenu()">- Trading</button>
+              <button class="nhub-drawer-item" onclick="hubNav('developer-tools');nhubToggleMenu()">- Developer Tools</button>
+              <button class="nhub-drawer-item" onclick="hubNav('faucets');nhubToggleMenu()">- Faucets</button>
+              <button class="nhub-drawer-item" onclick="hubNav('gaming');nhubToggleMenu()">- Gaming</button>
+              <button class="nhub-drawer-item" onclick="hubNav('earn');nhubToggleMenu()">- Earn</button>
+              <button class="nhub-drawer-item" onclick="hubNav('ai');nhubToggleMenu()">- AI</button>
+              <button class="nhub-drawer-item" onclick="hubNav('charities');nhubToggleMenu()">- Charities</button>
+              <button class="nhub-drawer-item" onclick="hubNav('other-services');nhubToggleMenu()">- Other Services</button>
+              <button class="nhub-drawer-item" onclick="hubNav('recently-added');nhubToggleMenu()">- Recently Added</button>
+            </div>
+            <div class="nhub-drawer-sep"></div>
+            <div class="nhub-drawer-about"><a href="https://nano.org" target="_blank" rel="noopener">About Nano</a></div>
+            <div class="nhub-drawer-toggle">
+              <div class="nhub-toggle-track"><div class="nhub-toggle-dot"></div></div>
+              <span class="nhub-toggle-icon">☀️</span>
+            </div>
           </div>
 
           <!-- BODY -->
@@ -1860,68 +1898,75 @@ const wm = {
 
             <!-- ── HOME ── -->
             <div class="nhub-view nh-visible" id="nhub-home">
-              <div class="nhub-hero"><h1>Nano Hub</h1><p>Explore the nano ecosystem</p></div>
-              <div class="nhub-grid">
-                <div class="nhub-cat-card" onclick="hubNav('merchants')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/merchants.svg" alt="" onerror="this.outerHTML='🏪'">
-                  <div class="nhub-cat-name">Merchants</div>
-                  <div class="nhub-cat-desc">Spend your nano (XNO) around the world - online and in shops</div>
+              <div class="nhub-hero">
+                <h1>Nano Hub</h1>
+                <div class="nhub-search-wrap">
+                  <input class="nhub-search-inp" placeholder="Search All Items" onclick="window.open('https://hub.nano.org/','_blank')" readonly>
+                  <span class="nhub-search-ico">🔍</span>
                 </div>
-                <div class="nhub-cat-card" onclick="hubNav('wallets')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/wallets.svg" alt="" onerror="this.outerHTML='👛'">
-                  <div class="nhub-cat-name">Wallets</div>
-                  <div class="nhub-cat-desc">Store your nano (XNO) securely</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('merchant-solutions')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/merchant-solutions.svg" alt="" onerror="this.outerHTML='💳'">
-                  <div class="nhub-cat-name">Merchant Solutions</div>
-                  <div class="nhub-cat-desc">Apps and services for paying with nano (XNO)</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('trading')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/trading.svg" alt="" onerror="this.outerHTML='📈'">
-                  <div class="nhub-cat-name">Trading</div>
-                  <div class="nhub-cat-desc">Buy, sell, and trade nano (XNO) on many exchanges</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('developer-tools')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/developer-tools.svg" alt="" onerror="this.outerHTML='🛠️'">
-                  <div class="nhub-cat-name">Developer Tools</div>
-                  <div class="nhub-cat-desc">Find the perfect software to develop with nano (XNO)</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('faucets')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/faucets.svg" alt="" onerror="this.outerHTML='💧'">
-                  <div class="nhub-cat-name">Faucets</div>
-                  <div class="nhub-cat-desc">Try nano (XNO) by getting a small amount for free</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('gaming')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/gaming.svg" alt="" onerror="this.outerHTML='🎮'">
-                  <div class="nhub-cat-name">Gaming</div>
-                  <div class="nhub-cat-desc">Use and earn nano (XNO) in-game on a variety of platforms</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('earn')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/earn.svg" alt="" onerror="this.outerHTML='💰'">
-                  <div class="nhub-cat-name">Earn</div>
-                  <div class="nhub-cat-desc">Discover a wide range of ways to earn more nano (XNO)</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('ai')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/ai.png" alt="" onerror="this.outerHTML='🤖'">
-                  <div class="nhub-cat-name">AI</div>
-                  <div class="nhub-cat-desc">AI services and apps using nano (XNO)</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('charities')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/charities.svg" alt="" onerror="this.outerHTML='❤️'">
-                  <div class="nhub-cat-name">Charities</div>
-                  <div class="nhub-cat-desc">View charities accepting nano (XNO)</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('other-services')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/other-services.svg" alt="" onerror="this.outerHTML='🔧'">
-                  <div class="nhub-cat-name">Other Services</div>
-                  <div class="nhub-cat-desc">Other apps and services making use of nano (XNO)</div>
-                </div>
-                <div class="nhub-cat-card" onclick="hubNav('recently-added')">
-                  <img src="https://hub.nano.org/images/top-level-category-icons/recently-added.png" alt="" onerror="this.outerHTML='✨'">
-                  <div class="nhub-cat-name">Recently Added</div>
-                  <div class="nhub-cat-desc">What&#39;s new on Nano Hub</div>
-                </div>
+              </div>
+              <div class="nhub-explore-label">Explore the nano ecosystem</div>
+              <div class="nhub-cat-list">
+                <button class="nhub-cat-row" onclick="hubNav('merchants')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/merchants.svg" alt="" onerror="this.outerHTML='🏪'"></div>
+                  <div><div class="nhub-cat-row-name">Merchants</div><div class="nhub-cat-row-desc">Spend your nano (XNO) around the world - online and in shops</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('wallets')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/wallets.svg" alt="" onerror="this.outerHTML='👛'"></div>
+                  <div><div class="nhub-cat-row-name">Wallets</div><div class="nhub-cat-row-desc">Store your nano (XNO) securely</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('merchant-solutions')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/merchant-solutions.svg" alt="" onerror="this.outerHTML='💳'"></div>
+                  <div><div class="nhub-cat-row-name">Merchant Solutions</div><div class="nhub-cat-row-desc">Apps and services for paying with nano (XNO)</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('trading')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/trading.svg" alt="" onerror="this.outerHTML='📈'"></div>
+                  <div><div class="nhub-cat-row-name">Trading</div><div class="nhub-cat-row-desc">Buy, sell, and trade nano (XNO) on many exchanges</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('developer-tools')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/developer-tools.svg" alt="" onerror="this.outerHTML='🛠️'"></div>
+                  <div><div class="nhub-cat-row-name">Developer Tools</div><div class="nhub-cat-row-desc">Find the perfect software to develop with nano (XNO)</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('faucets')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/faucets.svg" alt="" onerror="this.outerHTML='💧'"></div>
+                  <div><div class="nhub-cat-row-name">Faucets</div><div class="nhub-cat-row-desc">Try nano (XNO) by getting a small amount for free</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('gaming')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/gaming.svg" alt="" onerror="this.outerHTML='🎮'"></div>
+                  <div><div class="nhub-cat-row-name">Gaming</div><div class="nhub-cat-row-desc">Use and earn nano (XNO) in-game on a variety of platforms</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('earn')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/earn.svg" alt="" onerror="this.outerHTML='💰'"></div>
+                  <div><div class="nhub-cat-row-name">Earn</div><div class="nhub-cat-row-desc">Discover a wide range of ways to earn more nano (XNO)</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('ai')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/ai.png" alt="" onerror="this.outerHTML='🤖'"></div>
+                  <div><div class="nhub-cat-row-name">AI</div><div class="nhub-cat-row-desc">AI services and apps using nano (XNO)</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('charities')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/charities.svg" alt="" onerror="this.outerHTML='❤️'"></div>
+                  <div><div class="nhub-cat-row-name">Charities</div><div class="nhub-cat-row-desc">View charities accepting nano (XNO)</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('other-services')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/other-services.svg" alt="" onerror="this.outerHTML='🔧'"></div>
+                  <div><div class="nhub-cat-row-name">Other Services</div><div class="nhub-cat-row-desc">Other apps and services making use of nano (XNO)</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
+                <button class="nhub-cat-row" onclick="hubNav('recently-added')">
+                  <div class="nhub-cat-icon-wrap"><img src="https://hub.nano.org/images/top-level-category-icons/recently-added.png" alt="" onerror="this.outerHTML='✨'"></div>
+                  <div><div class="nhub-cat-row-name">Recently Added</div><div class="nhub-cat-row-desc">What's new on Nano Hub</div></div>
+                  <span class="nhub-cat-row-arrow">›</span>
+                </button>
               </div>
             </div>
 
@@ -2842,6 +2887,10 @@ setInterval(norgHeroNext, 2800);
 /* ══════════════════════════════════════════
    NANO HUB NAVIGATION
 ══════════════════════════════════════════ */
+function nhubToggleMenu() {
+  const d = document.getElementById('nhub-drawer');
+  if (d) d.classList.toggle('nh-drawer-open');
+}
 function hubNav(page) {
   const body = document.getElementById('nhub-body');
   if (!body) return;
