@@ -298,6 +298,185 @@
     .browser-loading span { font-size: 44px; animation: arrow-pulse 1.2s ease infinite; }
     .browser-loading p { font-size: 12px; color: #8892aa; }
 
+    /* ── NANO.ORG PAGE REPLICA ── */
+    .nano-page {
+      width: 100%; height: 100%;
+      overflow-y: auto; display: flex; flex-direction: column;
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      background: #fff;
+    }
+    .nano-page::-webkit-scrollbar { width: 3px; }
+    .nano-page::-webkit-scrollbar-thumb { background: #c0c8dc; border-radius: 2px; }
+
+    /* Header */
+    .np-header {
+      background: #4e6db5; padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .np-logo {
+      display: flex; align-items: center; gap: 7px;
+      color: #fff; font-size: 17px; font-weight: 700; letter-spacing: .06em;
+    }
+    .np-logo-sym {
+      width: 22px; height: 22px; border: 2.5px solid #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #fff; font-weight: 900; flex-shrink: 0;
+    }
+    .np-logo-divider { width: 1.5px; height: 18px; background: rgba(255,255,255,.5); }
+    .np-header-right { display: flex; align-items: center; gap: 10px; }
+    .np-try-btn {
+      background: #5b9be0; color: #fff; border: none;
+      padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+    }
+    .np-menu { color: #fff; font-size: 20px; cursor: pointer; line-height: 1; }
+
+    /* Hero */
+    .np-hero {
+      background: linear-gradient(180deg, #4e6db5 0%, #3d5a9e 100%);
+      padding: 32px 22px 40px; text-align: left;
+    }
+    .np-hero-label {
+      font-size: 11px; color: rgba(255,255,255,.65); letter-spacing: .1em;
+      text-transform: uppercase; margin-bottom: 10px;
+    }
+    .np-hero-headline {
+      font-size: 28px; font-weight: 700; color: #fff; line-height: 1.25;
+      margin-bottom: 24px; letter-spacing: -.01em;
+    }
+    .np-hero-nav { display: flex; gap: 10px; }
+    .np-hero-nav button {
+      width: 38px; height: 38px; border-radius: 50%; border: none;
+      background: #5b9be0; color: #fff; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    /* Features card */
+    .np-features-card {
+      background: #fff; border-radius: 18px;
+      margin: -18px 14px 0; padding: 22px 18px 26px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.13);
+      position: relative; z-index: 2;
+    }
+    .np-features-title {
+      font-size: 16px; font-weight: 800; color: #1a2456; line-height: 1.3;
+      margin-bottom: 22px;
+    }
+    .np-feat-row {
+      display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px;
+    }
+    .np-feat-row:last-child { margin-bottom: 0; }
+    .np-feat-icon-wrap {
+      width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%;
+      background: #e8f0fb; display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .np-feat-body {}
+    .np-feat-name { font-size: 16px; font-weight: 700; color: #1a2456; margin-bottom: 5px; }
+    .np-feat-desc { font-size: 13px; color: #555; line-height: 1.5; }
+
+    /* Video / text section */
+    .np-video-section {
+      background: #f5f7fa; padding: 22px 18px 28px; margin-top: 20px;
+    }
+    .np-video-thumb {
+      width: 100%; border-radius: 14px; overflow: hidden; position: relative;
+      margin-bottom: 20px;
+    }
+    .np-video-thumb img { width: 100%; display: block; }
+    .np-play-btn {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(91,155,224,.92);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 3px 14px rgba(0,0,0,.35);
+    }
+    .np-play-btn::after {
+      content: ''; border-style: solid;
+      border-width: 9px 0 9px 18px; border-color: transparent transparent transparent #fff;
+      margin-left: 3px;
+    }
+    .np-video-title {
+      font-size: 20px; font-weight: 800; color: #1a2456; line-height: 1.3;
+      margin-bottom: 14px;
+    }
+    .np-video-body { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 10px; }
+    .np-try-btn-lg {
+      display: inline-block; margin-top: 14px;
+      background: #5b9be0; color: #fff; border: none;
+      padding: 12px 28px; border-radius: 24px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: inherit; text-decoration: none;
+    }
+
+    /* Use cases */
+    .np-usecases { background: #fff; padding: 32px 18px 28px; }
+    .np-usecases-title {
+      font-size: 24px; font-weight: 800; color: #1a2456; text-align: center;
+      line-height: 1.25; margin-bottom: 20px;
+    }
+    .np-carousel-img {
+      width: 100%; border-radius: 12px; overflow: hidden; position: relative;
+    }
+    .np-carousel-img img { width: 100%; display: block; }
+    .np-carousel-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,.55));
+      color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .12em;
+      text-align: center; padding: 20px 10px 12px;
+    }
+    .np-dots { display: flex; justify-content: center; gap: 6px; margin-top: 14px; }
+    .np-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #c0c8d8;
+    }
+    .np-dot.active { background: #4e6db5; }
+
+    /* Ecosystem */
+    .np-ecosystem {
+      background: #eef1fb; padding: 28px 18px;
+    }
+    .np-ecosystem-title {
+      font-size: 22px; font-weight: 800; color: #1a2456; text-align: center;
+      line-height: 1.25; margin-bottom: 20px;
+    }
+    .np-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .np-grid-card {
+      background: #fff; border-radius: 12px; padding: 16px 14px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 84px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+      cursor: pointer; text-decoration: none;
+    }
+    .np-grid-card-name {
+      font-size: 14px; font-weight: 700; color: #1a2456;
+    }
+    .np-grid-card-arrow {
+      font-size: 16px; color: #4e85d4; align-self: flex-end;
+    }
+
+    /* Footer */
+    .np-footer {
+      background: #1a2456; padding: 28px 22px 32px;
+    }
+    .np-footer-logo {
+      display: flex; align-items: center; gap: 8px;
+      color: #fff; font-size: 18px; font-weight: 700;
+      letter-spacing: .06em; margin-bottom: 24px;
+    }
+    .np-footer-logo .np-logo-sym { border-color: #fff; color: #fff; }
+    .np-footer-section { margin-bottom: 20px; }
+    .np-footer-heading {
+      font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 10px;
+    }
+    .np-footer-link {
+      display: block; font-size: 13px; color: rgba(255,255,255,.65);
+      margin-bottom: 7px; text-decoration: none; cursor: pointer;
+    }
+    .np-footer-link:hover { color: #fff; }
+
     /* ── CHAT ── */
     :root {
       --nd: #1a1f2e; --np: #232939; --nb: #2e3650;
@@ -928,45 +1107,150 @@ const wm = {
 
     const panels = {
       nano_org: `
-        <div class="site-panel">
-          <div class="sp-hero">
-            <div class="sp-icon">⊕</div>
-            <div class="sp-name">nano.org</div>
-            <div class="sp-tag">The Official Nano Website</div>
-            <div class="sp-desc">Everything you need to know about Nano — the instant, feeless, eco-friendly digital currency for the modern world.</div>
-          </div>
-          <div class="sp-divider"></div>
-          <div class="sp-features">
-            <div class="sp-feat">
-              <div class="sp-feat-icon">⚡</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Instant Transactions</div>
-                <div class="sp-feat-sub">Sub-second confirmation — faster than any card payment.</div>
-              </div>
+        <div class="nano-page">
+
+          <!-- Header -->
+          <div class="np-header">
+            <div class="np-logo">
+              <div class="np-logo-sym">¥</div>
+              <div class="np-logo-divider"></div>
+              NANO
             </div>
-            <div class="sp-feat">
-              <div class="sp-feat-icon">🚫</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Zero Fees</div>
-                <div class="sp-feat-sub">Send any amount anywhere with absolutely no fees, ever.</div>
-              </div>
-            </div>
-            <div class="sp-feat">
-              <div class="sp-feat-icon">🌱</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Eco-Friendly</div>
-                <div class="sp-feat-sub">No mining. Near-zero energy consumption per transaction.</div>
-              </div>
-            </div>
-            <div class="sp-feat">
-              <div class="sp-feat-icon">🔗</div>
-              <div class="sp-feat-text">
-                <div class="sp-feat-title">Block-Lattice DAG</div>
-                <div class="sp-feat-sub">Each account has its own chain — fully decentralized via Open Representative Voting.</div>
-              </div>
+            <div class="np-header-right">
+              <button class="np-try-btn" onclick="window.open('https://nano.org/get-nano','_blank')">Try Nano</button>
+              <div class="np-menu">≡</div>
             </div>
           </div>
-          <a class="sp-visit" href="https://nano.org" target="_blank" rel="noopener">↗ &nbsp;Visit nano.org</a>
+
+          <!-- Hero -->
+          <div class="np-hero">
+            <div class="np-hero-label">I use nano to</div>
+            <div class="np-hero-headline">accept payments</div>
+            <div class="np-hero-nav">
+              <button>←</button>
+              <button>→</button>
+            </div>
+          </div>
+
+          <!-- Features card overlapping hero -->
+          <div class="np-features-card">
+            <div class="np-features-title">Nano is a digital currency for everyone, without fees.</div>
+
+            <div class="np-feat-row">
+              <div class="np-feat-icon-wrap">❄️</div>
+              <div class="np-feat-body">
+                <div class="np-feat-name">Zero Fees</div>
+                <div class="np-feat-desc">It doesn't cost anything to send nano, making it practical and inclusive for all the world.</div>
+              </div>
+            </div>
+
+            <div class="np-feat-row">
+              <div class="np-feat-icon-wrap">🌲</div>
+              <div class="np-feat-body">
+                <div class="np-feat-name">Eco-Friendly</div>
+                <div class="np-feat-desc">Without relying on mining, printing or minting, nano is a sustainable solution to money. Sending nano uses less energy than a Google search.</div>
+              </div>
+            </div>
+
+            <div class="np-feat-row">
+              <div class="np-feat-icon-wrap">⚡</div>
+              <div class="np-feat-body">
+                <div class="np-feat-name">Instant Payment</div>
+                <div class="np-feat-desc">You don't have to wait to use digital currency, nano is ready when you are.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video / text section -->
+          <div class="np-video-section">
+            <div class="np-video-thumb">
+              <div style="width:100%;height:160px;background:linear-gradient(135deg,#2a3a5a 0%,#3d5a7e 50%,#2a4060 100%);border-radius:14px;display:flex;align-items:center;justify-content:center;">
+                <div style="display:flex;gap:0;width:100%;height:100%;border-radius:14px;overflow:hidden;position:relative;">
+                  <div style="flex:1;background:linear-gradient(160deg,#3a4a6a,#5a7aaa);"></div>
+                  <div style="flex:1;background:linear-gradient(160deg,#5a6a8a,#4a6080);"></div>
+                  <div class="np-play-btn" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+                </div>
+              </div>
+            </div>
+            <div class="np-video-title">Nano is a new currency that happens to be digital.</div>
+            <div class="np-video-body">Just like the cash in your pocket, choosing to transact with nano ensures that 100% of the value is transferred directly to the recipient.</div>
+            <div class="np-video-body">Created to facilitate both local and international payments, choosing to use nano makes moving money across borders effortless and feeless.</div>
+            <button class="np-try-btn-lg" onclick="window.open('https://nano.org/get-nano','_blank')">Try Nano</button>
+          </div>
+
+          <!-- What can I do with nano? -->
+          <div class="np-usecases">
+            <div class="np-usecases-title">What can I do with nano?</div>
+            <div class="np-carousel-img">
+              <div style="width:100%;height:190px;background:linear-gradient(160deg,#2a3550 0%,#3a4a6a 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+                <div style="position:absolute;inset:0;background:rgba(20,30,60,.48);"></div>
+                <div style="font-size:52px;position:relative;z-index:1;">🏧</div>
+                <div class="np-carousel-label">MICROTRANSACTIONS</div>
+              </div>
+            </div>
+            <div class="np-dots">
+              <div class="np-dot active"></div>
+              <div class="np-dot"></div>
+              <div class="np-dot"></div>
+              <div class="np-dot"></div>
+              <div class="np-dot"></div>
+            </div>
+          </div>
+
+          <!-- Ecosystem grid -->
+          <div class="np-ecosystem">
+            <div class="np-ecosystem-title">Explore the rich ecosystem of apps, merchants and exchanges.</div>
+            <div class="np-grid">
+              <a class="np-grid-card" href="https://nano.org/merchants" target="_blank" rel="noopener">
+                <div class="np-grid-card-name">Merchants</div>
+                <div class="np-grid-card-arrow">→</div>
+              </a>
+              <a class="np-grid-card" href="https://nano.org/gaming" target="_blank" rel="noopener">
+                <div class="np-grid-card-name">Gaming</div>
+                <div class="np-grid-card-arrow">→</div>
+              </a>
+              <a class="np-grid-card" href="https://nano.org/merchant-solutions" target="_blank" rel="noopener">
+                <div class="np-grid-card-name">Merchant Solutions</div>
+                <div class="np-grid-card-arrow">→</div>
+              </a>
+              <a class="np-grid-card" href="https://nano.org/wallets" target="_blank" rel="noopener">
+                <div class="np-grid-card-name">Wallets</div>
+                <div class="np-grid-card-arrow">→</div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="np-footer">
+            <div class="np-footer-logo">
+              <div class="np-logo-sym">¥</div>
+              <div class="np-logo-divider"></div>
+              NANO
+            </div>
+
+            <div class="np-footer-section">
+              <div class="np-footer-heading">Get Started</div>
+              <a class="np-footer-link" href="https://nano.org/get-nano" target="_blank" rel="noopener">Try Nano</a>
+              <a class="np-footer-link" href="https://nano.org/accept-nano" target="_blank" rel="noopener">Accept Nano</a>
+              <a class="np-footer-link" href="https://docs.nano.org" target="_blank" rel="noopener">Developers</a>
+            </div>
+
+            <div class="np-footer-section">
+              <div class="np-footer-heading">Learn More</div>
+              <a class="np-footer-link" href="https://nano.org/sustainability" target="_blank" rel="noopener">Sustainability</a>
+              <a class="np-footer-link" href="https://nano.org/currency-kit" target="_blank" rel="noopener">Currency Kit</a>
+              <a class="np-footer-link" href="https://nano.org/faq" target="_blank" rel="noopener">Frequently Asked Questions</a>
+              <a class="np-footer-link" href="https://nano.org/nano-foundation" target="_blank" rel="noopener">Nano Foundation</a>
+              <a class="np-footer-link" href="https://nano.org/connect" target="_blank" rel="noopener">Connect With Us</a>
+            </div>
+
+            <div class="np-footer-section">
+              <div class="np-footer-heading">News</div>
+              <a class="np-footer-link" href="https://nano.org/news" target="_blank" rel="noopener">All</a>
+              <a class="np-footer-link" href="https://nano.org/news/announcements" target="_blank" rel="noopener">Announcements</a>
+            </div>
+          </div>
+
         </div>`,
       nano_gpt: `
         <div class="site-panel">
