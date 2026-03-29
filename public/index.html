@@ -810,6 +810,110 @@
     }
 
     /* ═══════════════════════════
+       FOLDER WINDOW
+    ═══════════════════════════ */
+    .folder-shell {
+      display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden;
+      background: #fff; font-family: "Tahoma", sans-serif;
+    }
+    .folder-toolbar {
+      background: #ece9d8; border-bottom: 1px solid #aca899;
+      padding: 3px 8px; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .folder-addr {
+      flex: 1; background: #fff; border: 1px solid #7f9db9;
+      padding: 2px 6px; font-size: 11px; color: #333;
+      border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .folder-status {
+      background: #ece9d8; border-top: 1px solid #aca899;
+      padding: 2px 8px; font-size: 10px; color: #555; flex-shrink: 0;
+      display: flex; justify-content: space-between;
+    }
+    .folder-body {
+      display: flex; flex: 1; overflow: hidden;
+    }
+    .folder-sidebar {
+      width: 120px; flex-shrink: 0; background: linear-gradient(180deg,#d6dff7 0%,#c2cef0 100%);
+      border-right: 1px solid #aca899; padding: 10px 8px; overflow-y: auto;
+      font-size: 10px;
+    }
+    .folder-sidebar-title {
+      font-size: 10px; font-weight: bold; color: #003080;
+      border-bottom: 1px solid #7f9db9; margin-bottom: 6px; padding-bottom: 3px;
+    }
+    .folder-grid {
+      flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start;
+      gap: 4px; padding: 10px; overflow-y: auto; background: #fff;
+    }
+    .folder-item {
+      display: flex; flex-direction: column; align-items: center;
+      width: 76px; padding: 5px 4px; border-radius: 2px; cursor: pointer;
+      border: 1px solid transparent; user-select: none; gap: 4px;
+    }
+    .folder-item:hover { background: #d5e3f7; border-color: #7da2ce; }
+    .folder-item:active { background: #c1d7f5; }
+    .folder-item-thumb {
+      width: 60px; height: 52px; object-fit: cover; border-radius: 2px;
+      border: 1px solid #bbb; display: block;
+    }
+    .folder-item-video-icon {
+      width: 60px; height: 52px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: linear-gradient(135deg,#fffbe6 0%,#ffd700 60%,#e6b800 100%);
+      border: 1px solid #c8a000; border-radius: 2px; position: relative;
+    }
+    .folder-item-video-icon::before {
+      content: "▶"; font-size: 18px; color: #333; opacity: .7;
+    }
+    .folder-item-video-icon .fiv-ext {
+      position: absolute; bottom: 2px; right: 4px;
+      font-size: 7px; font-weight: bold; color: #555; letter-spacing: .02em;
+    }
+    .folder-item-name {
+      font-size: 10px; color: #1a1a1a; text-align: center; max-width: 72px;
+      word-break: break-word; line-height: 1.25;
+    }
+
+    /* ═══════════════════════════
+       MEDIA VIEWER WINDOW
+    ═══════════════════════════ */
+    .mv-win {
+      position: absolute; display: none; flex-direction: column;
+      background: #000; border: 2px solid #0831d9;
+      border-radius: 6px 6px 0 0; box-shadow: 4px 4px 14px rgba(0,0,0,.7);
+      overflow: hidden; min-width: 220px; min-height: 160px;
+      font-family: "Tahoma", sans-serif;
+    }
+    .mv-titlebar {
+      background: linear-gradient(180deg,#1a6be8 0%,#0a3dbf 100%);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 3px 5px; cursor: move; user-select: none; flex-shrink: 0;
+    }
+    .mv-title {
+      color: #fff; font-size: 11px; font-weight: bold;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .mv-close {
+      background: #c0392b; border: 1px solid #922b21; border-radius: 3px;
+      color: #fff; font-size: 10px; width: 16px; height: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mv-close:hover { background: #e74c3c; }
+    .mv-body {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      overflow: auto; background: #111;
+    }
+    .mv-body img {
+      max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+    }
+    .mv-body video {
+      max-width: 100%; max-height: 100%; display: block; outline: none;
+    }
+
+    /* ═══════════════════════════
        WIFI / REPS BUTTON & POPUP
     ═══════════════════════════ */
     .wifi-btn {
@@ -1195,6 +1299,10 @@
         <img class="di-img" src="/nanohub-icon.png" alt="Nano Hub" />
         <span class="label">Nano Hub</span>
       </div>
+      <div class="desk-icon" ondblclick="wm.open('media_folder')" onclick="wm.open('media_folder')" style="margin-top:4px;">
+        <div class="di-emoji" style="font-size:34px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">📁</div>
+        <span class="label">Nano videos<br>and memes</span>
+      </div>
     </div>
     <div class="win-area" id="win-area"></div>
   </div>
@@ -1276,6 +1384,29 @@
 /* ══════════════════════════════════════════
    APP CONFIGS
 ══════════════════════════════════════════ */
+const MEDIA_FILES = [
+  { name: 'Nano vs Lightning.jpeg',    type: 'image', src: '/media/IMG_4155_1774779741095.jpeg' },
+  { name: 'Hard to Swallow Pills.jpeg',type: 'image', src: '/media/IMG_1112_1774779741095.jpeg' },
+  { name: 'I Hate Paying Fees.png',    type: 'image', src: '/media/IMG_5445_1774779741095.png'  },
+  { name: 'No Thanks, Busy.jpeg',      type: 'image', src: '/media/IMG_0454_1774779741095.jpeg' },
+  { name: 'Nano Doge.jpeg',            type: 'image', src: '/media/IMG_0736_1774779741095.jpeg' },
+  { name: 'I Wish My Coin.jpeg',       type: 'image', src: '/media/IMG_9647_1774779741095.jpeg' },
+  { name: 'Has Anyone Seen Nano.jpeg', type: 'image', src: '/media/IMG_9369_1774779741095.jpeg' },
+  { name: 'Big Brain Nano.png',        type: 'image', src: '/media/IMG_5806_1774779741095.png'  },
+  { name: 'Video 1.mp4',  type: 'video', src: '/media/trim_2A557431-7B28-4E4E-90A4-55A0AD34F50A_1774779741095.mp4' },
+  { name: 'Video 2.mp4',  type: 'video', src: '/media/trim_4AA71837-3130-4F53-88FD-0CEED956B2D1_1774779741095.mp4' },
+  { name: 'Video 3.mov',  type: 'video', src: '/media/trim_4BA33056-42C3-4BFB-BA40-F846649F9326_1774779741095.mov' },
+  { name: 'Video 4.mp4',  type: 'video', src: '/media/trim_6C641AA9-BDA7-4777-BDE8-17ADD6978B98_1774779741095.mp4' },
+  { name: 'Video 5.mp4',  type: 'video', src: '/media/trim_0073679E-D0E4-402C-A8DB-A93F97388C36_1774779741095.mp4' },
+  { name: 'Video 6.mp4',  type: 'video', src: '/media/x-downloader.com_vzCZFe_1774779741095.mp4' },
+  { name: 'Video 7.mp4',  type: 'video', src: '/media/trim_ED549C08-D18F-404A-9BD0-13158B80DED8_1774779741095.mp4' },
+  { name: 'Video 8.mov',  type: 'video', src: '/media/fcc1716ec02f423ba9c78f27c9ae6ca4_1774779741095.mov' },
+  { name: 'Video 9.mov',  type: 'video', src: '/media/53c7ef5b97444cb7a31c15a26cf6558d_1774779741095.mov' },
+  { name: 'Video 10.mov', type: 'video', src: '/media/ssstwitter.com_1761633794422_1774779741095.mov' },
+  { name: 'Video 11.mp4', type: 'video', src: '/media/trim_15C1E541-0B01-493A-B54F-9A4A22E29569_1774779741095.mp4' },
+  { name: 'Video 12.mp4', type: 'video', src: '/media/_users_bfc4d50f-adb9-4a57-b628-42365cebd017_generated_d5595688_1774779741095.mp4' },
+];
+
 const APPS = {
   nanonerd: {
     id: 'nanonerd', title: 'NanoNerd',
@@ -1303,6 +1434,12 @@ const APPS = {
     tbIconHtml: '<img src="/nanohub-icon.png" style="height:14px;width:14px;border-radius:50%;object-fit:cover;">',
     type: 'browser', url: 'https://hub.nano.org',
     emoji: '🌐', desc: 'Explore the Nano (XNO) ecosystem',
+  },
+  media_folder: {
+    id: 'media_folder', title: 'Nano videos and memes',
+    iconHtml: '<span style="font-size:14px;">📁</span>',
+    tbIconHtml: '<span style="font-size:12px;">📁</span>',
+    type: 'folder',
   },
 };
 
@@ -1502,7 +1639,11 @@ const wm = {
     /* Content */
     const content = document.createElement('div');
     content.className = 'xp-content';
-    content.appendChild(app.type === 'chat' ? this._buildChat() : this._buildBrowser(app));
+    let bodyEl;
+    if (app.type === 'chat')         bodyEl = this._buildChat();
+    else if (app.type === 'folder')  bodyEl = this._buildFolder();
+    else                             bodyEl = this._buildBrowser(app);
+    content.appendChild(bodyEl);
 
     win.appendChild(tb);
     win.appendChild(content);
@@ -2662,6 +2803,61 @@ const wm = {
     return wrap;
   },
 
+  _buildFolder() {
+    const shell = document.createElement('div');
+    shell.className = 'folder-shell';
+    const imageFiles = MEDIA_FILES.filter(f => f.type === 'image');
+    const videoFiles = MEDIA_FILES.filter(f => f.type === 'video');
+    const total = MEDIA_FILES.length;
+    shell.innerHTML = `
+      <div class="folder-toolbar">
+        <span style="font-size:11px;color:#555;white-space:nowrap;">Address:</span>
+        <div class="folder-addr">📁 Nano videos and memes</div>
+      </div>
+      <div class="folder-body">
+        <div class="folder-sidebar">
+          <div class="folder-sidebar-title">📁 This Folder</div>
+          <div style="margin-bottom:8px;line-height:1.6;">
+            <div style="color:#003080;font-weight:bold;">${imageFiles.length} images</div>
+            <div style="color:#003080;font-weight:bold;">${videoFiles.length} videos</div>
+          </div>
+          <div class="folder-sidebar-title" style="margin-top:8px;">Details</div>
+          <div style="color:#444;line-height:1.5;">Nano XNO memes &amp; clips</div>
+        </div>
+        <div class="folder-grid" id="folder-grid-inner"></div>
+      </div>
+      <div class="folder-status">
+        <span>${total} objects</span>
+        <span>${imageFiles.length} images · ${videoFiles.length} videos</span>
+      </div>
+    `;
+    /* Populate grid after DOM attached (requestAnimationFrame) */
+    requestAnimationFrame(() => {
+      const grid = shell.querySelector('#folder-grid-inner');
+      if (!grid) return;
+      MEDIA_FILES.forEach((file, idx) => {
+        const item = document.createElement('div');
+        item.className = 'folder-item';
+        item.title = file.name;
+        item.onclick = () => openMediaViewer(idx);
+        const ext = file.name.split('.').pop().toUpperCase();
+        if (file.type === 'image') {
+          item.innerHTML = `
+            <img class="folder-item-thumb" src="${file.src}" alt="${file.name}" loading="lazy">
+            <span class="folder-item-name">${file.name}</span>
+          `;
+        } else {
+          item.innerHTML = `
+            <div class="folder-item-video-icon"><span class="fiv-ext">${ext}</span></div>
+            <span class="folder-item-name">${file.name}</span>
+          `;
+        }
+        grid.appendChild(item);
+      });
+    });
+    return shell;
+  },
+
   _buildChat() {
     const wrap = document.createElement('div');
     wrap.className = 'chat-wrap';
@@ -3243,8 +3439,73 @@ function updateClock() {
 }
 
 /* ══════════════════════════════════════════
-   BOOT
+   MEDIA VIEWER (spawns individual windows)
 ══════════════════════════════════════════ */
+let _mvZ = 9000;
+const _mvWins = [];
+
+function openMediaViewer(idx) {
+  const file = MEDIA_FILES[idx];
+  if (!file) return;
+  const area = document.getElementById('win-area');
+  _mvZ++;
+
+  /* Build window */
+  const win = document.createElement('div');
+  win.className = 'mv-win';
+  win.style.cssText = `
+    display:flex; z-index:${_mvZ};
+    width:${file.type === 'video' ? 480 : 420}px;
+    height:${file.type === 'video' ? 320 : 380}px;
+    left:${80 + (_mvZ % 12) * 22}px;
+    top:${60 + (_mvZ % 10) * 18}px;
+  `;
+
+  const ext = file.name.split('.').pop().toUpperCase();
+  const icon = file.type === 'image' ? '🖼️' : '▶️';
+
+  win.innerHTML = `
+    <div class="mv-titlebar">
+      <div class="mv-title">${icon} ${file.name}</div>
+      <button class="mv-close" title="Close">✕</button>
+    </div>
+    <div class="mv-body">
+      ${file.type === 'image'
+        ? `<img src="${file.src}" alt="${file.name}">`
+        : `<video src="${file.src}" controls autoplay playsinline style="max-width:100%;max-height:100%;"></video>`
+      }
+    </div>
+  `;
+
+  /* Close button */
+  win.querySelector('.mv-close').onclick = () => {
+    const v = win.querySelector('video');
+    if (v) { v.pause(); v.src = ''; }
+    win.remove();
+  };
+
+  /* Drag */
+  const titlebar = win.querySelector('.mv-titlebar');
+  let dragging = false, ox = 0, oy = 0;
+  const onDown = (cx, cy) => {
+    dragging = true; _mvZ++;
+    win.style.zIndex = _mvZ;
+    ox = cx - win.offsetLeft; oy = cy - win.offsetTop;
+  };
+  const onMove = (cx, cy) => { if (!dragging) return; win.style.left = (cx - ox) + 'px'; win.style.top = (cy - oy) + 'px'; };
+  const onUp   = () => { dragging = false; };
+  titlebar.addEventListener('mousedown',  e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); onDown(e.clientX, e.clientY); } });
+  document.addEventListener('mousemove',  e => onMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup',    onUp);
+  titlebar.addEventListener('touchstart', e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); const t = e.touches[0]; onDown(t.clientX, t.clientY); } }, {passive:false});
+  document.addEventListener('touchmove',  e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); }, {passive:true});
+  document.addEventListener('touchend',   onUp);
+  win.addEventListener('mousedown', () => { _mvZ++; win.style.zIndex = _mvZ; });
+
+  area.appendChild(win);
+  _mvWins.push(win);
+}
+
 wm.init();
 wm.open('nanonerd');
 showWelcome();
