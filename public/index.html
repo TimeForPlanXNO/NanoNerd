@@ -901,6 +901,97 @@
 
     .menu-overlay.visible { display: block; }
 
+    /* ─── nano.org SPA Panel ─── */
+    .norg-page { display:flex; flex-direction:column; height:100%; background:#f5f7fb; color:#1a2b4b; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; }
+    .norg-header { background:#4a62a8; padding:0 14px; display:flex; align-items:center; gap:8px; min-height:52px; flex-shrink:0; flex-wrap:wrap; }
+    .norg-logo { display:flex; align-items:center; gap:8px; cursor:pointer; }
+    .norg-nav { display:flex; align-items:center; gap:2px; flex:1; flex-wrap:wrap; }
+    .norg-nav-link { padding:5px 8px; font-size:12px; color:rgba(255,255,255,.82); border-radius:6px; cursor:pointer; white-space:nowrap; border:none; background:none; font-family:inherit; }
+    .norg-nav-link:hover, .norg-nav-link.no-active { background:rgba(255,255,255,.22); color:#fff; }
+    .norg-try-hdr { padding:5px 13px; font-size:12px; font-weight:600; color:#4a62a8; background:#fff; border-radius:14px; cursor:pointer; border:none; font-family:inherit; white-space:nowrap; }
+    .norg-try-hdr:hover { background:#e8f0ff; }
+    .norg-body { flex:1; overflow-y:auto; }
+    .norg-view { display:none; flex-direction:column; }
+    .norg-view.no-visible { display:flex; }
+    .norg-hero { background:linear-gradient(160deg,#4a62a8 0%,#3d5a9e 100%); padding:30px 18px 90px; text-align:center; flex-shrink:0; }
+    .norg-hero-label { font-size:14px; color:rgba(255,255,255,.72); margin-bottom:4px; letter-spacing:.04em; }
+    .norg-hero-word { font-size:28px; font-weight:800; color:#fff; letter-spacing:-.01em; min-height:38px; }
+    .norg-hero-dots { display:flex; justify-content:center; gap:6px; margin-top:14px; }
+    .norg-hero-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.35); cursor:pointer; }
+    .norg-hero-dot.ndot-active { background:#fff; }
+    .norg-feat-card { margin:-58px 14px 0; background:#fff; border-radius:16px; padding:18px 16px; box-shadow:0 8px 30px rgba(74,98,168,.2); position:relative; z-index:2; }
+    .norg-feat-title { font-size:14.5px; font-weight:700; color:#1a2b4b; margin-bottom:14px; line-height:1.35; }
+    .norg-feat-row { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-top:1px solid #eef0f8; }
+    .norg-feat-icon { font-size:20px; flex-shrink:0; margin-top:2px; }
+    .norg-feat-name { font-size:13px; font-weight:700; color:#1a2b4b; margin-bottom:2px; }
+    .norg-feat-desc { font-size:11.5px; color:#5a6e8a; line-height:1.5; }
+    .norg-feat-lnk { font-size:11px; color:#4a62a8; text-decoration:none; margin-top:4px; display:inline-block; }
+    .norg-section { padding:22px 16px 8px; }
+    .norg-section-title { font-size:18px; font-weight:800; color:#1a2b4b; margin-bottom:10px; line-height:1.3; }
+    .norg-section-body { font-size:12.5px; color:#5a6e8a; line-height:1.6; margin-bottom:10px; }
+    .norg-cta-btn { display:inline-block; padding:9px 22px; background:#4a62a8; color:#fff; border-radius:20px; font-size:13px; font-weight:600; text-decoration:none; border:none; cursor:pointer; font-family:inherit; }
+    .norg-cta-btn:hover { background:#3d55a0; }
+    .norg-usecases { padding:14px 16px 22px; }
+    .norg-uc-title { font-size:15px; font-weight:700; color:#1a2b4b; margin-bottom:12px; }
+    .norg-uc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .norg-uc-card { background:#fff; border-radius:10px; padding:13px 12px; border:1.5px solid #e0e7f0; }
+    .norg-uc-icon { font-size:20px; margin-bottom:6px; }
+    .norg-uc-name { font-size:12px; font-weight:700; color:#1a2b4b; }
+    .norg-uc-desc { font-size:10.5px; color:#5a6e8a; margin-top:2px; line-height:1.4; }
+    .norg-ecosystem { background:#e8f0ff; padding:20px 16px; }
+    .norg-eco-title { font-size:14.5px; font-weight:700; color:#1a2b4b; margin-bottom:13px; line-height:1.4; }
+    .norg-eco-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .norg-eco-card { background:#fff; border-radius:10px; padding:12px 14px; border:1.5px solid #ccd9f5; display:flex; align-items:center; justify-content:space-between; text-decoration:none; color:#1a2b4b; font-size:12.5px; font-weight:600; }
+    .norg-eco-card:hover { background:#f0f4ff; }
+    .norg-blog-sec { padding:20px 16px 24px; }
+    .norg-blog-title { font-size:15px; font-weight:700; color:#1a2b4b; margin-bottom:13px; }
+    .norg-blog-list { display:flex; flex-direction:column; gap:10px; }
+    .norg-blog-card { background:#fff; border-radius:10px; border:1.5px solid #e0e7f0; padding:13px; text-decoration:none; color:inherit; display:block; }
+    .norg-blog-card:hover { border-color:#b0c4ee; }
+    .norg-blog-cat { font-size:10px; font-weight:700; color:#4a62a8; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .norg-blog-post-title { font-size:13px; font-weight:700; color:#1a2b4b; margin-bottom:4px; line-height:1.4; }
+    .norg-blog-snippet { font-size:11px; color:#5a6e8a; line-height:1.5; margin-bottom:5px; }
+    .norg-blog-meta { font-size:10px; color:#8a9ab8; }
+    .norg-blog-more { text-align:center; margin-top:10px; }
+    .norg-blog-more a { color:#4a62a8; font-size:12.5px; font-weight:600; text-decoration:none; }
+    .norg-footer { background:#1a2b4b; color:#fff; padding:24px 16px 20px; }
+    .norg-footer-logo { display:flex; align-items:center; gap:8px; margin-bottom:18px; }
+    .norg-footer-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .norg-footer-col-title { font-size:11px; font-weight:700; color:rgba(255,255,255,.55); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+    .norg-footer-lnk { display:block; font-size:12px; color:rgba(255,255,255,.72); text-decoration:none; padding:3px 0; }
+    .norg-footer-lnk:hover { color:#fff; }
+    .norg-sub-header { padding:18px 16px 10px; }
+    .norg-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#4a62a8; cursor:pointer; background:none; border:none; padding:0; margin-bottom:10px; font-family:inherit; }
+    .norg-sub-header h2 { font-size:20px; font-weight:800; color:#1a2b4b; margin:0 0 4px; }
+    .norg-sub-header p { font-size:12px; color:#5a6e8a; margin:0; }
+    .norg-try-steps { padding:0 16px 24px; }
+    .norg-try-step { display:flex; gap:14px; padding:16px 0; border-bottom:1px solid #eef0f8; align-items:flex-start; }
+    .norg-try-step-num { width:28px; height:28px; border-radius:50%; background:#4a62a8; color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+    .norg-try-step-title { font-size:14px; font-weight:700; color:#1a2b4b; margin-bottom:5px; }
+    .norg-try-step-body { font-size:12px; color:#5a6e8a; margin-bottom:10px; line-height:1.5; }
+    .norg-try-links { display:flex; flex-wrap:wrap; gap:6px; }
+    .norg-try-lnk { padding:5px 12px; border:1.5px solid #4a62a8; color:#4a62a8; border-radius:14px; font-size:11.5px; font-weight:600; text-decoration:none; }
+    .norg-try-lnk:hover, .norg-try-lnk.primary { background:#4a62a8; color:#fff; }
+    .norg-about-goals { padding:0 16px 8px; display:flex; flex-direction:column; gap:10px; }
+    .norg-goal { background:#fff; border-radius:10px; padding:15px; border:1.5px solid #e0e7f0; }
+    .norg-goal-icon { font-size:22px; margin-bottom:7px; }
+    .norg-goal-title { font-size:14px; font-weight:700; color:#1a2b4b; margin-bottom:4px; }
+    .norg-goal-desc { font-size:12px; color:#5a6e8a; line-height:1.5; }
+    .norg-sus-stats { padding:0 16px; display:flex; flex-direction:column; gap:0; }
+    .norg-stat { display:flex; gap:14px; align-items:center; padding:14px 0; border-bottom:1px solid #eef0f8; }
+    .norg-stat-icon { font-size:28px; }
+    .norg-stat-val { font-size:18px; font-weight:800; color:#4a62a8; margin-bottom:2px; }
+    .norg-stat-label { font-size:11.5px; color:#5a6e8a; }
+    .norg-sus-articles { padding:18px 16px 24px; }
+    .norg-sus-articles h3 { font-size:14px; font-weight:700; color:#1a2b4b; margin-bottom:12px; }
+    .norg-article { background:#fff; border-radius:10px; border:1.5px solid #e0e7f0; padding:13px; margin-bottom:9px; text-decoration:none; display:block; color:inherit; }
+    .norg-article:hover { border-color:#b0c4ee; }
+    .norg-article-title { font-size:13px; font-weight:700; color:#1a2b4b; margin-bottom:4px; line-height:1.4; }
+    .norg-article-snippet { font-size:11px; color:#5a6e8a; line-height:1.5; }
+    .norg-hub-cta { background:#4a62a8; margin:16px; border-radius:12px; padding:18px 16px; text-align:center; color:#fff; }
+    .norg-hub-cta p { font-size:13px; margin:0 0 10px; opacity:.88; }
+    .norg-hub-cta-btn { display:inline-block; padding:8px 20px; background:#fff; color:#4a62a8; border-radius:16px; font-size:13px; font-weight:700; text-decoration:none; }
+
     /* ─── Nano Hub Panel ─── */
     .nhub-page { display:flex; flex-direction:column; height:100%; background:#f5f7ff; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; color:#1a2b4b; }
     .nhub-header { background:#fff; border-bottom:1.5px solid #e0e7f0; padding:0 14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-height:50px; flex-shrink:0; }
@@ -1255,160 +1346,426 @@ const wm = {
 
     const panels = {
       nano_org: `
-        <div class="nano-page">
+        <div class="norg-page">
 
           <!-- Header -->
-          <div class="np-header">
-            <div style="display:flex;align-items:center;gap:9px;">
-              <svg width="20" height="26" viewBox="0 0 20 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <line x1="1.5" y1="1.5" x2="18.5" y2="26.5" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-                <line x1="18.5" y1="1.5" x2="1.5" y2="26.5" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-                <line x1="3.5" y1="18" x2="16.5" y2="18" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-                <line x1="5.5" y1="22" x2="14.5" y2="22" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-              </svg>
-              <div style="width:1px;height:22px;background:#7ab4e8;opacity:.8;"></div>
-              <span style="font-size:18px;font-weight:300;color:#fff;letter-spacing:.15em;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;">NANO</span>
+          <div class="norg-header">
+            <div class="norg-logo" onclick="nanoNav('home')">
+              <img src="/nano-symbol.png" alt="XNO" style="height:30px;mix-blend-mode:screen;">
+              <div style="width:1px;height:22px;background:#7ab4e8;opacity:.75;"></div>
+              <span style="font-size:17px;font-weight:300;color:#fff;letter-spacing:.15em;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;">NANO</span>
             </div>
-            <div class="np-header-right">
-              <button class="np-try-btn" onclick="window.open('https://nano.org/get-nano','_blank')">Try Nano</button>
-              <div class="np-menu">≡</div>
+            <div class="norg-nav">
+              <button class="norg-nav-link" data-page="try-nano" onclick="nanoNav('try-nano')">Try Nano</button>
+              <button class="norg-nav-link" data-page="about" onclick="nanoNav('about')">About</button>
+              <button class="norg-nav-link" data-page="sustainability" onclick="nanoNav('sustainability')">Sustainability</button>
+              <button class="norg-nav-link" data-page="blog" onclick="nanoNav('blog')">Blog</button>
             </div>
+            <button class="norg-try-hdr" onclick="nanoNav('try-nano')">Try Nano</button>
           </div>
 
-          <!-- Hero -->
-          <div class="np-hero">
-            <div class="np-hero-label">I use nano to</div>
-            <div class="np-hero-headline">accept payments</div>
-            <div class="np-hero-nav">
-              <button>←</button>
-              <button>→</button>
-            </div>
-          </div>
+          <!-- Body -->
+          <div class="norg-body" id="norg-body">
 
-          <!-- Features card overlapping hero -->
-          <div class="np-features-card">
-            <div class="np-features-title">Nano is a digital currency for everyone, without fees.</div>
-
-            <div class="np-feat-row">
-              <div class="np-feat-icon-wrap">❄️</div>
-              <div class="np-feat-body">
-                <div class="np-feat-name">Zero Fees</div>
-                <div class="np-feat-desc">It doesn't cost anything to send nano, making it practical and inclusive for all the world.</div>
-              </div>
-            </div>
-
-            <div class="np-feat-row">
-              <div class="np-feat-icon-wrap">🌲</div>
-              <div class="np-feat-body">
-                <div class="np-feat-name">Eco-Friendly</div>
-                <div class="np-feat-desc">Without relying on mining, printing or minting, nano is a sustainable solution to money. Sending nano uses less energy than a Google search.</div>
-              </div>
-            </div>
-
-            <div class="np-feat-row">
-              <div class="np-feat-icon-wrap">⚡</div>
-              <div class="np-feat-body">
-                <div class="np-feat-name">Instant Payment</div>
-                <div class="np-feat-desc">You don't have to wait to use digital currency, nano is ready when you are.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Video / text section -->
-          <div class="np-video-section">
-            <div class="np-video-thumb">
-              <div style="width:100%;height:160px;background:linear-gradient(135deg,#2a3a5a 0%,#3d5a7e 50%,#2a4060 100%);border-radius:14px;display:flex;align-items:center;justify-content:center;">
-                <div style="display:flex;gap:0;width:100%;height:100%;border-radius:14px;overflow:hidden;position:relative;">
-                  <div style="flex:1;background:linear-gradient(160deg,#3a4a6a,#5a7aaa);"></div>
-                  <div style="flex:1;background:linear-gradient(160deg,#5a6a8a,#4a6080);"></div>
-                  <div class="np-play-btn" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+            <!-- ── HOME ── -->
+            <div class="norg-view no-visible" id="norg-home">
+              <div class="norg-hero">
+                <div class="norg-hero-label">I use nano to</div>
+                <div class="norg-hero-word" id="norg-hero-word">accept payments</div>
+                <div class="norg-hero-dots">
+                  <div class="norg-hero-dot ndot-active"></div>
+                  <div class="norg-hero-dot"></div>
+                  <div class="norg-hero-dot"></div>
+                  <div class="norg-hero-dot"></div>
+                  <div class="norg-hero-dot"></div>
                 </div>
               </div>
-            </div>
-            <div class="np-video-title">Nano is a new currency that happens to be digital.</div>
-            <div class="np-video-body">Just like the cash in your pocket, choosing to transact with nano ensures that 100% of the value is transferred directly to the recipient.</div>
-            <div class="np-video-body">Created to facilitate both local and international payments, choosing to use nano makes moving money across borders effortless and feeless.</div>
-            <button class="np-try-btn-lg" onclick="window.open('https://nano.org/get-nano','_blank')">Try Nano</button>
-          </div>
 
-          <!-- What can I do with nano? -->
-          <div class="np-usecases">
-            <div class="np-usecases-title">What can I do with nano?</div>
-            <div class="np-carousel-img">
-              <div style="width:100%;height:190px;background:linear-gradient(160deg,#2a3550 0%,#3a4a6a 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-                <div style="position:absolute;inset:0;background:rgba(20,30,60,.48);"></div>
-                <div style="font-size:52px;position:relative;z-index:1;">🏧</div>
-                <div class="np-carousel-label">MICROTRANSACTIONS</div>
+              <div class="norg-feat-card">
+                <div class="norg-feat-title">Nano is a digital currency for everyone, without fees.</div>
+                <div class="norg-feat-row">
+                  <div class="norg-feat-icon">❄️</div>
+                  <div>
+                    <div class="norg-feat-name">Zero Fees</div>
+                    <div class="norg-feat-desc">It doesn't cost anything to send nano, making it practical and inclusive for all the world.</div>
+                  </div>
+                </div>
+                <div class="norg-feat-row">
+                  <div class="norg-feat-icon">🌱</div>
+                  <div>
+                    <div class="norg-feat-name">Eco-Friendly</div>
+                    <div class="norg-feat-desc">Without relying on mining, printing or minting, nano is a sustainable solution to money. Sending nano uses less energy than a Google search.</div>
+                    <a class="norg-feat-lnk" onclick="nanoNav('sustainability')">Learn about sustainability →</a>
+                  </div>
+                </div>
+                <div class="norg-feat-row">
+                  <div class="norg-feat-icon">⚡</div>
+                  <div>
+                    <div class="norg-feat-name">Instant Payment</div>
+                    <div class="norg-feat-desc">You don't have to wait to use digital currency, nano is ready when you are.</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="np-dots">
-              <div class="np-dot active"></div>
-              <div class="np-dot"></div>
-              <div class="np-dot"></div>
-              <div class="np-dot"></div>
-              <div class="np-dot"></div>
-            </div>
-          </div>
 
-          <!-- Ecosystem grid -->
-          <div class="np-ecosystem">
-            <div class="np-ecosystem-title">Explore the rich ecosystem of apps, merchants and exchanges.</div>
-            <div class="np-grid">
-              <a class="np-grid-card" href="https://nano.org/merchants" target="_blank" rel="noopener">
-                <div class="np-grid-card-name">Merchants</div>
-                <div class="np-grid-card-arrow">→</div>
-              </a>
-              <a class="np-grid-card" href="https://nano.org/gaming" target="_blank" rel="noopener">
-                <div class="np-grid-card-name">Gaming</div>
-                <div class="np-grid-card-arrow">→</div>
-              </a>
-              <a class="np-grid-card" href="https://nano.org/merchant-solutions" target="_blank" rel="noopener">
-                <div class="np-grid-card-name">Merchant Solutions</div>
-                <div class="np-grid-card-arrow">→</div>
-              </a>
-              <a class="np-grid-card" href="https://nano.org/wallets" target="_blank" rel="noopener">
-                <div class="np-grid-card-name">Wallets</div>
-                <div class="np-grid-card-arrow">→</div>
-              </a>
-            </div>
-          </div>
+              <div class="norg-section">
+                <div class="norg-section-title">Nano is a new currency that happens to be digital.</div>
+                <div class="norg-section-body">Just like the cash in your pocket, choosing to transact with nano ensures that 100% of the value is transferred directly to the recipient.</div>
+                <div class="norg-section-body">Created to facilitate both local and international payments, choosing to use nano makes moving money across borders effortless and feeless.</div>
+                <button class="norg-cta-btn" onclick="nanoNav('try-nano')">Try Nano</button>
+              </div>
 
-          <!-- Footer -->
-          <div class="np-footer">
-            <div class="np-footer-logo">
-              <svg width="18" height="24" viewBox="0 0 20 28" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-                <line x1="1.5" y1="1.5" x2="18.5" y2="26.5" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-                <line x1="18.5" y1="1.5" x2="1.5" y2="26.5" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-                <line x1="3.5" y1="18" x2="16.5" y2="18" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-                <line x1="5.5" y1="22" x2="14.5" y2="22" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-              </svg>
-              <div style="width:1px;height:20px;background:#7ab4e8;opacity:.7;"></div>
-              <span style="font-size:16px;font-weight:300;color:#fff;letter-spacing:.15em;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;">NANO</span>
-            </div>
+              <div class="norg-usecases">
+                <div class="norg-uc-title">What can I do with nano?</div>
+                <div class="norg-uc-grid">
+                  <div class="norg-uc-card">
+                    <div class="norg-uc-icon">💸</div>
+                    <div class="norg-uc-name">Remittances</div>
+                    <div class="norg-uc-desc">Send money across borders instantly with zero fees</div>
+                  </div>
+                  <div class="norg-uc-card">
+                    <div class="norg-uc-icon">🏧</div>
+                    <div class="norg-uc-name">Microtransactions</div>
+                    <div class="norg-uc-desc">Pay tiny amounts that traditional payment rails make impossible</div>
+                  </div>
+                  <div class="norg-uc-card">
+                    <div class="norg-uc-icon">🛒</div>
+                    <div class="norg-uc-name">Online & In-Store</div>
+                    <div class="norg-uc-desc">Pay at thousands of merchants worldwide with nano</div>
+                  </div>
+                  <div class="norg-uc-card">
+                    <div class="norg-uc-icon">📈</div>
+                    <div class="norg-uc-name">Foreign Exchange</div>
+                    <div class="norg-uc-desc">Trade and exchange nano on dozens of global exchanges</div>
+                  </div>
+                  <div class="norg-uc-card">
+                    <div class="norg-uc-icon">🏦</div>
+                    <div class="norg-uc-name">Banking Infrastructure</div>
+                    <div class="norg-uc-desc">Build financial services on a fast, feeless network</div>
+                  </div>
+                  <div class="norg-uc-card">
+                    <div class="norg-uc-icon">🎮</div>
+                    <div class="norg-uc-name">Gaming</div>
+                    <div class="norg-uc-desc">Earn and spend nano in games with instant micro-rewards</div>
+                  </div>
+                </div>
+              </div>
 
-            <div class="np-footer-section">
-              <div class="np-footer-heading">Get Started</div>
-              <a class="np-footer-link" href="https://nano.org/get-nano" target="_blank" rel="noopener">Try Nano</a>
-              <a class="np-footer-link" href="https://nano.org/accept-nano" target="_blank" rel="noopener">Accept Nano</a>
-              <a class="np-footer-link" href="https://docs.nano.org" target="_blank" rel="noopener">Developers</a>
-            </div>
+              <div class="norg-ecosystem">
+                <div class="norg-eco-title">Explore the rich ecosystem of apps, merchants and exchanges.</div>
+                <div class="norg-eco-grid">
+                  <a class="norg-eco-card" href="https://hub.nano.org/merchants" target="_blank" rel="noopener">Merchants <span>→</span></a>
+                  <a class="norg-eco-card" href="https://hub.nano.org/gaming" target="_blank" rel="noopener">Gaming <span>→</span></a>
+                  <a class="norg-eco-card" href="https://hub.nano.org/merchant-solutions" target="_blank" rel="noopener">Merchant Solutions <span>→</span></a>
+                  <a class="norg-eco-card" href="https://hub.nano.org/wallets" target="_blank" rel="noopener">Wallets <span>→</span></a>
+                  <a class="norg-eco-card" href="https://hub.nano.org/trading" target="_blank" rel="noopener">Trading <span>→</span></a>
+                  <a class="norg-eco-card" href="https://hub.nano.org/earn" target="_blank" rel="noopener">Earn <span>→</span></a>
+                </div>
+              </div>
 
-            <div class="np-footer-section">
-              <div class="np-footer-heading">Learn More</div>
-              <a class="np-footer-link" href="https://nano.org/sustainability" target="_blank" rel="noopener">Sustainability</a>
-              <a class="np-footer-link" href="https://nano.org/currency-kit" target="_blank" rel="noopener">Currency Kit</a>
-              <a class="np-footer-link" href="https://nano.org/faq" target="_blank" rel="noopener">Frequently Asked Questions</a>
-              <a class="np-footer-link" href="https://nano.org/nano-foundation" target="_blank" rel="noopener">Nano Foundation</a>
-              <a class="np-footer-link" href="https://nano.org/connect" target="_blank" rel="noopener">Connect With Us</a>
-            </div>
+              <div class="norg-blog-sec">
+                <div class="norg-blog-title">Latest Updates</div>
+                <div class="norg-blog-list">
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/what-if-money-worked-like-email--de760659" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Education</div>
+                    <div class="norg-blog-post-title">What If Money Worked Like Email?</div>
+                    <div class="norg-blog-snippet">Email made communication instant, free &amp; borderless, however money still works like a 1980s postal service. Nano fixes this.</div>
+                    <div class="norg-blog-meta">George Coxon · Feb 27, 2026</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/beyond-borders-how-bizmerchant-and-nano-are-shaping-the-future-of-global-commerc--256113e3" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Community</div>
+                    <div class="norg-blog-post-title">Beyond Borders: How BizMerchant and Nano Are Shaping the Future of Global Commerce</div>
+                    <div class="norg-blog-snippet">Enaanapu Gabriel organised the BizMerchant event 2025 — read his story and experience.</div>
+                    <div class="norg-blog-meta">Enaanapu Gabriel · Oct 6, 2025</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/v28-electrum-the-start-of-commercial-grade--1b8adb83" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Development</div>
+                    <div class="norg-blog-post-title">V28 Electrum: The Start of Commercial Grade</div>
+                    <div class="norg-blog-snippet">An in-depth look at what V28 Electrum brings to the Nano Node — marking the beginning of Nano's transition to commercial grade.</div>
+                    <div class="norg-blog-meta">Nano Foundation · Jan 28, 2025</div>
+                  </a>
+                </div>
+                <div class="norg-blog-more"><a href="https://nano.org/en/blog" target="_blank" rel="noopener">View all updates →</a></div>
+              </div>
 
-            <div class="np-footer-section">
-              <div class="np-footer-heading">News</div>
-              <a class="np-footer-link" href="https://nano.org/news" target="_blank" rel="noopener">All</a>
-              <a class="np-footer-link" href="https://nano.org/news/announcements" target="_blank" rel="noopener">Announcements</a>
-            </div>
-          </div>
+              <div class="norg-footer">
+                <div class="norg-footer-logo">
+                  <img src="/nano-symbol.png" alt="XNO" style="height:24px;mix-blend-mode:screen;">
+                  <div style="width:1px;height:20px;background:#7ab4e8;opacity:.6;"></div>
+                  <span style="font-size:15px;font-weight:300;color:#fff;letter-spacing:.15em;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;">NANO</span>
+                </div>
+                <div class="norg-footer-grid">
+                  <div>
+                    <div class="norg-footer-col-title">Get Started</div>
+                    <a class="norg-footer-lnk" onclick="nanoNav('try-nano')">Try Nano</a>
+                    <a class="norg-footer-lnk" href="https://nano.org/accept-nano" target="_blank" rel="noopener">Accept Nano</a>
+                    <a class="norg-footer-lnk" href="https://docs.nano.org" target="_blank" rel="noopener">Developers</a>
+                    <a class="norg-footer-lnk" href="https://hub.nano.org/" target="_blank" rel="noopener">Nano Hub</a>
+                  </div>
+                  <div>
+                    <div class="norg-footer-col-title">Learn More</div>
+                    <a class="norg-footer-lnk" onclick="nanoNav('sustainability')">Sustainability</a>
+                    <a class="norg-footer-lnk" onclick="nanoNav('about')">Nano Foundation</a>
+                    <a class="norg-footer-lnk" href="https://nano.org/en/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+                    <a class="norg-footer-lnk" href="https://nano.org/en/faq" target="_blank" rel="noopener">FAQ</a>
+                  </div>
+                  <div>
+                    <div class="norg-footer-col-title">News</div>
+                    <a class="norg-footer-lnk" onclick="nanoNav('blog')">All Articles</a>
+                    <a class="norg-footer-lnk" href="https://nano.org/en/blog/category/2/development" target="_blank" rel="noopener">Development</a>
+                    <a class="norg-footer-lnk" href="https://nano.org/en/blog/category/4/community" target="_blank" rel="noopener">Community</a>
+                    <a class="norg-footer-lnk" href="https://nano.org/en/blog/category/3/education" target="_blank" rel="noopener">Education</a>
+                  </div>
+                  <div>
+                    <div class="norg-footer-col-title">Connect</div>
+                    <a class="norg-footer-lnk" href="https://twitter.com/nano" target="_blank" rel="noopener">Twitter / X</a>
+                    <a class="norg-footer-lnk" href="https://reddit.com/r/nanocurrency" target="_blank" rel="noopener">Reddit</a>
+                    <a class="norg-footer-lnk" href="https://discord.gg/nano" target="_blank" rel="noopener">Discord</a>
+                    <a class="norg-footer-lnk" href="https://github.com/nanocurrency" target="_blank" rel="noopener">GitHub</a>
+                  </div>
+                </div>
+                <div style="margin-top:18px;font-size:10.5px;color:rgba(255,255,255,.38);text-align:center;">© Nano Foundation · XNO · Digital currency for everyone</div>
+              </div>
+            </div><!-- /home -->
 
+            <!-- ── TRY NANO ── -->
+            <div class="norg-view" id="norg-try-nano">
+              <div class="norg-sub-header">
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
+                <h2>Try Nano</h2>
+                <p>Four simple steps to start using nano today.</p>
+              </div>
+              <div class="norg-try-steps">
+                <div class="norg-try-step">
+                  <div class="norg-try-step-num">1</div>
+                  <div>
+                    <div class="norg-try-step-title">Get a Wallet</div>
+                    <div class="norg-try-step-body">Download a wallet to store, send, and receive your nano. Available on every platform.</div>
+                    <div class="norg-try-links">
+                      <a class="norg-try-lnk primary" href="https://hub.nano.org/wallets" target="_blank" rel="noopener">View all wallets</a>
+                      <a class="norg-try-lnk" href="https://hub.nano.org/wallets/linux/81" target="_blank" rel="noopener">Linux Wallets</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="norg-try-step">
+                  <div class="norg-try-step-num">2</div>
+                  <div>
+                    <div class="norg-try-step-title">Get Nano</div>
+                    <div class="norg-try-step-body">Grab your first free nano and send it to your nano wallet address. Or buy some from an exchange.</div>
+                    <div class="norg-try-links">
+                      <a class="norg-try-lnk primary" href="https://nanodrop.io/" target="_blank" rel="noopener">Receive free nano</a>
+                      <a class="norg-try-lnk" href="https://hub.nano.org/trading" target="_blank" rel="noopener">All ways to get nano</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="norg-try-step">
+                  <div class="norg-try-step-num">3</div>
+                  <div>
+                    <div class="norg-try-step-title">Spend Nano</div>
+                    <div class="norg-try-step-body">See the list of merchants that accept nano — both online and in shops around the world.</div>
+                    <div class="norg-try-links">
+                      <a class="norg-try-lnk primary" href="https://hub.nano.org/merchants/online/64" target="_blank" rel="noopener">Online merchants</a>
+                      <a class="norg-try-lnk" href="https://hub.nano.org/merchants/in-shops/65" target="_blank" rel="noopener">In shops</a>
+                      <a class="norg-try-lnk" href="https://hub.nano.org/merchants" target="_blank" rel="noopener">View all merchants</a>
+                    </div>
+                  </div>
+                </div>
+                <div class="norg-try-step">
+                  <div class="norg-try-step-num">4</div>
+                  <div>
+                    <div class="norg-try-step-title">Earn Nano</div>
+                    <div class="norg-try-step-body">Discover ways to earn nano through gaming, tasks, and other services in the ecosystem.</div>
+                    <div class="norg-try-links">
+                      <a class="norg-try-lnk primary" href="https://hub.nano.org/earn/gaming/228" target="_blank" rel="noopener">Gaming</a>
+                      <a class="norg-try-lnk" href="https://hub.nano.org/earn/tasks/229" target="_blank" rel="noopener">Tasks</a>
+                      <a class="norg-try-lnk" href="https://hub.nano.org/earn" target="_blank" rel="noopener">View all ways to earn</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="norg-hub-cta">
+                <p>Enjoying nano so far? Find other useful apps and services on the Hub.</p>
+                <a class="norg-hub-cta-btn" href="https://hub.nano.org/" target="_blank" rel="noopener">Visit the Nano Hub →</a>
+              </div>
+            </div><!-- /try-nano -->
+
+            <!-- ── ABOUT ── -->
+            <div class="norg-view" id="norg-about">
+              <div class="norg-sub-header">
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
+                <h2>About</h2>
+                <p>The Nano Foundation is a not-for-profit organisation built by passionate volunteers.</p>
+              </div>
+              <div class="norg-section" style="padding-top:4px;">
+                <div class="norg-section-body">In the ever-evolving digital landscape, nano stands out with a vision that is both unique and transformative: to establish a fee-free &amp; sustainable currency that makes digital payments accessible to everyone, everywhere.</div>
+              </div>
+              <div class="norg-about-goals">
+                <div class="norg-goal">
+                  <div class="norg-goal-icon">🔗</div>
+                  <div class="norg-goal-title">Protocol Development</div>
+                  <div class="norg-goal-desc">With its ultra-efficient block-lattice design, the nano network is optimized to provide the fastest transaction speeds of any cryptocurrency.</div>
+                </div>
+                <div class="norg-goal">
+                  <div class="norg-goal-icon">🌐</div>
+                  <div class="norg-goal-title">Supporting Services</div>
+                  <div class="norg-goal-desc">To actively participate in the creation and support of a robust ecosystem, with a focus on fostering adoption and integration of large and small-scale services.</div>
+                </div>
+                <div class="norg-goal">
+                  <div class="norg-goal-icon">📚</div>
+                  <div class="norg-goal-title">Education and Resources</div>
+                  <div class="norg-goal-desc">To help educate and inform people about nano and its use case as a global digital currency, by creating an accessible collection of resources and materials.</div>
+                </div>
+              </div>
+              <div class="norg-blog-sec">
+                <div class="norg-blog-title">From the Foundation</div>
+                <div class="norg-blog-list">
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/the-nano-foundation-takes-a-step-forward-on-its-open-source-journey--420eae42" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Nano Foundation</div>
+                    <div class="norg-blog-post-title">The Nano Foundation Takes a Step Forward on Its Open-Source Journey</div>
+                    <div class="norg-blog-snippet">In the last 8 months, The Nano Foundation has moved to a completely volunteer-led operating model.</div>
+                    <div class="norg-blog-meta">Nano Foundation · Oct 10, 2023</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/the-community-programme-is-becoming-open-source--cc461fc3" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Community · Nano Foundation</div>
+                    <div class="norg-blog-post-title">The Community Programme is Becoming 'Open Source'</div>
+                    <div class="norg-blog-snippet">The Nano Community Programme is evolving to become more open, as a necessary next step forward.</div>
+                    <div class="norg-blog-meta">Vini Barbosa · Oct 3, 2023</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/empowering-the-academia-the-nano-university-program--1f8e38cb" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Nano Foundation</div>
+                    <div class="norg-blog-post-title">Empowering the Academia: The Nano University Program</div>
+                    <div class="norg-blog-snippet">The Nano University Program is now welcoming academic enthusiasts from around the globe.</div>
+                    <div class="norg-blog-meta">Aneena Ann Alexander · Oct 2, 2023</div>
+                  </a>
+                </div>
+              </div>
+            </div><!-- /about -->
+
+            <!-- ── SUSTAINABILITY ── -->
+            <div class="norg-view" id="norg-sustainability">
+              <div class="norg-sub-header">
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
+                <h2>Sustainability</h2>
+                <p>Digital money shouldn't cost the Earth.</p>
+              </div>
+              <div class="norg-section" style="padding-top:4px;">
+                <div class="norg-section-body">Nano was created to perform efficiently without the need for mining, an energy-intensive mechanism to process transactions. Instead, nano uses an innovative voting system where no mining is required.</div>
+                <div class="norg-section-body">This efficient mechanism allows the nano network to use magnitudes less energy than other digital currencies, providing the world with an environmentally-friendly, and sustainable currency for a greener future.</div>
+              </div>
+              <div class="norg-sus-stats">
+                <div class="norg-stat">
+                  <div class="norg-stat-icon">⚡</div>
+                  <div>
+                    <div class="norg-stat-val">0.111 Wh</div>
+                    <div class="norg-stat-label">Energy per nano transaction — less than a Google search</div>
+                  </div>
+                </div>
+                <div class="norg-stat">
+                  <div class="norg-stat-icon">🖥️</div>
+                  <div>
+                    <div class="norg-stat-val">~300 nodes</div>
+                    <div class="norg-stat-label">Tiny infrastructure footprint — just a few hundred machines power the entire network</div>
+                  </div>
+                </div>
+                <div class="norg-stat">
+                  <div class="norg-stat-icon">⛏️</div>
+                  <div>
+                    <div class="norg-stat-val">Zero mining</div>
+                    <div class="norg-stat-label">Block-lattice design — no mining, no printing, no minting required</div>
+                  </div>
+                </div>
+                <div class="norg-stat">
+                  <div class="norg-stat-icon">🤝</div>
+                  <div>
+                    <div class="norg-stat-val">Supported by kindness</div>
+                    <div class="norg-stat-label">Feeless savings incentivise users to support representatives and secure the network</div>
+                  </div>
+                </div>
+              </div>
+              <div class="norg-sus-articles">
+                <h3>Related Articles</h3>
+                <a class="norg-article" href="https://www.daytrading.com/cryptocurrency/greenest-cryptos" target="_blank" rel="noopener">
+                  <div class="norg-article-title">The Greenest Cryptos: Which Coins Use the Least Energy?</div>
+                  <div class="norg-article-snippet">Nano (XNO) is almost in a league of its own. Its block-lattice design means transactions confirm without heavy validation, clocking in at around 0.0001 kWh.</div>
+                </a>
+                <a class="norg-article" href="https://ecohustler.com/technology/sustainable-solutions-in-the-great-cryptocurrency-transition" target="_blank" rel="noopener">
+                  <div class="norg-article-title">Sustainable Solutions in the Great Cryptocurrency Transition</div>
+                  <div class="norg-article-snippet">2021 has seen the global economy flipped on its head — and once again "cryptocurrency" continues to reign as the buzzword of the year.</div>
+                </a>
+                <a class="norg-article" href="https://blog.nano.org/fight-the-climate-crisis-usenano-6e7c22d45b0e" target="_blank" rel="noopener">
+                  <div class="norg-article-title">Fight the Climate Crisis, #UseNano</div>
+                  <div class="norg-article-snippet">Even if you do not care about cryptocurrency, you should care about Nano — and the environmental impact Bitcoin has is not something to be ignored.</div>
+                </a>
+              </div>
+            </div><!-- /sustainability -->
+
+            <!-- ── BLOG ── -->
+            <div class="norg-view" id="norg-blog">
+              <div class="norg-sub-header">
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
+                <h2>Blog</h2>
+                <p>The latest news, updates and insights from the Nano ecosystem.</p>
+              </div>
+              <div class="norg-blog-sec" style="padding-top:4px;">
+                <div class="norg-blog-title">Highlights</div>
+                <div class="norg-blog-list">
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/the-beginners-guide-to-cryptocurrency-and-nano--652f72a2" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Education</div>
+                    <div class="norg-blog-post-title">The Beginner's Guide to Cryptocurrency and Nano</div>
+                    <div class="norg-blog-snippet">Your introductory guide to all things cryptocurrency. Jump in, explore and build the confidence to make your first transaction with nano, for free!</div>
+                    <div class="norg-blog-meta">Nano Foundation</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/the-problem-with-mixing-currency-and-data--afebb981" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Development</div>
+                    <div class="norg-blog-post-title">The Problem with Mixing Currency and Data</div>
+                    <div class="norg-blog-snippet">Doing more doesn't always equate to doing better. Nano creator, Colin, explains why storing data on the nano network can lead to wider issues.</div>
+                    <div class="norg-blog-meta">Colin LeMahieu</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/growth-blog-how-nigeria-is-voluntarily-adopting-nano--67d9fef4" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Community</div>
+                    <div class="norg-blog-post-title">Growth Blog: How Nigeria Is Voluntarily Adopting Nano</div>
+                    <div class="norg-blog-snippet">Nano Foundation Growth Strategist, Pim Coffeng, explains how Nigeria is leading the way in grassroots nano adoption.</div>
+                    <div class="norg-blog-meta">Pim Coffeng</div>
+                  </a>
+                </div>
+
+                <div class="norg-blog-title" style="margin-top:20px;">Latest</div>
+                <div class="norg-blog-list">
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/what-if-money-worked-like-email--de760659" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Education</div>
+                    <div class="norg-blog-post-title">What If Money Worked Like Email?</div>
+                    <div class="norg-blog-snippet">Email made communication instant, free &amp; borderless, however money still works like a 1980s postal service. Nano fixes this.</div>
+                    <div class="norg-blog-meta">George Coxon · Feb 27, 2026</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/beyond-borders-how-bizmerchant-and-nano-are-shaping-the-future-of-global-commerc--256113e3" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Community</div>
+                    <div class="norg-blog-post-title">Beyond Borders: How BizMerchant and Nano Are Shaping the Future of Global Commerce</div>
+                    <div class="norg-blog-snippet">Enaanapu Gabriel organised the BizMerchant event 2025 — read his story and experience with the event.</div>
+                    <div class="norg-blog-meta">Enaanapu Gabriel · Oct 6, 2025</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/v28-electrum-the-start-of-commercial-grade--1b8adb83" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Development</div>
+                    <div class="norg-blog-post-title">V28 Electrum: The Start of Commercial Grade</div>
+                    <div class="norg-blog-snippet">Dive into this in depth look at what V28 Electrum brings to the Nano Node, marking the beginning of Nano's transition to commercial grade.</div>
+                    <div class="norg-blog-meta">Nano Foundation · Jan 28, 2025</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/the-nano-foundation-takes-a-step-forward-on-its-open-source-journey--420eae42" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Nano Foundation</div>
+                    <div class="norg-blog-post-title">The Nano Foundation Takes a Step Forward on Its Open-Source Journey</div>
+                    <div class="norg-blog-snippet">The Nano Foundation has moved to a completely volunteer-led operating model — this article brings you along on the journey.</div>
+                    <div class="norg-blog-meta">Nano Foundation · Oct 10, 2023</div>
+                  </a>
+                  <a class="norg-blog-card" href="https://nano.org/en/blog/empowering-the-academia-the-nano-university-program--1f8e38cb" target="_blank" rel="noopener">
+                    <div class="norg-blog-cat">Nano Foundation</div>
+                    <div class="norg-blog-post-title">Empowering the Academia: The Nano University Program</div>
+                    <div class="norg-blog-snippet">The Nano University Program is now welcoming academic enthusiasts from around the globe.</div>
+                    <div class="norg-blog-meta">Aneena Ann Alexander · Oct 2, 2023</div>
+                  </a>
+                </div>
+                <div class="norg-blog-more"><a href="https://nano.org/en/blog" target="_blank" rel="noopener">View all articles on nano.org →</a></div>
+              </div>
+            </div><!-- /blog -->
+
+          </div><!-- /norg-body -->
         </div>`,
       nano_gpt: `
         <div class="ngpt-page">
@@ -2458,6 +2815,29 @@ document.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if (e.target?.closest('#sendBtn')) { const inp=getEl('userInput'); if(inp) sendMsg(inp.value); }
 });
+
+/* ══════════════════════════════════════════
+   NANO.ORG NAVIGATION
+══════════════════════════════════════════ */
+const NORG_WORDS = ['accept payments','send remittances','play games','trade globally','bank without borders'];
+let norgWordIdx = 0;
+function nanoNav(page) {
+  const body = document.getElementById('norg-body');
+  if (!body) return;
+  body.querySelectorAll('.norg-view').forEach(v => v.classList.remove('no-visible'));
+  const target = document.getElementById('norg-' + page);
+  if (target) { target.classList.add('no-visible'); body.scrollTop = 0; }
+  body.closest('.norg-page').querySelectorAll('.norg-nav-link').forEach(a => {
+    a.classList.toggle('no-active', a.dataset.page === page);
+  });
+}
+function norgHeroNext() {
+  norgWordIdx = (norgWordIdx + 1) % NORG_WORDS.length;
+  const w = document.getElementById('norg-hero-word');
+  if (w) w.textContent = NORG_WORDS[norgWordIdx];
+  document.querySelectorAll('.norg-hero-dot').forEach((d,i) => d.classList.toggle('ndot-active', i === norgWordIdx));
+}
+setInterval(norgHeroNext, 2800);
 
 /* ══════════════════════════════════════════
    NANO HUB NAVIGATION
