@@ -180,7 +180,7 @@ function proxyRequest(site, subPath, proxyBase, res) {
 /* Mount proxy routes for each site */
 Object.entries(PROXY_SITES).forEach(([key, site]) => {
   const proxyBase = `/proxy/${key}`;
-  app.get(`${proxyBase}*`, (req, res) => {
+  app.get(`${proxyBase}/*path`, (req, res) => {
     const subPath = req.path.slice(proxyBase.length) || "/";
     proxyRequest(site, subPath + (req._parsedUrl.search || ""), proxyBase, res);
   });
