@@ -192,8 +192,8 @@ Object.entries(PROXY_SITES).forEach(([key, site]) => {
 /* ── Nano Representatives ── */
 app.get("/api/nano-reps", (req, res) => {
   https.get({
-    hostname: "mynano.ninja",
-    path: "/api/reps",
+    hostname: "nanoticker.org",
+    path: "/api/representatives",
     headers: { "User-Agent": "NanoNerd/1.0", "Accept": "application/json" }
   }, (upstream) => {
     const chunks = [];
@@ -205,12 +205,15 @@ app.get("/api/nano-reps", (req, res) => {
     stream.on("end", () => {
       try {
         const data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
-        const online = data
-          .filter(r => r.isOnline)
-          .map(r => ({ account: r.account, alias: r.alias || null, weight: r.weight || 0 }))
-          .sort((a, b) => b.weight - a.weight)
-          .slice(0, 50);
-        res.json({ reps: online });
+        const reps = (data.sortedRepresentatives || []).map(r => ({
+          account:         r.account,
+          alias:           r.alias || null,
+          weight:          parseFloat(r.weight) || 0,
+          uptimePercentage: r.uptimePercentage ?? 100,
+          version:         r.fullVersion || null,
+          totalScore:      r.totalScore || 0,
+        }));
+        res.json({ reps });
       } catch (e) {
         res.status(502).json({ error: "Parse error" });
       }

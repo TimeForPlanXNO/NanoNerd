@@ -811,6 +811,7 @@
     .wifi-rep-info { flex:1; min-width:0; }
     .wifi-rep-alias { font-weight:bold; color:#1a1a1a; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .wifi-rep-addr  { color:#555; font-size:9.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:monospace; }
+    .wifi-rep-meta  { color:#888; font-size:9px; margin-top:1px; }
     .wifi-rep-copy  { font-size:9px; color:#0055e5; flex-shrink:0; opacity:.7; }
     .wifi-rep.copied { background:#d4f7d4; }
     .wifi-rep.copied .wifi-rep-copy { color:#22c55e; }
@@ -2783,18 +2784,26 @@ async function loadNanoReps() {
     if (data.error) throw new Error(data.error);
     const reps = data.reps;
     wifiLoaded = true;
-    countEl.textContent = reps.length + ' online';
+    countEl.textContent = reps.length + ' reps';
     if (!reps.length) {
-      list.innerHTML = '<div class="wifi-loading">No online representatives found.</div>';
+      list.innerHTML = '<div class="wifi-loading">No representatives found.</div>';
       return;
     }
     list.innerHTML = reps.map(r => {
-      const display = r.alias || (r.account.slice(0,16) + '…' + r.account.slice(-8));
+      const display  = r.alias || (r.account.slice(0,13) + '…' + r.account.slice(-6));
+      const uptime   = r.uptimePercentage ?? 100;
+      const dotColor = uptime >= 90 ? '#22c55e' : uptime >= 50 ? '#f59e0b' : '#ef4444';
+      const dotTitle = uptime + '% uptime';
+      const meta     = [
+        r.weight > 0 ? r.weight.toFixed(2) + '% weight' : null,
+        r.version    ? 'v' + r.version : null,
+      ].filter(Boolean).join(' · ');
       return `<div class="wifi-rep" onclick="copyRepAddr(this,'${r.account}')">
-        <div class="wifi-rep-dot"></div>
+        <div class="wifi-rep-dot" style="background:${dotColor}" title="${dotTitle}"></div>
         <div class="wifi-rep-info">
           <div class="wifi-rep-alias">${escHtml(display)}</div>
           <div class="wifi-rep-addr">${r.account}</div>
+          ${meta ? `<div class="wifi-rep-meta">${escHtml(meta)}</div>` : ''}
         </div>
         <div class="wifi-rep-copy">copy</div>
       </div>`;
