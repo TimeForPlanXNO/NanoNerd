@@ -234,8 +234,16 @@ async function updateNanoStats() {
     const now = Date.now();
     const cemented = parseInt(blockData.cemented) || 0;
     if (_prevCemented !== null && _prevCementedTime !== null) {
+      const newBlocks = cemented - _prevCemented;
       const dt = (now - _prevCementedTime) / 1000;
-      if (dt > 0) _nanoStats.tps = Math.max(0, (cemented - _prevCemented) / dt);
+      if (dt > 0) {
+        _nanoStats.tps = Math.max(0, newBlocks / dt);
+        /* Only update finality when a new block was actually confirmed */
+        if (newBlocks > 0) {
+          _nanoStats.lastFinality = dt / newBlocks;   /* seconds per block */
+          _nanoStats.lastFinalityAt = now;
+        }
+      }
     }
     _prevCemented = cemented;
     _prevCementedTime = now;
@@ -258,7 +266,7 @@ async function updateNanoStats() {
 }
 
 updateNanoStats();
-setInterval(updateNanoStats, 5000);
+setInterval(updateNanoStats, 2000);
 
 app.get('/api/nano-stats', (_req, res) => res.json(_nanoStats));
 

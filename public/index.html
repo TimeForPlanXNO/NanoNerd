@@ -2982,13 +2982,16 @@ async function fetchAndRenderStats() {
     if (tpsEl) {
       if (data.tps === null) {
         tpsEl.textContent = 'warming up…';
-        if (finalityEl) finalityEl.textContent = '—';
       } else {
         tpsEl.textContent = data.tps.toFixed(2) + ' conf/s';
-        if (finalityEl) {
-          const ms = data.tps > 0 ? (1000 / data.tps) : null;
-          finalityEl.textContent = ms !== null ? (ms / 1000).toFixed(3) + 's' : '—';
-        }
+      }
+    }
+    if (finalityEl) {
+      if (data.lastFinality != null) {
+        /* Show finality from latest block; freeze until next block arrives */
+        finalityEl.textContent = data.lastFinality.toFixed(3) + 's';
+      } else {
+        finalityEl.textContent = 'warming up…';
       }
     }
     if (cementedEl) cementedEl.textContent = fmtNum(data.cemented);
