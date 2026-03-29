@@ -1301,6 +1301,19 @@
     .nhub-view-more a { color:#4a9fd4; font-size:12.5px; text-decoration:none; font-weight:600; }
     .nhub-view-more a:hover { text-decoration:underline; }
 
+    /* ── RESIZE HANDLES ── */
+    .xp-resize {
+      position: absolute; z-index: 200; user-select: none; touch-action: none;
+    }
+    .xp-resize-n  { top: 0;      left: 10px; right: 10px;  height: 5px;  cursor: n-resize;  }
+    .xp-resize-s  { bottom: 0;   left: 10px; right: 10px;  height: 5px;  cursor: s-resize;  }
+    .xp-resize-e  { right: 0;    top: 10px;  bottom: 10px; width: 5px;   cursor: e-resize;  }
+    .xp-resize-w  { left: 0;     top: 10px;  bottom: 10px; width: 5px;   cursor: w-resize;  }
+    .xp-resize-ne { top: 0;      right: 0;   width: 10px;  height: 10px; cursor: ne-resize; }
+    .xp-resize-nw { top: 0;      left: 0;    width: 10px;  height: 10px; cursor: nw-resize; }
+    .xp-resize-se { bottom: 0;   right: 0;   width: 10px;  height: 10px; cursor: se-resize; }
+    .xp-resize-sw { bottom: 0;   left: 0;    width: 10px;  height: 10px; cursor: sw-resize; }
+
     /* ── WALLPAPER BUTTON ── */
     .wp-btn {
       position: absolute; top: 8px; right: 10px; z-index: 1;
@@ -2004,20 +2017,34 @@ const wm = {
     else                             bodyEl = this._buildBrowser(app);
     content.appendChild(bodyEl);
 
+    /* Resize handles (8 directions) */
+    ['n','s','e','w','ne','nw','se','sw'].forEach(dir => {
+      const rh = document.createElement('div');
+      rh.className = `xp-resize xp-resize-${dir}`;
+      rh.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        resizer.start(id, dir, e.clientX, e.clientY);
+      });
+      rh.addEventListener('touchstart', e => {
+        e.preventDefault(); e.stopPropagation();
+        resizer.start(id, dir, e.touches[0].clientX, e.touches[0].clientY);
+      }, { passive: false });
+      win.appendChild(rh);
+    });
+
     win.appendChild(tb);
     win.appendChild(content);
     area.appendChild(win);
     this.els[id].win = win;
 
-    /* On desktop/tablet (>768 px wide): start at 67% of win-area, centered */
+    /* On desktop/tablet (>768 px wide): start at 67% width, full height, centered horizontally */
     if (window.innerWidth > 768) {
       const ar = area.getBoundingClientRect();
-      const w  = Math.round(ar.width  * 0.67);
-      const h  = Math.round(ar.height * 0.67);
+      const w  = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = h + 'px';
-      win.style.left   = Math.round((ar.width  - w) / 2) + 'px';
-      win.style.top    = Math.round((ar.height - h) / 2) + 'px';
+      win.style.height = ar.height + 'px';
+      win.style.left   = Math.round((ar.width - w) / 2) + 'px';
+      win.style.top    = '0';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -3333,13 +3360,78 @@ const drag = {
   },
 };
 
+/* ══════════════════════════════════════════
+   GLOBAL RESIZE ENGINE
+══════════════════════════════════════════ */
+const resizer = {
+  active: false, id: null, dir: null,
+  startCX: 0, startCY: 0,
+  startLeft: 0, startTop: 0, startW: 0, startH: 0,
+
+  start(id, dir, cx, cy) {
+    const { win } = wm.els[id];
+    if (win.classList.contains('maximized')) return;
+    const rect     = win.getBoundingClientRect();
+    const areaRect = document.getElementById('win-area').getBoundingClientRect();
+    win.style.width  = rect.width  + 'px';
+    win.style.height = rect.height + 'px';
+    win.style.right  = 'auto';
+    win.style.bottom = 'auto';
+    win.style.left   = (rect.left - areaRect.left) + 'px';
+    win.style.top    = (rect.top  - areaRect.top)  + 'px';
+    this.active    = true;
+    this.id        = id;
+    this.dir       = dir;
+    this.startCX   = cx;
+    this.startCY   = cy;
+    this.startLeft = parseFloat(win.style.left);
+    this.startTop  = parseFloat(win.style.top);
+    this.startW    = parseFloat(win.style.width);
+    this.startH    = parseFloat(win.style.height);
+    win.style.transition = 'none';
+    win.style.userSelect = 'none';
+    wm.focus(id);
+  },
+
+  move(cx, cy) {
+    if (!this.active) return;
+    const { win } = wm.els[this.id];
+    const dx = cx - this.startCX;
+    const dy = cy - this.startCY;
+    const MIN_W = 220, MIN_H = 150;
+    let left = this.startLeft, top = this.startTop;
+    let w = this.startW,       h   = this.startH;
+    const d = this.dir;
+    if (d.includes('e')) { w = Math.max(MIN_W, w + dx); }
+    if (d.includes('s')) { h = Math.max(MIN_H, h + dy); }
+    if (d.includes('w')) { const nw = Math.max(MIN_W, w - dx); left += w - nw; w = nw; }
+    if (d.includes('n')) { const nh = Math.max(MIN_H, h - dy); top  += h - nh; h = nh; }
+    win.style.left   = left + 'px';
+    win.style.top    = top  + 'px';
+    win.style.width  = w    + 'px';
+    win.style.height = h    + 'px';
+  },
+
+  end() {
+    if (!this.active) return;
+    const { win } = wm.els[this.id];
+    win.style.transition = '';
+    win.style.userSelect = '';
+    this.active = false;
+    this.id = null;
+    this.dir = null;
+  },
+};
+
 /* Attach global move / end listeners once */
-document.addEventListener('mousemove', e => drag.move(e.clientX, e.clientY));
-document.addEventListener('mouseup',   () => drag.end());
+document.addEventListener('mousemove', e => { drag.move(e.clientX, e.clientY); resizer.move(e.clientX, e.clientY); });
+document.addEventListener('mouseup',   () => { drag.end(); resizer.end(); });
 document.addEventListener('touchmove', e => {
-  if (drag.active) { e.preventDefault(); drag.move(e.touches[0].clientX, e.touches[0].clientY); }
+  const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
+  if (drag.active)    { e.preventDefault(); drag.move(cx, cy); }
+  if (resizer.active) { e.preventDefault(); resizer.move(cx, cy); }
 }, { passive: false });
-document.addEventListener('touchend',  () => drag.end());
+document.addEventListener('touchend',  () => { drag.end(); resizer.end(); });
 
 /* ══════════════════════════════════════════
    START MENU
