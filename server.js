@@ -236,13 +236,11 @@ async function updateNanoStats() {
     if (_prevCemented !== null && _prevCementedTime !== null) {
       const newBlocks = cemented - _prevCemented;
       const dt = (now - _prevCementedTime) / 1000;
-      if (dt > 0) {
-        _nanoStats.tps = Math.max(0, newBlocks / dt);
-        /* Only update finality when a new block was actually confirmed */
-        if (newBlocks > 0) {
-          _nanoStats.lastFinality = dt / newBlocks;   /* seconds per block */
-          _nanoStats.lastFinalityAt = now;
-        }
+      /* Only update TPS and finality when a new block was actually confirmed */
+      if (dt > 0 && newBlocks > 0) {
+        _nanoStats.tps           = newBlocks / dt;
+        _nanoStats.lastFinality  = dt / newBlocks;   /* seconds per block */
+        _nanoStats.lastFinalityAt = now;
       }
     }
     _prevCemented = cemented;
