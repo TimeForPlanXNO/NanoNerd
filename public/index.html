@@ -3718,6 +3718,33 @@ const SUGGESTIONS = [
   "What is Open Representative Voting?",
 ];
 
+/* ── Suggestion translation cache ── */
+const _suggestionCache = { English: [...SUGGESTIONS] };
+
+async function loadSuggestions(lang) {
+  if (_suggestionCache[lang]) return _suggestionCache[lang];
+  try {
+    const res = await fetch('/api/translate-suggestions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lang, suggestions: SUGGESTIONS }),
+    });
+    const data = await res.json();
+    if (Array.isArray(data.suggestions) && data.suggestions.length === SUGGESTIONS.length) {
+      _suggestionCache[lang] = data.suggestions;
+      return data.suggestions;
+    }
+  } catch(e) { /* fall back to English */ }
+  return SUGGESTIONS;
+}
+
+function _renderSuggestions(list) {
+  const sugg = document.querySelector('#welcome .sugg');
+  if (!sugg) return;
+  sugg.innerHTML = list.map(q => `<button class="sq">${q}</button>`).join('');
+  sugg.querySelectorAll('.sq').forEach(btn => btn.addEventListener('click', () => sendMsg(btn.textContent)));
+}
+
 function getEl(id) { return document.getElementById(id); }
 
 /* ── Scroll-arrow helpers ── */
@@ -3762,20 +3789,30 @@ function showWelcome() {
   if (!chat) return;
   const w = document.createElement('div');
   w.className = 'welcome'; w.id = 'welcome';
-  const langBadge = (currentLang && currentLang !== 'English')
-    ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:3px 10px;background:rgba(0,201,255,.12);border:1px solid rgba(0,201,255,.3);border-radius:12px;font-size:11px;color:#00C9FF;">🌐 Responding in <strong>${currentLang}</strong></div>`
+  const lang = currentLang || 'English';
+  const langBadge = (lang !== 'English')
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:3px 10px;background:rgba(0,201,255,.12);border:1px solid rgba(0,201,255,.3);border-radius:12px;font-size:11px;color:#00C9FF;">🌐 Responding in <strong>${lang}</strong></div>`
     : '';
+  /* Render with best available suggestions right now (English or cached) */
+  const immediate = _suggestionCache[lang] || SUGGESTIONS;
   w.innerHTML = `
     <div class="wi">🥦</div>
     <h2>Welcome to NanoNerd 🧠</h2>
     <p>Your dedicated Nano (XNO) expert.<br>Ask me anything!</p>
     ${langBadge}
     <div class="sugg">
-      ${SUGGESTIONS.map(q=>`<button class="sq">${q}</button>`).join('')}
+      ${immediate.map(q=>`<button class="sq">${q}</button>`).join('')}
     </div>
   `;
   chat.appendChild(w);
   w.querySelectorAll('.sq').forEach(btn => btn.addEventListener('click', () => sendMsg(btn.textContent)));
+  /* If not cached yet, fetch translations and swap in without flicker */
+  if (!_suggestionCache[lang]) {
+    loadSuggestions(lang).then(list => {
+      /* Only update if welcome screen is still visible and lang hasn't changed */
+      if (currentLang === lang && getEl('welcome')) _renderSuggestions(list);
+    });
+  }
 }
 
 function removeWelcome() { const el=getEl('welcome'); if(el) el.remove(); }

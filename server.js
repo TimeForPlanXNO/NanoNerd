@@ -301,6 +301,30 @@ app.get("/api/nano-reps", (req, res) => {
   }).on("error", err => res.status(502).json({ error: err.message }));
 });
 
+/* ── Translate suggestions ── */
+app.post("/api/translate-suggestions", async (req, res) => {
+  const { lang, suggestions } = req.body;
+  if (!lang || !Array.isArray(suggestions)) {
+    return res.status(400).json({ error: "lang and suggestions required" });
+  }
+  if (lang === 'English') return res.json({ suggestions });
+  try {
+    const prompt = `Translate each of the following questions about Nano (XNO) cryptocurrency into ${lang}. Return ONLY a JSON array of exactly ${suggestions.length} translated strings, preserving the original meaning. No explanations.\n\n${JSON.stringify(suggestions)}`;
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [{ role: "user", content: prompt }],
+      max_completion_tokens: 512,
+    });
+    const raw = completion.choices[0]?.message?.content?.trim() || '[]';
+    const match = raw.match(/\[[\s\S]*\]/);
+    const translated = match ? JSON.parse(match[0]) : suggestions;
+    res.json({ suggestions: translated });
+  } catch (e) {
+    console.error("translate-suggestions error:", e);
+    res.status(500).json({ error: "Translation failed" });
+  }
+});
+
 /* ── Chat streaming ── */
 app.post("/api/chat", async (req, res) => {
   const { messages, lang } = req.body;
