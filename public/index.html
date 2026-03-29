@@ -853,6 +853,7 @@
     .folder-sidebar-title {
       font-size: 10px; font-weight: bold; color: #003080;
       border-bottom: 1px solid #7f9db9; margin-bottom: 6px; padding-bottom: 3px;
+      display: flex; align-items: center;
     }
     .folder-grid {
       flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start;
@@ -1556,8 +1557,13 @@
       </div>
     </div>
     <div class="sm-footer">
-      <div style="font-size:11px;color:#8a9ab8;text-align:center;">
-        created by <a href="https://x.com/timeforplanx" target="_blank" rel="noopener" style="color:#4a62a8;text-decoration:none;font-weight:600;">TimeForPlanX</a>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <img src="/timeforplanx.jpeg" alt="TimeForPlanX"
+          style="width:52px;height:52px;border-radius:50%;object-fit:cover;
+                 border:2px solid #4a62a8;box-shadow:0 2px 8px rgba(0,0,0,.35);" />
+        <div style="font-size:11px;color:#8a9ab8;text-align:center;">
+          created by <a href="https://x.com/timeforplanx" target="_blank" rel="noopener" style="color:#4a62a8;text-decoration:none;font-weight:600;">TimeForPlanX</a>
+        </div>
       </div>
     </div>
   </div>
@@ -3211,16 +3217,28 @@ const wm = {
     shell.innerHTML = `
       <div class="folder-toolbar">
         <span style="font-size:11px;color:#555;white-space:nowrap;">Address:</span>
-        <div class="folder-addr">📁 Nano videos and memes</div>
+        <div class="folder-addr"><svg width="14" height="12" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg>Nano videos and memes</div>
       </div>
       <div class="folder-body">
         <div class="folder-sidebar">
-          <div class="folder-sidebar-title">📁 This Folder</div>
+          <div class="folder-sidebar-title">
+            <svg width="15" height="13" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:3px;flex-shrink:0;">
+              <path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/>
+              <path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/>
+              <path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/>
+            </svg>This Folder
+          </div>
           <div style="margin-bottom:8px;line-height:1.6;">
             <div style="color:#003080;font-weight:bold;">${imageFiles.length} images</div>
             <div style="color:#003080;font-weight:bold;">${videoFiles.length} videos</div>
           </div>
-          <div class="folder-sidebar-title" style="margin-top:8px;">Details</div>
+          <div class="folder-sidebar-title" style="margin-top:8px;">
+            <svg width="15" height="13" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:3px;flex-shrink:0;">
+              <path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/>
+              <path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/>
+              <path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/>
+            </svg>Details
+          </div>
           <div style="color:#444;line-height:1.5;">Nano XNO memes &amp; clips</div>
         </div>
         <div class="folder-grid" id="folder-grid-inner"></div>
@@ -3744,10 +3762,14 @@ function showWelcome() {
   if (!chat) return;
   const w = document.createElement('div');
   w.className = 'welcome'; w.id = 'welcome';
+  const langBadge = (currentLang && currentLang !== 'English')
+    ? `<div style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:3px 10px;background:rgba(0,201,255,.12);border:1px solid rgba(0,201,255,.3);border-radius:12px;font-size:11px;color:#00C9FF;">🌐 Responding in <strong>${currentLang}</strong></div>`
+    : '';
   w.innerHTML = `
     <div class="wi">🥦</div>
     <h2>Welcome to NanoNerd 🧠</h2>
     <p>Your dedicated Nano (XNO) expert.<br>Ask me anything!</p>
+    ${langBadge}
     <div class="sugg">
       ${SUGGESTIONS.map(q=>`<button class="sq">${q}</button>`).join('')}
     </div>
