@@ -1223,7 +1223,7 @@
     <div class="stats-section">
       <div class="stats-section-title"><span class="stats-live-dot"></span>Network · Live</div>
       <div class="stats-row"><span class="stats-label">Conf/sec</span><span class="stats-value blue" id="sp-tps">—</span></div>
-      <div class="stats-row"><span class="stats-label">Avg Finality</span><span class="stats-value green" id="sp-finality">&lt; 1 second</span></div>
+      <div class="stats-row"><span class="stats-label">Avg Finality</span><span class="stats-value green" id="sp-finality">—</span></div>
       <div class="stats-row"><span class="stats-label">Cemented Blocks</span><span class="stats-value" id="sp-cemented">—</span></div>
       <div class="stats-row"><span class="stats-label">Total Blocks</span><span class="stats-value" id="sp-blocks">—</span></div>
     </div>
@@ -2978,11 +2978,17 @@ async function fetchAndRenderStats() {
     const tpsEl      = document.getElementById('sp-tps');
     const cementedEl = document.getElementById('sp-cemented');
     const blocksEl   = document.getElementById('sp-blocks');
+    const finalityEl = document.getElementById('sp-finality');
     if (tpsEl) {
       if (data.tps === null) {
         tpsEl.textContent = 'warming up…';
+        if (finalityEl) finalityEl.textContent = '—';
       } else {
         tpsEl.textContent = data.tps.toFixed(2) + ' conf/s';
+        if (finalityEl) {
+          const ms = data.tps > 0 ? (1000 / data.tps) : null;
+          finalityEl.textContent = ms !== null ? (ms / 1000).toFixed(3) + 's' : '—';
+        }
       }
     }
     if (cementedEl) cementedEl.textContent = fmtNum(data.cemented);
