@@ -740,10 +740,6 @@ const wm = {
 
   maximize(id) {
     const app = APPS[id];
-    if (app.type === 'browser') {
-      window.open(app.url, '_blank');
-      return;
-    }
     const { win } = this.els[id];
     const wasMaximized = win.classList.contains('maximized');
     if (!wasMaximized) {
@@ -1120,7 +1116,7 @@ function clickScrollArrow() {
   const chat = getEl('chat');
   if (!chat) return;
   autoScroll = true;                    /* re-enable follow during streaming */
-  chat.scrollTop = chat.scrollHeight;   /* instant jump to bottom */
+  chat.scrollTo({ top: chat.scrollHeight, behavior: 'instant' });
   updateScrollArrow();
 }
 
@@ -1233,7 +1229,7 @@ async function sendMsg(text) {
             fullResponse+=ev.content;
             bbl.innerHTML=fmt(fullResponse);
             const chat=getEl('chat');
-            if(chat && autoScroll) chat.scrollTop=chat.scrollHeight;
+            if(chat && autoScroll) chat.scrollTo({ top: chat.scrollHeight, behavior: 'instant' });
             updateScrollArrow();
           }
         }catch{}
