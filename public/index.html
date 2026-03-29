@@ -1268,6 +1268,7 @@ const wm = {
       this._updateTbBtn(id);
     }
     this.focus(id);
+    if (window._histReady && !window._histPop) history.pushState({ type: 'app', id }, '');
   },
 
   close(id) {
@@ -3036,6 +3037,7 @@ function nanoNav(page) {
   body.closest('.norg-page').querySelectorAll('.norg-nav-link').forEach(a => {
     a.classList.toggle('no-active', a.dataset.page === page);
   });
+  if (window._histReady && !window._histPop) history.pushState({ type: 'norg', page }, '');
 }
 function norgHeroNext() {
   norgWordIdx = (norgWordIdx + 1) % NORG_WORDS.length;
@@ -3061,6 +3063,7 @@ function hubNav(page) {
   body.closest('.nhub-page').querySelectorAll('.nhub-nav-link').forEach(a => {
     a.classList.toggle('nh-active', a.dataset.page === page);
   });
+  if (window._histReady && !window._histPop) history.pushState({ type: 'nhub', page }, '');
 }
 
 /* ══════════════════════════════════════════
@@ -3073,6 +3076,28 @@ function updateClock() {
 }
 
 /* ══════════════════════════════════════════
+   HISTORY ROUTER
+══════════════════════════════════════════ */
+window._histReady = false;
+window._histPop   = false;
+
+window.addEventListener('popstate', e => {
+  const s = e.state;
+  if (!s) return;
+  window._histPop = true;
+  if (s.type === 'norg') {
+    if (wm.state['nano_org'] !== 'open') wm.open('nano_org');
+    nanoNav(s.page);
+  } else if (s.type === 'nhub') {
+    if (wm.state['nano_hub'] !== 'open') wm.open('nano_hub');
+    hubNav(s.page);
+  } else if (s.type === 'app') {
+    wm.open(s.id);
+  }
+  window._histPop = false;
+});
+
+/* ══════════════════════════════════════════
    BOOT
 ══════════════════════════════════════════ */
 wm.init();
@@ -3081,6 +3106,8 @@ showWelcome();
 setupChatScroll();
 updateClock();
 setInterval(updateClock, 10000);
+history.replaceState({ type: 'app', id: 'nanonerd' }, '');
+window._histReady = true;
 </script>
 </body>
 </html>
