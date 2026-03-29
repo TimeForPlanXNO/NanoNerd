@@ -1427,18 +1427,18 @@ const MEDIA_FILES = [
   { name: 'I Wish My Coin.jpeg',       type: 'image', src: '/media/IMG_9647_1774779741095.jpeg' },
   { name: 'Has Anyone Seen Nano.jpeg', type: 'image', src: '/media/IMG_9369_1774779741095.jpeg' },
   { name: 'Big Brain Nano.png',        type: 'image', src: '/media/IMG_5806_1774779741095.png'  },
-  { name: 'Video 1.mp4',  type: 'video', src: '/media/trim_2A557431-7B28-4E4E-90A4-55A0AD34F50A_1774779741095.mp4' },
-  { name: 'Video 2.mp4',  type: 'video', src: '/media/trim_4AA71837-3130-4F53-88FD-0CEED956B2D1_1774779741095.mp4' },
-  { name: 'Video 3.mov',  type: 'video', src: '/media/trim_4BA33056-42C3-4BFB-BA40-F846649F9326_1774779741095.mov' },
-  { name: 'Video 4.mp4',  type: 'video', src: '/media/trim_6C641AA9-BDA7-4777-BDE8-17ADD6978B98_1774779741095.mp4' },
-  { name: 'Video 5.mp4',  type: 'video', src: '/media/trim_0073679E-D0E4-402C-A8DB-A93F97388C36_1774779741095.mp4' },
-  { name: 'Video 6.mp4',  type: 'video', src: '/media/x-downloader.com_vzCZFe_1774779741095.mp4' },
-  { name: 'Video 7.mp4',  type: 'video', src: '/media/trim_ED549C08-D18F-404A-9BD0-13158B80DED8_1774779741095.mp4' },
-  { name: 'Video 8.mov',  type: 'video', src: '/media/fcc1716ec02f423ba9c78f27c9ae6ca4_1774779741095.mov' },
-  { name: 'Video 9.mov',  type: 'video', src: '/media/53c7ef5b97444cb7a31c15a26cf6558d_1774779741095.mov' },
-  { name: 'Video 10.mov', type: 'video', src: '/media/ssstwitter.com_1761633794422_1774779741095.mov' },
-  { name: 'Video 11.mp4', type: 'video', src: '/media/trim_15C1E541-0B01-493A-B54F-9A4A22E29569_1774779741095.mp4' },
-  { name: 'Video 12.mp4', type: 'video', src: '/media/_users_bfc4d50f-adb9-4a57-b628-42365cebd017_generated_d5595688_1774779741095.mp4' },
+  { name: 'Natrium to Natrium payments',   type: 'video', src: '/media/trim_2A557431-7B28-4E4E-90A4-55A0AD34F50A_1774779741095.mp4' },
+  { name: 'Natrium to Bitrequest',          type: 'video', src: '/media/trim_4AA71837-3130-4F53-88FD-0CEED956B2D1_1774779741095.mp4' },
+  { name: 'Natrium to NanoGPT + Bitrequest',type: 'video', src: '/media/trim_4BA33056-42C3-4BFB-BA40-F846649F9326_1774779741095.mov' },
+  { name: 'Kappture Point-of-Sale',         type: 'video', src: '/media/trim_6C641AA9-BDA7-4777-BDE8-17ADD6978B98_1774779741095.mp4' },
+  { name: 'NFC payment concept',            type: 'video', src: '/media/trim_0073679E-D0E4-402C-A8DB-A93F97388C36_1774779741095.mp4' },
+  { name: 'Natrium to Nault wallet',        type: 'video', src: '/media/x-downloader.com_vzCZFe_1774779741095.mp4' },
+  { name: '1 Nano around the world',        type: 'video', src: '/media/trim_ED549C08-D18F-404A-9BD0-13158B80DED8_1774779741095.mp4' },
+  { name: 'Natrium to XNOPay beta',         type: 'video', src: '/media/fcc1716ec02f423ba9c78f27c9ae6ca4_1774779741095.mov' },
+  { name: 'Payment Natrium to Natrium',     type: 'video', src: '/media/53c7ef5b97444cb7a31c15a26cf6558d_1774779741095.mov' },
+  { name: 'XNOPay beta',                    type: 'video', src: '/media/ssstwitter.com_1761633794422_1774779741095.mov' },
+  { name: 'Natrium to Nault.cc',            type: 'video', src: '/media/trim_15C1E541-0B01-493A-B54F-9A4A22E29569_1774779741095.mp4' },
+  { name: 'Trade offer, XNO vs BTC',        type: 'video', src: '/media/_users_bfc4d50f-adb9-4a57-b628-42365cebd017_generated_d5595688_1774779741095.mp4' },
 ];
 
 const APPS = {
@@ -3558,7 +3558,7 @@ function openMediaViewer(idx) {
     <div class="mv-body">
       ${file.type === 'image'
         ? `<img src="${file.src}" alt="${file.name}">`
-        : `<video src="${file.src}" controls autoplay playsinline style="max-width:100%;max-height:100%;"></video>`
+        : `<video src="${file.src}" controls autoplay loop playsinline style="max-width:100%;max-height:100%;"></video>`
       }
     </div>
   `;
