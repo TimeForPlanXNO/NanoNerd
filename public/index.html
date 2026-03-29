@@ -756,6 +756,67 @@
     }
 
     /* ═══════════════════════════
+       WIFI / REPS BUTTON & POPUP
+    ═══════════════════════════ */
+    .wifi-btn {
+      height: 22px; padding: 0 6px; flex-shrink: 0;
+      background: transparent; border: none; cursor: pointer;
+      color: #fff; font-size: 14px; display: flex; align-items: center;
+      border-radius: 3px; transition: background .12s;
+      position: relative;
+    }
+    .wifi-btn:hover { background: rgba(255,255,255,.15); }
+    .wifi-btn.active { background: rgba(0,0,0,.25); }
+
+    .wifi-popup {
+      display: none; position: fixed; bottom: 38px; right: 48px;
+      width: 320px; max-height: 420px;
+      background: #ece9d8; border: 1px solid #0055e5;
+      box-shadow: 3px 3px 10px rgba(0,0,0,.5);
+      border-radius: 4px 4px 0 0; z-index: 9999;
+      font-family: "Tahoma", sans-serif; font-size: 11px;
+      animation: wifipop-in .15s ease;
+      flex-direction: column;
+    }
+    .wifi-popup.open { display: flex; }
+    @keyframes wifipop-in {
+      from { transform: translateY(10px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    .wifi-popup-head {
+      background: linear-gradient(180deg,#0a5cdf 0%,#0845c0 100%);
+      color: #fff; padding: 5px 9px; font-weight: bold; font-size: 11px;
+      border-radius: 3px 3px 0 0; display: flex; align-items: center; gap: 6px;
+      flex-shrink: 0;
+    }
+    .wifi-popup-head .wp-dot { width:8px;height:8px;border-radius:50%;background:#5dff5d;flex-shrink:0; }
+    .wifi-popup-sub {
+      font-size:10px; color:#acd8ff; font-weight:normal; margin-left:auto; white-space:nowrap;
+    }
+    .wifi-popup-list {
+      overflow-y: auto; flex: 1;
+      max-height: 360px;
+    }
+    .wifi-popup-list::-webkit-scrollbar { width: 8px; }
+    .wifi-popup-list::-webkit-scrollbar-track { background: #ece9d8; }
+    .wifi-popup-list::-webkit-scrollbar-thumb { background: #7a9ccc; border-radius: 4px; }
+    .wifi-rep {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 9px; border-bottom: 1px solid #d4d0c8; cursor: pointer;
+      transition: background .1s;
+    }
+    .wifi-rep:last-child { border-bottom: none; }
+    .wifi-rep:hover { background: #d3e6ff; }
+    .wifi-rep-dot { width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0; }
+    .wifi-rep-info { flex:1; min-width:0; }
+    .wifi-rep-alias { font-weight:bold; color:#1a1a1a; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .wifi-rep-addr  { color:#555; font-size:9.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:monospace; }
+    .wifi-rep-copy  { font-size:9px; color:#0055e5; flex-shrink:0; opacity:.7; }
+    .wifi-rep.copied { background:#d4f7d4; }
+    .wifi-rep.copied .wifi-rep-copy { color:#22c55e; }
+    .wifi-loading { text-align:center; padding:20px; color:#555; }
+
+    /* ═══════════════════════════
        START MENU / QR POPUP
     ═══════════════════════════ */
     @keyframes start-menu-in  {
@@ -1087,7 +1148,20 @@
   <div class="taskbar">
     <button class="start-btn" id="start-btn">Ӿ start</button>
     <div class="taskbar-apps" id="tb-apps"></div>
+    <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives">📶</button>
     <div class="tb-clock" id="clock">00:00</div>
+  </div>
+
+  <!-- WiFi / Reps Popup -->
+  <div class="wifi-popup" id="wifi-popup">
+    <div class="wifi-popup-head">
+      <div class="wp-dot"></div>
+      Online Nano Representatives
+      <span class="wifi-popup-sub" id="wifi-count"></span>
+    </div>
+    <div class="wifi-popup-list" id="wifi-list">
+      <div class="wifi-loading">Loading representatives…</div>
+    </div>
   </div>
 
   <!-- Click-outside overlay for start menu -->
@@ -2678,6 +2752,83 @@ function showCopyToast(msg) {
   document.getElementById('app-shell').appendChild(toast);
   copyToastTimer = setTimeout(() => { toast.remove(); copyToastTimer = null; }, 2000);
 }
+
+/* ══════════════════════════════════════════
+   WIFI / NANO REPRESENTATIVES
+══════════════════════════════════════════ */
+let wifiOpen = false;
+let wifiLoaded = false;
+
+function toggleWifiPopup() {
+  const popup = document.getElementById('wifi-popup');
+  const btn   = document.getElementById('wifi-btn');
+  wifiOpen = !wifiOpen;
+  popup.classList.toggle('open', wifiOpen);
+  btn.classList.toggle('active', wifiOpen);
+  if (wifiOpen && !wifiLoaded) loadNanoReps();
+}
+
+function closeWifiPopup() {
+  wifiOpen = false;
+  document.getElementById('wifi-popup').classList.remove('open');
+  document.getElementById('wifi-btn').classList.remove('active');
+}
+
+async function loadNanoReps() {
+  const list = document.getElementById('wifi-list');
+  const countEl = document.getElementById('wifi-count');
+  try {
+    const res  = await fetch('/api/nano-reps');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const reps = data.reps;
+    wifiLoaded = true;
+    countEl.textContent = reps.length + ' online';
+    if (!reps.length) {
+      list.innerHTML = '<div class="wifi-loading">No online representatives found.</div>';
+      return;
+    }
+    list.innerHTML = reps.map(r => {
+      const display = r.alias || (r.account.slice(0,16) + '…' + r.account.slice(-8));
+      return `<div class="wifi-rep" onclick="copyRepAddr(this,'${r.account}')">
+        <div class="wifi-rep-dot"></div>
+        <div class="wifi-rep-info">
+          <div class="wifi-rep-alias">${escHtml(display)}</div>
+          <div class="wifi-rep-addr">${r.account}</div>
+        </div>
+        <div class="wifi-rep-copy">copy</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="wifi-loading">⚠️ Could not load representatives.</div>';
+  }
+}
+
+function copyRepAddr(el, addr) {
+  navigator.clipboard.writeText(addr).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = addr; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+  el.classList.add('copied');
+  el.querySelector('.wifi-rep-copy').textContent = '✓ copied';
+  setTimeout(() => {
+    el.classList.remove('copied');
+    el.querySelector('.wifi-rep-copy').textContent = 'copy';
+  }, 1800);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* close wifi popup when clicking outside */
+document.addEventListener('click', e => {
+  if (wifiOpen && !e.target.closest('#wifi-popup') && !e.target.closest('#wifi-btn')) {
+    closeWifiPopup();
+  }
+});
 
 /* ══════════════════════════════════════════
    CHAT ENGINE

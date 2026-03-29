@@ -189,6 +189,36 @@ Object.entries(PROXY_SITES).forEach(([key, site]) => {
   app.get(`${proxyBase}/*path`, handler);
 });
 
+/* ── Nano Representatives ── */
+app.get("/api/nano-reps", (req, res) => {
+  https.get({
+    hostname: "mynano.ninja",
+    path: "/api/reps",
+    headers: { "User-Agent": "NanoNerd/1.0", "Accept": "application/json" }
+  }, (upstream) => {
+    const chunks = [];
+    let stream = upstream;
+    const enc = upstream.headers["content-encoding"] || "";
+    if (enc === "gzip")    stream = upstream.pipe(zlib.createGunzip());
+    else if (enc === "br") stream = upstream.pipe(zlib.createBrotliDecompress());
+    stream.on("data", c => chunks.push(c));
+    stream.on("end", () => {
+      try {
+        const data = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+        const online = data
+          .filter(r => r.isOnline)
+          .map(r => ({ account: r.account, alias: r.alias || null, weight: r.weight || 0 }))
+          .sort((a, b) => b.weight - a.weight)
+          .slice(0, 50);
+        res.json({ reps: online });
+      } catch (e) {
+        res.status(502).json({ error: "Parse error" });
+      }
+    });
+    stream.on("error", () => res.status(502).json({ error: "Stream error" }));
+  }).on("error", err => res.status(502).json({ error: err.message }));
+});
+
 /* ── Chat streaming ── */
 app.post("/api/chat", async (req, res) => {
   const { messages } = req.body;
