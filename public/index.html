@@ -900,6 +900,50 @@
     }
 
     .menu-overlay.visible { display: block; }
+
+    /* ─── Nano Hub Panel ─── */
+    .nhub-page { display:flex; flex-direction:column; height:100%; background:#f5f7ff; font-family:-apple-system,'Helvetica Neue',Arial,sans-serif; color:#1a2b4b; }
+    .nhub-header { background:#fff; border-bottom:1.5px solid #e0e7f0; padding:0 14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-height:50px; flex-shrink:0; }
+    .nhub-logo { display:flex; align-items:center; gap:7px; flex-shrink:0; cursor:pointer; }
+    .nhub-logo img { height:26px; }
+    .nhub-nav { display:flex; align-items:center; gap:1px; flex:1; flex-wrap:wrap; min-width:0; }
+    .nhub-nav-link { padding:5px 7px; font-size:11.5px; color:#1a2b4b; border-radius:6px; cursor:pointer; white-space:nowrap; border:none; background:none; font-family:inherit; }
+    .nhub-nav-link:hover { background:#e8efff; color:#4C6FE4; }
+    .nhub-nav-link.nh-active { background:#e8efff; color:#4C6FE4; font-weight:600; }
+    .nhub-suggest-btn { padding:4px 10px; font-size:11px; color:#4C6FE4; border:1.5px solid #4C6FE4; border-radius:14px; background:none; cursor:pointer; white-space:nowrap; flex-shrink:0; font-family:inherit; }
+    .nhub-suggest-btn:hover { background:#4C6FE4; color:#fff; }
+    .nhub-body { flex:1; overflow-y:auto; }
+    .nhub-view { display:none; flex-direction:column; }
+    .nhub-view.nh-visible { display:flex; }
+    .nhub-hero { text-align:center; padding:26px 20px 14px; }
+    .nhub-hero h1 { font-size:24px; font-weight:800; margin:0 0 5px; color:#1a2b4b; }
+    .nhub-hero p { font-size:13px; color:#5a6e8a; margin:0; }
+    .nhub-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:6px 14px 24px; }
+    .nhub-cat-card { background:#fff; border-radius:12px; padding:14px 10px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:7px; cursor:pointer; border:1.5px solid #e0e7f0; transition:box-shadow .15s,transform .15s; }
+    .nhub-cat-card:hover { box-shadow:0 4px 16px rgba(76,111,228,.16); transform:translateY(-2px); border-color:#c5d5f5; }
+    .nhub-cat-card img { width:36px; height:36px; object-fit:contain; }
+    .nhub-cat-name { font-size:11.5px; font-weight:700; color:#1a2b4b; line-height:1.2; }
+    .nhub-cat-desc { font-size:10px; color:#5a6e8a; line-height:1.4; }
+    .nhub-sub-header { padding:16px 14px 6px; }
+    .nhub-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#4C6FE4; cursor:pointer; background:none; border:none; padding:0; margin-bottom:8px; font-family:inherit; }
+    .nhub-sub-header h2 { font-size:20px; font-weight:800; margin:0 0 3px; color:#1a2b4b; }
+    .nhub-sub-header p { font-size:12px; color:#5a6e8a; margin:0; }
+    .nhub-result-count { font-size:11.5px; color:#5a6e8a; padding:4px 14px 8px; }
+    .nhub-items { display:flex; flex-direction:column; gap:9px; padding:0 14px 8px; }
+    .nhub-item { background:#fff; border-radius:10px; border:1.5px solid #e0e7f0; padding:13px; }
+    .nhub-item-name a { font-size:13.5px; font-weight:700; color:#1a2b4b; text-decoration:none; }
+    .nhub-item-name a:hover { color:#4C6FE4; text-decoration:underline; }
+    .nhub-item-desc { font-size:11.5px; color:#5a6e8a; line-height:1.5; margin:5px 0 9px; }
+    .nhub-item-tags { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; }
+    .nhub-tag { padding:2px 7px; background:#e8efff; color:#4C6FE4; border-radius:10px; font-size:10px; text-decoration:none; }
+    .nhub-tag:hover { background:#4C6FE4; color:#fff; }
+    .nhub-visit-btn { display:inline-block; padding:4px 13px; border:1.5px solid #4C6FE4; color:#4C6FE4; border-radius:14px; font-size:11.5px; font-weight:600; text-decoration:none; }
+    .nhub-visit-btn:hover { background:#4C6FE4; color:#fff; }
+    .nhub-view-more { text-align:center; padding:10px 14px 22px; }
+    .nhub-view-more a { color:#4C6FE4; font-size:12.5px; text-decoration:none; font-weight:600; }
+    .nhub-view-more a:hover { text-decoration:underline; }
+    .nhub-about-link { font-size:11px; color:#5a6e8a; padding:0 14px 2px; }
+    .nhub-about-link a { color:#4C6FE4; text-decoration:none; }
   </style>
 </head>
 <body>
@@ -922,6 +966,12 @@
           src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=64"
           onerror="this.outerHTML='<div class=di-emoji>⚡</div>'" alt="NanoGPT" />
         <span class="label">NanoGPT</span>
+      </div>
+      <div class="desk-icon" onclick="wm.open('nano_hub')">
+        <img class="di-img"
+          src="https://hub.nano.org/images/nano-hub-logo-header.svg"
+          onerror="this.outerHTML='<div class=di-emoji>🌐</div>'" alt="Nano Hub" />
+        <span class="label">Nano Hub</span>
       </div>
     </div>
     <div class="win-area" id="win-area"></div>
@@ -985,6 +1035,13 @@ const APPS = {
     tbIconHtml: '<img src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=16" onerror="this.outerHTML=\'⚡\'">',
     type: 'browser', url: 'https://nano-gpt.com/',
     emoji: '⚡', desc: 'AI-powered tools powered by Nano (XNO)',
+  },
+  nano_hub: {
+    id: 'nano_hub', title: 'Nano Hub',
+    iconHtml: '<img src="https://hub.nano.org/images/nano-hub-logo-header.svg" onerror="this.outerHTML=\'🌐\'">',
+    tbIconHtml: '<img src="https://hub.nano.org/images/nano-hub-logo-header.svg" onerror="this.outerHTML=\'🌐\'" style="height:14px">',
+    type: 'browser', url: 'https://hub.nano.org',
+    emoji: '🌐', desc: 'Explore the Nano (XNO) ecosystem',
   },
 };
 
@@ -1412,6 +1469,630 @@ const wm = {
           <a class="ngpt-visit" href="https://nano-gpt.com" target="_blank" rel="noopener">↗ &nbsp;Visit nano-gpt.com</a>
 
         </div>`,
+
+      nano_hub: `
+        <div class="nhub-page">
+
+          <!-- HEADER -->
+          <div class="nhub-header">
+            <div class="nhub-logo" onclick="hubNav('home')">
+              <img src="https://hub.nano.org/images/nano-hub-logo-header.svg" alt="Nano Hub"
+                   onerror="this.outerHTML='<span style=font-weight:800;color:#4C6FE4;font-size:14px>Nano Hub</span>'">
+            </div>
+            <nav class="nhub-nav">
+              <button class="nhub-nav-link nh-active" data-page="home" onclick="hubNav('home')">Home</button>
+              <button class="nhub-nav-link" data-page="merchants" onclick="hubNav('merchants')">Merchants</button>
+              <button class="nhub-nav-link" data-page="wallets" onclick="hubNav('wallets')">Wallets</button>
+              <button class="nhub-nav-link" data-page="merchant-solutions" onclick="hubNav('merchant-solutions')">Merchant Solutions</button>
+              <button class="nhub-nav-link" data-page="trading" onclick="hubNav('trading')">Trading</button>
+              <button class="nhub-nav-link" data-page="developer-tools" onclick="hubNav('developer-tools')">Developer Tools</button>
+              <button class="nhub-nav-link" data-page="faucets" onclick="hubNav('faucets')">Faucets</button>
+              <button class="nhub-nav-link" data-page="gaming" onclick="hubNav('gaming')">Gaming</button>
+              <button class="nhub-nav-link" data-page="earn" onclick="hubNav('earn')">Earn</button>
+              <button class="nhub-nav-link" data-page="ai" onclick="hubNav('ai')">AI</button>
+              <button class="nhub-nav-link" data-page="charities" onclick="hubNav('charities')">Charities</button>
+              <button class="nhub-nav-link" data-page="other-services" onclick="hubNav('other-services')">Other Services</button>
+              <button class="nhub-nav-link" data-page="recently-added" onclick="hubNav('recently-added')">Recently Added</button>
+            </nav>
+            <div class="nhub-about-link">| <a href="https://nano.org" target="_blank" rel="noopener">About Nano</a></div>
+            <button class="nhub-suggest-btn" onclick="window.open('https://forms.gle/qCQRahAoFcNZxtST6','_blank')">+ Suggest Item</button>
+          </div>
+
+          <!-- BODY -->
+          <div class="nhub-body" id="nhub-body">
+
+            <!-- ── HOME ── -->
+            <div class="nhub-view nh-visible" id="nhub-home">
+              <div class="nhub-hero"><h1>Nano Hub</h1><p>Explore the nano ecosystem</p></div>
+              <div class="nhub-grid">
+                <div class="nhub-cat-card" onclick="hubNav('merchants')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/merchants.svg" alt="" onerror="this.outerHTML='🏪'">
+                  <div class="nhub-cat-name">Merchants</div>
+                  <div class="nhub-cat-desc">Spend your nano (XNO) around the world - online and in shops</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('wallets')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/wallets.svg" alt="" onerror="this.outerHTML='👛'">
+                  <div class="nhub-cat-name">Wallets</div>
+                  <div class="nhub-cat-desc">Store your nano (XNO) securely</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('merchant-solutions')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/merchant-solutions.svg" alt="" onerror="this.outerHTML='💳'">
+                  <div class="nhub-cat-name">Merchant Solutions</div>
+                  <div class="nhub-cat-desc">Apps and services for paying with nano (XNO)</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('trading')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/trading.svg" alt="" onerror="this.outerHTML='📈'">
+                  <div class="nhub-cat-name">Trading</div>
+                  <div class="nhub-cat-desc">Buy, sell, and trade nano (XNO) on many exchanges</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('developer-tools')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/developer-tools.svg" alt="" onerror="this.outerHTML='🛠️'">
+                  <div class="nhub-cat-name">Developer Tools</div>
+                  <div class="nhub-cat-desc">Find the perfect software to develop with nano (XNO)</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('faucets')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/faucets.svg" alt="" onerror="this.outerHTML='💧'">
+                  <div class="nhub-cat-name">Faucets</div>
+                  <div class="nhub-cat-desc">Try nano (XNO) by getting a small amount for free</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('gaming')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/gaming.svg" alt="" onerror="this.outerHTML='🎮'">
+                  <div class="nhub-cat-name">Gaming</div>
+                  <div class="nhub-cat-desc">Use and earn nano (XNO) in-game on a variety of platforms</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('earn')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/earn.svg" alt="" onerror="this.outerHTML='💰'">
+                  <div class="nhub-cat-name">Earn</div>
+                  <div class="nhub-cat-desc">Discover a wide range of ways to earn more nano (XNO)</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('ai')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/ai.png" alt="" onerror="this.outerHTML='🤖'">
+                  <div class="nhub-cat-name">AI</div>
+                  <div class="nhub-cat-desc">AI services and apps using nano (XNO)</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('charities')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/charities.svg" alt="" onerror="this.outerHTML='❤️'">
+                  <div class="nhub-cat-name">Charities</div>
+                  <div class="nhub-cat-desc">View charities accepting nano (XNO)</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('other-services')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/other-services.svg" alt="" onerror="this.outerHTML='🔧'">
+                  <div class="nhub-cat-name">Other Services</div>
+                  <div class="nhub-cat-desc">Other apps and services making use of nano (XNO)</div>
+                </div>
+                <div class="nhub-cat-card" onclick="hubNav('recently-added')">
+                  <img src="https://hub.nano.org/images/top-level-category-icons/recently-added.png" alt="" onerror="this.outerHTML='✨'">
+                  <div class="nhub-cat-name">Recently Added</div>
+                  <div class="nhub-cat-desc">What&#39;s new on Nano Hub</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── MERCHANTS ── -->
+            <div class="nhub-view" id="nhub-merchants">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Merchants</h2><p>Spend your nano (XNO) around the world - online and in shops</p>
+              </div>
+              <div class="nhub-result-count">52 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nano-gpt.com/" target="_blank" rel="noopener">NanoGPT</a></div>
+                  <div class="nhub-item-desc">Access ChatGPT, Gemini, Claude and other flagship AI text &amp; image models on a pay-per-prompt basis, no subscription needed.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/ai/agents-automation/342" target="_blank">Agents &amp; Automation</a><a class="nhub-tag" href="https://hub.nano.org/ai/generative-ai/341" target="_blank">Generative AI</a><a class="nhub-tag" href="https://hub.nano.org/merchants/art/209" target="_blank">Art</a><a class="nhub-tag" href="https://hub.nano.org/merchants/software/152" target="_blank">Software</a><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a></div>
+                  <a class="nhub-visit-btn" href="https://nano-gpt.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.travala.com/" target="_blank" rel="noopener">Travala</a></div>
+                  <div class="nhub-item-desc">Book hotels, resorts, flights and activities worldwide</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a><a class="nhub-tag" href="https://hub.nano.org/merchants/travel-vacation-services/147" target="_blank">Travel &amp; Vacation Services</a></div>
+                  <a class="nhub-visit-btn" href="https://www.travala.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.pnp.co.za/" target="_blank" rel="noopener">Pick n Pay</a></div>
+                  <div class="nhub-item-desc">Nationwide across South Africa at 2,200 stores. Grocery shopping for all your needs. (via Binance Pay)</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchants/in-shops/65" target="_blank">In Shops</a><a class="nhub-tag" href="https://hub.nano.org/merchants/grocery-foods/154" target="_blank">Grocery &amp; Foods</a><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a></div>
+                  <a class="nhub-visit-btn" href="https://www.pnp.co.za/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.armour-hosting.com/" target="_blank" rel="noopener">Armour Hosting</a></div>
+                  <div class="nhub-item-desc">Armour Hosting delivers high-speed, robust web hosting and scalable, secure servers.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchants/hosting-services/66" target="_blank">Hosting Services</a><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a></div>
+                  <a class="nhub-visit-btn" href="https://www.armour-hosting.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nanswap.com/shop" target="_blank" rel="noopener">NanShop</a></div>
+                  <div class="nhub-item-desc">Buy gift cards from over 5,000 brands with Nano. Shop with Nano (XNO)</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchants/gift-cards/148" target="_blank">Gift Cards</a><a class="nhub-tag" href="https://hub.nano.org/merchants/mobile-top-up/149" target="_blank">Mobile Top-up</a><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a></div>
+                  <a class="nhub-visit-btn" href="https://nanswap.com/shop" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://sleap.io/?currency=XNO" target="_blank" rel="noopener">Sleap.io</a></div>
+                  <div class="nhub-item-desc">Travel booking platform. Book any of the 1M+ hotel accommodations accepting nano.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchants/travel-vacation-services/147" target="_blank">Travel &amp; Vacation Services</a><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a></div>
+                  <a class="nhub-visit-btn" href="https://sleap.io/?currency=XNO" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/merchants" target="_blank" rel="noopener">View all 52 merchants on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── WALLETS ── -->
+            <div class="nhub-view" id="nhub-wallets">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Wallets</h2><p>Store your nano (XNO) securely</p>
+              </div>
+              <div class="nhub-result-count">13 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nault.cc/" target="_blank" rel="noopener">Nault</a></div>
+                  <div class="nhub-item-desc">Open source and advanced wallet for web, mobile via web and desktop. Robust features including rep management, Ledger support, multiple accounts and more.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/wallets/non-custodial/291" target="_blank">Non-Custodial</a><a class="nhub-tag" href="https://hub.nano.org/wallets/ledger-support/78" target="_blank">Ledger Support</a><a class="nhub-tag" href="https://hub.nano.org/wallets/multi-account-support/79" target="_blank">Multi-Account</a><a class="nhub-tag" href="https://hub.nano.org/wallets/open-source/75" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/wallets/web/84" target="_blank">Web</a><a class="nhub-tag" href="https://hub.nano.org/wallets/windows/55" target="_blank">Windows</a><a class="nhub-tag" href="https://hub.nano.org/wallets/macos/80" target="_blank">macOS</a><a class="nhub-tag" href="https://hub.nano.org/wallets/linux/81" target="_blank">Linux</a></div>
+                  <a class="nhub-visit-btn" href="https://nault.cc/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://natrium.io/" target="_blank" rel="noopener">Natrium</a></div>
+                  <div class="nhub-item-desc">Fully-featured, open source mobile wallet with advanced features such as contact management, private key sweeping, account icons, and more</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/wallets/non-custodial/291" target="_blank">Non-Custodial</a><a class="nhub-tag" href="https://hub.nano.org/wallets/community-built/85" target="_blank">Community Built</a><a class="nhub-tag" href="https://hub.nano.org/wallets/open-source/75" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/wallets/ios/54" target="_blank">iOS</a><a class="nhub-tag" href="https://hub.nano.org/wallets/android/53" target="_blank">Android</a></div>
+                  <a class="nhub-visit-btn" href="https://natrium.io/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nanchat.com/" target="_blank" rel="noopener">NanChat</a></div>
+                  <div class="nhub-item-desc">Nano Wallet &amp; Chat. Send money and messages instantly all over the world with zero fees.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/wallets/social/86" target="_blank">Social</a><a class="nhub-tag" href="https://hub.nano.org/wallets/community-built/85" target="_blank">Community Built</a><a class="nhub-tag" href="https://hub.nano.org/wallets/ledger-support/78" target="_blank">Ledger Support</a></div>
+                  <a class="nhub-visit-btn" href="https://nanchat.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://xnap.xyz/" target="_blank" rel="noopener">Xnap</a></div>
+                  <div class="nhub-item-desc">Xnap is a MetaMask integration/SDK that allows you to manage your Nano (XNO) directly from MetaMask</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/wallets/non-custodial/291" target="_blank">Non-Custodial</a><a class="nhub-tag" href="https://hub.nano.org/wallets/open-source/75" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/wallets/browser-extension/301" target="_blank">Browser Extension</a></div>
+                  <a class="nhub-visit-btn" href="https://xnap.xyz/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/wallets" target="_blank" rel="noopener">View all 13 wallets on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── MERCHANT SOLUTIONS ── -->
+            <div class="nhub-view" id="nhub-merchant-solutions">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Merchant Solutions</h2><p>Apps and services for paying with nano (XNO)</p>
+              </div>
+              <div class="nhub-result-count">16 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://coinify.com/" target="_blank" rel="noopener">Coinify</a></div>
+                  <div class="nhub-item-desc">Accept nano payments, deposit and withdraw your coins and manage your digital currency payments with invoice capabilities and more</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/api/71" target="_blank">API</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/invoices/70" target="_blank">Invoices</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/online-payments/67" target="_blank">Online Payments</a></div>
+                  <a class="nhub-visit-btn" href="https://coinify.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nowpayments.io/" target="_blank" rel="noopener">NOWPayments</a></div>
+                  <div class="nhub-item-desc">Accept nano payments and donations instantly through an API or plugins for popular CMS platforms such as Shopify, WooCommerce, OpenCart and more</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/plugins/72" target="_blank">Plugins</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/api/71" target="_blank">API</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/invoices/70" target="_blank">Invoices</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/online-payments/67" target="_blank">Online Payments</a></div>
+                  <a class="nhub-visit-btn" href="https://nowpayments.io/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://onramp.money/" target="_blank" rel="noopener">Onramp.money</a></div>
+                  <div class="nhub-item-desc">Allows users to easily on- and off-ramp to INR, TRY, VND, MXN, AED, KES, NGN, COP, PEN, CLP, EUR, GBP, IDR and more.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/ios/98" target="_blank">iOS</a><a class="nhub-tag" href="https://hub.nano.org/trading/android/97" target="_blank">Android</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/online-payments/67" target="_blank">Online Payments</a></div>
+                  <a class="nhub-visit-btn" href="https://onramp.money/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nault.cc/" target="_blank" rel="noopener">Nault</a></div>
+                  <div class="nhub-item-desc">Open source wallet with In Store / Point-of-Sale capabilities for accepting nano payments.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/in-store-point-of-sale/68" target="_blank">In Store / POS</a><a class="nhub-tag" href="https://hub.nano.org/wallets/open-source/75" target="_blank">Open Source</a></div>
+                  <a class="nhub-visit-btn" href="https://nault.cc/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nano.to/" target="_blank" rel="noopener">nano.to</a></div>
+                  <div class="nhub-item-desc">API to create hosted payment links for your nano address. Anonymous, no account or API key required.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/api/71" target="_blank">API</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/donations/69" target="_blank">Donations</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/online-payments/67" target="_blank">Online Payments</a></div>
+                  <a class="nhub-visit-btn" href="https://nano.to/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/merchant-solutions" target="_blank" rel="noopener">View all 16 solutions on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── TRADING ── -->
+            <div class="nhub-view" id="nhub-trading">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Trading</h2><p>Buy, sell, and trade nano (XNO) on many exchanges</p>
+              </div>
+              <div class="nhub-result-count">52 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.kraken.com/" target="_blank" rel="noopener">Kraken</a></div>
+                  <div class="nhub-item-desc">Cryptocurrency exchange with features from simple to advanced for buying and trading nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/android/97" target="_blank">Android</a><a class="nhub-tag" href="https://hub.nano.org/trading/ios/98" target="_blank">iOS</a><a class="nhub-tag" href="https://hub.nano.org/trading/allows-withdrawals/99" target="_blank">Allows Withdrawals</a><a class="nhub-tag" href="https://hub.nano.org/trading/advanced-trading/141" target="_blank">Advanced Trading</a></div>
+                  <a class="nhub-visit-btn" href="https://www.kraken.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.binance.com/" target="_blank" rel="noopener">Binance</a></div>
+                  <div class="nhub-item-desc">Platform for buying and trading nano against a variety of other currencies</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/allows-withdrawals/99" target="_blank">Allows Withdrawals</a><a class="nhub-tag" href="https://hub.nano.org/trading/android/97" target="_blank">Android</a><a class="nhub-tag" href="https://hub.nano.org/trading/ios/98" target="_blank">iOS</a><a class="nhub-tag" href="https://hub.nano.org/trading/advanced-trading/141" target="_blank">Advanced Trading</a></div>
+                  <a class="nhub-visit-btn" href="https://www.binance.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://bitvavo.com/en/nano" target="_blank" rel="noopener">Bitvavo</a></div>
+                  <div class="nhub-item-desc">European exchange for buying and trading nano with other cryptocurrencies</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/allows-withdrawals/99" target="_blank">Allows Withdrawals</a></div>
+                  <a class="nhub-visit-btn" href="https://bitvavo.com/en/nano" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://crypto.com/" target="_blank" rel="noopener">Crypto.com</a></div>
+                  <div class="nhub-item-desc">Trade, buy or get a credit card to spend your nano with merchants all across the world</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/visa-credit-card/100" target="_blank">VISA Credit Card</a><a class="nhub-tag" href="https://hub.nano.org/trading/allows-withdrawals/99" target="_blank">Allows Withdrawals</a><a class="nhub-tag" href="https://hub.nano.org/trading/android/97" target="_blank">Android</a><a class="nhub-tag" href="https://hub.nano.org/trading/ios/98" target="_blank">iOS</a></div>
+                  <a class="nhub-visit-btn" href="https://crypto.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://coinmerce.io/" target="_blank" rel="noopener">Coinmerce</a></div>
+                  <div class="nhub-item-desc">European based trading platform for buying and trading nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/allows-withdrawals/99" target="_blank">Allows Withdrawals</a></div>
+                  <a class="nhub-visit-btn" href="https://coinmerce.io/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://onramp.money/" target="_blank" rel="noopener">Onramp.money</a></div>
+                  <div class="nhub-item-desc">Easily on- and off-ramp to INR, TRY, VND, MXN, AED, KES, NGN and many more currencies</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/trading/ios/98" target="_blank">iOS</a><a class="nhub-tag" href="https://hub.nano.org/trading/android/97" target="_blank">Android</a></div>
+                  <a class="nhub-visit-btn" href="https://onramp.money/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/trading" target="_blank" rel="noopener">View all 52 exchanges on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── DEVELOPER TOOLS ── -->
+            <div class="nhub-view" id="nhub-developer-tools">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Developer Tools</h2>
+                <p>Find the perfect software to help you develop with nano (XNO), or visit our documentation at <a href="https://docs.nano.org/" target="_blank" rel="noopener" style="color:#4C6FE4">docs.nano.org</a></p>
+              </div>
+              <div class="nhub-result-count">53 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nano.to/" target="_blank" rel="noopener">nano.to</a></div>
+                  <div class="nhub-item-desc">API to create hosted payment links for your nano address. Accessible from any internet connected device. Anonymous, no account or API key required.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/developer-tools/payment-processing/45" target="_blank">Payment Processing</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/api/71" target="_blank">API</a><a class="nhub-tag" href="https://hub.nano.org/merchant-solutions/donations/69" target="_blank">Donations</a></div>
+                  <a class="nhub-visit-btn" href="https://nano.to/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://github.com/joohansson/nanorpcproxy" target="_blank" rel="noopener">Nano RPC Proxy</a></div>
+                  <div class="nhub-item-desc">A relay and protection system that operates between a client and a Nano node, including RPC and WebSocket interfaces</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/developer-tools/open-source/249" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/javascript/58" target="_blank">JavaScript</a></div>
+                  <a class="nhub-visit-btn" href="https://github.com/joohansson/nanorpcproxy" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.npmjs.com/package/nano25519" target="_blank" rel="noopener">nano25519</a></div>
+                  <div class="nhub-item-desc">Block signing, key derivation, and signature verification for Nano cryptocurrency using WebAssembly</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/developer-tools/javascript/58" target="_blank">JavaScript</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/accounts-signing-keys/42" target="_blank">Accounts, Signing &amp; Keys</a></div>
+                  <a class="nhub-visit-btn" href="https://www.npmjs.com/package/nano25519" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://github.com/infinitybay/nano-sdk" target="_blank" rel="noopener">nano-sdk</a></div>
+                  <div class="nhub-item-desc">TypeScript SDK for interacting with a Nano node, providing fully typed and runtime-validated RPC and WebSocket APIs</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/developer-tools/javascript/58" target="_blank">JavaScript</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/open-source/249" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/block-management/41" target="_blank">Block Management</a></div>
+                  <a class="nhub-visit-btn" href="https://github.com/infinitybay/nano-sdk" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/developer-tools" target="_blank" rel="noopener">View all 53 developer tools on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── FAUCETS ── -->
+            <div class="nhub-view" id="nhub-faucets">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Faucets</h2><p>Try nano (XNO) by getting a small amount for free</p>
+              </div>
+              <div class="nhub-result-count">14 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nanodrop.io/" target="_blank" rel="noopener">Nano Drop</a></div>
+                  <div class="nhub-item-desc">Grab a micro-fraction of nano for free from this simple faucet</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/basic/224" target="_blank">Basic</a></div>
+                  <a class="nhub-visit-btn" href="https://nanodrop.io/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://faucet.xnopay.com/" target="_blank" rel="noopener">XNOPay Faucet</a></div>
+                  <div class="nhub-item-desc">XNOPay is a payment processor and faucet, providing some free nano.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/basic/224" target="_blank">Basic</a></div>
+                  <a class="nhub-visit-btn" href="https://faucet.xnopay.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://wenano.net/" target="_blank" rel="noopener">WeNano</a></div>
+                  <div class="nhub-item-desc">Through globally distributed spots, you can earn nano and interact with other users in this unique social wallet experience</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/location-based/225" target="_blank">Location-based</a><a class="nhub-tag" href="https://hub.nano.org/wallets/social/86" target="_blank">Social</a><a class="nhub-tag" href="https://hub.nano.org/wallets/open-source/75" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/wallets/ios/54" target="_blank">iOS</a><a class="nhub-tag" href="https://hub.nano.org/wallets/android/53" target="_blank">Android</a></div>
+                  <a class="nhub-visit-btn" href="https://wenano.net/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://freenanofaucet.com/" target="_blank" rel="noopener">FreeNanoFaucet</a></div>
+                  <div class="nhub-item-desc">Earn a little nano and find out more about the digital currency</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/basic/224" target="_blank">Basic</a></div>
+                  <a class="nhub-visit-btn" href="https://freenanofaucet.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://get-xno.com/" target="_blank" rel="noopener">Get &#x58;NO</a></div>
+                  <div class="nhub-item-desc">A platform to earn Nano. Offers a faucet accessible every 30 minutes, offerwall, and weekly codes. No minimum withdrawal limits.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/basic/224" target="_blank">Basic</a></div>
+                  <a class="nhub-visit-btn" href="https://get-xno.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://thenanobutton.com/" target="_blank" rel="noopener">The Nano Button</a></div>
+                  <div class="nhub-item-desc">The Nano button is a fun and easy faucet for humans and AI agents to get some Nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/basic/224" target="_blank">Basic</a></div>
+                  <a class="nhub-visit-btn" href="https://thenanobutton.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/faucets" target="_blank" rel="noopener">View all 14 faucets on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── GAMING ── -->
+            <div class="nhub-view" id="nhub-gaming">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Gaming</h2><p>Use and earn nano (XNO) in-game on a variety of platforms</p>
+              </div>
+              <div class="nhub-result-count">10 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nanogotchi.com/" target="_blank" rel="noopener">Nanogotchi</a></div>
+                  <div class="nhub-item-desc">Log in with your nano wallet address and start growing your very own Nanogotchi! Earn nano by leveling up, spend nano on items, and customize your Nanogotchi's world.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/gaming/228" target="_blank">Gaming</a><a class="nhub-tag" href="https://hub.nano.org/gaming/web/219" target="_blank">Web</a></div>
+                  <a class="nhub-visit-btn" href="https://nanogotchi.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://cryptovision.live/" target="_blank" rel="noopener">CryptoVision</a></div>
+                  <div class="nhub-item-desc">Video streaming faucet with nano payouts</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/gaming/web/219" target="_blank">Web</a><a class="nhub-tag" href="https://hub.nano.org/earn/gaming/228" target="_blank">Gaming</a><a class="nhub-tag" href="https://hub.nano.org/earn/tasks/229" target="_blank">Tasks</a></div>
+                  <a class="nhub-visit-btn" href="https://cryptovision.live/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://raesonic.world/" target="_blank" rel="noopener">Raesonic</a></div>
+                  <div class="nhub-item-desc">A multiplayer online game with procedurally generated tracks, customisable vehicles and more. Features premium in-game items obtained exclusively with nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/gaming/web/219" target="_blank">Web</a><a class="nhub-tag" href="https://hub.nano.org/gaming/pc/222" target="_blank">PC</a></div>
+                  <a class="nhub-visit-btn" href="https://raesonic.world/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://jc2rp.fandom.com/" target="_blank" rel="noopener">JC2RP - Game Faucet</a></div>
+                  <div class="nhub-item-desc">Earn nano from playing a faction wars mode in the classic Just Cause 2 Multiplayer game</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/gaming/228" target="_blank">Gaming</a><a class="nhub-tag" href="https://hub.nano.org/gaming/pc/222" target="_blank">PC</a></div>
+                  <a class="nhub-visit-btn" href="https://jc2rp.fandom.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://deanobones.github.io/Skyrun/" target="_blank" rel="noopener">Nano SkyRun</a></div>
+                  <div class="nhub-item-desc">Play Skyrun for free and earn Nano. Windows-based.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/gaming/pc/222" target="_blank">PC</a></div>
+                  <a class="nhub-visit-btn" href="https://deanobones.github.io/Skyrun/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://xno-aurora.space/" target="_blank" rel="noopener">Aurora Seekers</a></div>
+                  <div class="nhub-item-desc">Experience the magic of Aurora Seekers, a cozy rhythm adventure where the Northern Lights dance to your beat.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/game/302" target="_blank">Game</a></div>
+                  <a class="nhub-visit-btn" href="https://xno-aurora.space/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://xno-fishing.space/" target="_blank" rel="noopener">Fishing Frenzy</a></div>
+                  <div class="nhub-item-desc">Real-time multiplayer game where every catch pays out Nano directly to your wallet.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/game/302" target="_blank">Game</a></div>
+                  <a class="nhub-visit-btn" href="https://xno-fishing.space/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/gaming" target="_blank" rel="noopener">View all 10 games on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── EARN ── -->
+            <div class="nhub-view" id="nhub-earn">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Earn</h2><p>Discover a wide range of ways to earn more nano (XNO)</p>
+              </div>
+              <div class="nhub-result-count">14 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://subnano.me/" target="_blank" rel="noopener">Subnano</a></div>
+                  <div class="nhub-item-desc">Unlock content instantly with Nano micro-payments. Get paid in Nano micro-payments for your content</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/other-services/microtransactions/134" target="_blank">Microtransactions</a><a class="nhub-tag" href="https://hub.nano.org/other-services/paywalls/92" target="_blank">Paywalls</a><a class="nhub-tag" href="https://hub.nano.org/earn/content/297" target="_blank">Content</a></div>
+                  <a class="nhub-visit-btn" href="https://subnano.me/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nanogotchi.com/" target="_blank" rel="noopener">Nanogotchi</a></div>
+                  <div class="nhub-item-desc">Log in with your nano wallet address and start growing your very own Nanogotchi! Earn nano by leveling up, spend nano on items.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/gaming/228" target="_blank">Gaming</a><a class="nhub-tag" href="https://hub.nano.org/gaming/web/219" target="_blank">Web</a></div>
+                  <a class="nhub-visit-btn" href="https://nanogotchi.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://zealy.io/cw/prismgroup/questboard" target="_blank" rel="noopener">PRISM</a></div>
+                  <div class="nhub-item-desc">A questboard with small tasks that help Nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/tasks/229" target="_blank">Tasks</a></div>
+                  <a class="nhub-visit-btn" href="https://zealy.io/cw/prismgroup/questboard" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://karmacall.com/" target="_blank" rel="noopener">KarmaCall</a></div>
+                  <div class="nhub-item-desc">Get paid in nano to block malicious spam calls on your Android phone</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/tasks/229" target="_blank">Tasks</a><a class="nhub-tag" href="https://hub.nano.org/other-services/microtransactions/134" target="_blank">Microtransactions</a><a class="nhub-tag" href="https://hub.nano.org/other-services/mobile-app/96" target="_blank">Mobile App</a></div>
+                  <a class="nhub-visit-btn" href="https://karmacall.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://coinrabbit.io/" target="_blank" rel="noopener">CoinRabbit</a></div>
+                  <div class="nhub-item-desc">Crypto lending platform that provides crypto-backed loans and also crypto deposits to earn interest on. Offers XNO-backed loans.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/loans/230" target="_blank">Loans</a></div>
+                  <a class="nhub-visit-btn" href="https://coinrabbit.io/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/earn" target="_blank" rel="noopener">View all 14 earn options on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── AI ── -->
+            <div class="nhub-view" id="nhub-ai">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>AI</h2><p>AI services and apps using nano (XNO)</p>
+              </div>
+              <div class="nhub-result-count">3 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nano-gpt.com/" target="_blank" rel="noopener">NanoGPT</a></div>
+                  <div class="nhub-item-desc">Access ChatGPT, Gemini, Claude and other flagship AI text &amp; image models on a pay-per-prompt basis, no subscription needed.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/ai/agents-automation/342" target="_blank">Agents &amp; Automation</a><a class="nhub-tag" href="https://hub.nano.org/ai/generative-ai/341" target="_blank">Generative AI</a></div>
+                  <a class="nhub-visit-btn" href="https://nano-gpt.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://longstories.ai/" target="_blank" rel="noopener">LongStories.ai</a></div>
+                  <div class="nhub-item-desc">LongStories makes it easy for anyone to bring their ideas to life with animated short movies. Purchase LongStories credits with nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/ai/generative-ai/341" target="_blank">Generative AI</a></div>
+                  <a class="nhub-visit-btn" href="https://longstories.ai/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://ainanomusic.com/" target="_blank" rel="noopener">Al Nano Music</a></div>
+                  <div class="nhub-item-desc">Al Music Contest Platform powered by Nano (XNO)</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/ai/generative-ai/341" target="_blank">Generative AI</a></div>
+                  <a class="nhub-visit-btn" href="https://ainanomusic.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/ai" target="_blank" rel="noopener">View AI section on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── CHARITIES ── -->
+            <div class="nhub-view" id="nhub-charities">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Charities</h2><p>View charities accepting nano (XNO)</p>
+              </div>
+              <div class="nhub-result-count">6 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://thehumaneleague.org/donate-cryptocurrencies" target="_blank" rel="noopener">The Humane League</a></div>
+                  <div class="nhub-item-desc">Global non-profit aiming to end the abuse of animals raised for food</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/charities/animal-rights-welfare-and-services/144" target="_blank">Animal Rights &amp; Welfare</a></div>
+                  <a class="nhub-visit-btn" href="https://thehumaneleague.org/donate-cryptocurrencies" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.sos-kinderdorf.at/helfen-sie-mit/spenden/kryptowaehrungsspenden" target="_blank" rel="noopener">SOS Kinderdorf</a></div>
+                  <div class="nhub-item-desc">Helps children to find a loving home and supports them and their families in difficult life situations</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/charities/social-services/194" target="_blank">Social Services</a><a class="nhub-tag" href="https://hub.nano.org/charities/youth-development-shelter-and-crisis-services/190" target="_blank">Youth Development</a></div>
+                  <a class="nhub-visit-btn" href="https://www.sos-kinderdorf.at/helfen-sie-mit/spenden/kryptowaehrungsspenden" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://cryptoforthehomeless.com/" target="_blank" rel="noopener">Crypto for the Homeless</a></div>
+                  <div class="nhub-item-desc">Provides reimbursement in crypto, including nano, to volunteers who purchase food for homeless.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/charities/homeless-services/193" target="_blank">Homeless Services</a></div>
+                  <a class="nhub-visit-btn" href="https://cryptoforthehomeless.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nim-lang.org/donate.html" target="_blank" rel="noopener">Nim-lang</a></div>
+                  <div class="nhub-item-desc">Nim is a statically typed compiled systems programming language. The team accepts donations in nano.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/charities/community-foundations/195" target="_blank">Community Foundation</a></div>
+                  <a class="nhub-visit-btn" href="https://nim-lang.org/donate.html" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/charities" target="_blank" rel="noopener">View all 6 charities on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── OTHER SERVICES ── -->
+            <div class="nhub-view" id="nhub-other-services">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Other Services</h2><p>Other apps and services making use of nano (XNO)</p>
+              </div>
+              <div class="nhub-result-count">30 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://subnano.me/" target="_blank" rel="noopener">Subnano</a></div>
+                  <div class="nhub-item-desc">Unlock content instantly with Nano micro-payments. Get paid in Nano micro-payments for your content</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/other-services/microtransactions/134" target="_blank">Microtransactions</a><a class="nhub-tag" href="https://hub.nano.org/other-services/paywalls/92" target="_blank">Paywalls</a><a class="nhub-tag" href="https://hub.nano.org/earn/content/297" target="_blank">Content</a></div>
+                  <a class="nhub-visit-btn" href="https://subnano.me/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://karmacall.com/" target="_blank" rel="noopener">KarmaCall</a></div>
+                  <div class="nhub-item-desc">Get paid in nano to block malicious spam calls on your Android phone</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/earn/tasks/229" target="_blank">Tasks</a><a class="nhub-tag" href="https://hub.nano.org/other-services/microtransactions/134" target="_blank">Microtransactions</a><a class="nhub-tag" href="https://hub.nano.org/other-services/mobile-app/96" target="_blank">Mobile App</a></div>
+                  <a class="nhub-visit-btn" href="https://karmacall.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://flipsuite.xyz/" target="_blank" rel="noopener">Flipsuite.xyz</a></div>
+                  <div class="nhub-item-desc">A Discord application that allows communities to tip people, gate communities, reward users (Like &amp; Retweet to earn rewards) with nano.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/other-services/tips/89" target="_blank">Tips</a></div>
+                  <a class="nhub-visit-btn" href="https://flipsuite.xyz/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://nanswap.com/" target="_blank" rel="noopener">Nanswap</a></div>
+                  <div class="nhub-item-desc">Instant crypto exchange supporting nano. Swap between XNO and many other cryptocurrencies instantly.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/other-services/exchange/90" target="_blank">Exchange</a></div>
+                  <a class="nhub-visit-btn" href="https://nanswap.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/other-services" target="_blank" rel="noopener">View all 30 services on hub.nano.org ↗</a></div>
+            </div>
+
+            <!-- ── RECENTLY ADDED ── -->
+            <div class="nhub-view" id="nhub-recently-added">
+              <div class="nhub-sub-header">
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
+                <h2>Recently Added</h2><p>What&#39;s new on Nano Hub</p>
+              </div>
+              <div class="nhub-result-count">247 Results</div>
+              <div class="nhub-items">
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://www.npmjs.com/package/nano25519" target="_blank" rel="noopener">nano25519</a></div>
+                  <div class="nhub-item-desc">Block signing, key derivation, and signature verification for Nano cryptocurrency using WebAssembly</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/developer-tools/javascript/58" target="_blank">JavaScript</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/accounts-signing-keys/42" target="_blank">Accounts, Signing &amp; Keys</a></div>
+                  <a class="nhub-visit-btn" href="https://www.npmjs.com/package/nano25519" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://voronyz.com/" target="_blank" rel="noopener">Voronyz</a></div>
+                  <div class="nhub-item-desc">3D printed footwear matched to your unique foot geometry. 3% discount for paying with nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/merchants/clothing-apparel/127" target="_blank">Clothing &amp; Apparel</a><a class="nhub-tag" href="https://hub.nano.org/merchants/online/64" target="_blank">Online</a></div>
+                  <a class="nhub-visit-btn" href="https://voronyz.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://xno-aurora.space/" target="_blank" rel="noopener">Aurora Seekers</a></div>
+                  <div class="nhub-item-desc">Experience the magic of Aurora Seekers, a cozy rhythm adventure where the Northern Lights dance to your beat.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/game/302" target="_blank">Game</a></div>
+                  <a class="nhub-visit-btn" href="https://xno-aurora.space/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://xno-fishing.space/" target="_blank" rel="noopener">Fishing Frenzy</a></div>
+                  <div class="nhub-item-desc">Real-time multiplayer game where every catch pays out Nano directly to your wallet.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/game/302" target="_blank">Game</a></div>
+                  <a class="nhub-visit-btn" href="https://xno-fishing.space/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://thenanobutton.com/" target="_blank" rel="noopener">The Nano Button</a></div>
+                  <div class="nhub-item-desc">The Nano button is a fun and easy faucet for humans and AI agents to get some Nano</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/faucets/basic/224" target="_blank">Basic</a></div>
+                  <a class="nhub-visit-btn" href="https://thenanobutton.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://ainanomusic.com/" target="_blank" rel="noopener">Al Nano Music</a></div>
+                  <div class="nhub-item-desc">Al Music Contest Platform powered by Nano (XNO)</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/ai/generative-ai/341" target="_blank">Generative AI</a></div>
+                  <a class="nhub-visit-btn" href="https://ainanomusic.com/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://github.com/infinitybay/nano-sdk" target="_blank" rel="noopener">nano-sdk</a></div>
+                  <div class="nhub-item-desc">TypeScript SDK for interacting with a Nano node, providing fully typed and runtime-validated RPC and WebSocket APIs</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/developer-tools/javascript/58" target="_blank">JavaScript</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/open-source/249" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/developer-tools/block-management/41" target="_blank">Block Management</a></div>
+                  <a class="nhub-visit-btn" href="https://github.com/infinitybay/nano-sdk" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://flipsuite.xyz/" target="_blank" rel="noopener">Flipsuite.xyz</a></div>
+                  <div class="nhub-item-desc">A Discord application that allows communities to tip people, gate communities and reward users with nano.</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/other-services/tips/89" target="_blank">Tips</a></div>
+                  <a class="nhub-visit-btn" href="https://flipsuite.xyz/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+                <div class="nhub-item">
+                  <div class="nhub-item-name"><a href="https://xnap.xyz/" target="_blank" rel="noopener">Xnap</a></div>
+                  <div class="nhub-item-desc">Xnap is a MetaMask integration/SDK that allows you to manage your Nano (XNO) directly from MetaMask</div>
+                  <div class="nhub-item-tags"><a class="nhub-tag" href="https://hub.nano.org/wallets/non-custodial/291" target="_blank">Non-Custodial</a><a class="nhub-tag" href="https://hub.nano.org/wallets/open-source/75" target="_blank">Open Source</a><a class="nhub-tag" href="https://hub.nano.org/wallets/browser-extension/301" target="_blank">Browser Extension</a></div>
+                  <a class="nhub-visit-btn" href="https://xnap.xyz/" target="_blank" rel="noopener">Visit Website</a>
+                </div>
+              </div>
+              <div class="nhub-view-more"><a href="https://hub.nano.org/recently-added" target="_blank" rel="noopener">View all 247 recent additions on hub.nano.org ↗</a></div>
+            </div>
+
+          </div><!-- /nhub-body -->
+        </div>`,
     };
 
     wrap.innerHTML = `
@@ -1777,6 +2458,20 @@ document.addEventListener('keydown', e => {
 document.addEventListener('click', e => {
   if (e.target?.closest('#sendBtn')) { const inp=getEl('userInput'); if(inp) sendMsg(inp.value); }
 });
+
+/* ══════════════════════════════════════════
+   NANO HUB NAVIGATION
+══════════════════════════════════════════ */
+function hubNav(page) {
+  const body = document.getElementById('nhub-body');
+  if (!body) return;
+  body.querySelectorAll('.nhub-view').forEach(v => v.classList.remove('nh-visible'));
+  const target = document.getElementById('nhub-' + page);
+  if (target) { target.classList.add('nh-visible'); body.scrollTop = 0; }
+  body.closest('.nhub-page').querySelectorAll('.nhub-nav-link').forEach(a => {
+    a.classList.toggle('nh-active', a.dataset.page === page);
+  });
+}
 
 /* ══════════════════════════════════════════
    CLOCK
