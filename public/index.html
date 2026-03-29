@@ -1022,6 +1022,7 @@
     .norg-footer-col-title { font-size:11px; font-weight:700; color:rgba(255,255,255,.55); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
     .norg-footer-lnk { display:block; font-size:12px; color:rgba(255,255,255,.72); text-decoration:none; padding:3px 0; }
     .norg-footer-lnk:hover { color:#fff; }
+    .norg-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#4a62a8; cursor:pointer; background:none; border:none; padding:0; margin-bottom:10px; font-family:inherit; }
     .norg-sub-header { padding:18px 16px 10px; }
     .norg-sub-header h2 { font-size:20px; font-weight:800; color:#1a2b4b; margin:0 0 4px; }
     .norg-sub-header p { font-size:12px; color:#5a6e8a; margin:0; }
@@ -1097,6 +1098,8 @@
     .nhub-sub-header { padding:14px 14px 10px; background:#4a9fd4; flex-shrink:0; }
     .nhub-sub-header h2 { font-size:20px; font-weight:800; margin:0 0 3px; color:#fff; }
     .nhub-sub-header p { font-size:12px; color:rgba(255,255,255,.8); margin:0; }
+    .nhub-back-btn { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; color:rgba(255,255,255,.9); cursor:pointer; background:none; border:none; padding:0; margin-bottom:8px; font-family:inherit; }
+    .nhub-back-btn:hover { color:#fff; }
     .nhub-result-count { font-size:11.5px; color:#5a7a9a; padding:10px 14px 6px; }
     .nhub-items { display:flex; flex-direction:column; gap:9px; padding:0 14px 8px; }
     .nhub-item { background:#fff; border-radius:10px; border:1.5px solid #cde6f5; padding:13px; }
@@ -1620,7 +1623,7 @@ const wm = {
             <!-- ── TRY NANO ── -->
             <div class="norg-view" id="norg-try-nano">
               <div class="norg-sub-header">
-
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
                 <h2>Try Nano</h2>
                 <p>Four simple steps to start using nano today.</p>
               </div>
@@ -1681,7 +1684,7 @@ const wm = {
             <!-- ── ABOUT ── -->
             <div class="norg-view" id="norg-about">
               <div class="norg-sub-header">
-
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
                 <h2>About</h2>
                 <p>The Nano Foundation is a not-for-profit organisation built by passionate volunteers.</p>
               </div>
@@ -1733,7 +1736,7 @@ const wm = {
             <!-- ── SUSTAINABILITY ── -->
             <div class="norg-view" id="norg-sustainability">
               <div class="norg-sub-header">
-
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
                 <h2>Sustainability</h2>
                 <p>Digital money shouldn't cost the Earth.</p>
               </div>
@@ -1791,7 +1794,7 @@ const wm = {
             <!-- ── BLOG ── -->
             <div class="norg-view" id="norg-blog">
               <div class="norg-sub-header">
-
+                <button class="norg-back-btn" onclick="nanoNav('home')">← nano.org</button>
                 <h2>Blog</h2>
                 <p>The latest news, updates and insights from the Nano ecosystem.</p>
               </div>
@@ -2046,7 +2049,7 @@ const wm = {
             <!-- ── MERCHANTS ── -->
             <div class="nhub-view" id="nhub-merchants">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Merchants</h2><p>Spend your nano (XNO) around the world - online and in shops</p>
               </div>
               <div class="nhub-result-count">52 Results</div>
@@ -2094,7 +2097,7 @@ const wm = {
             <!-- ── WALLETS ── -->
             <div class="nhub-view" id="nhub-wallets">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Wallets</h2><p>Store your nano (XNO) securely</p>
               </div>
               <div class="nhub-result-count">13 Results</div>
@@ -2130,7 +2133,7 @@ const wm = {
             <!-- ── MERCHANT SOLUTIONS ── -->
             <div class="nhub-view" id="nhub-merchant-solutions">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Merchant Solutions</h2><p>Apps and services for paying with nano (XNO)</p>
               </div>
               <div class="nhub-result-count">16 Results</div>
@@ -2172,7 +2175,7 @@ const wm = {
             <!-- ── TRADING ── -->
             <div class="nhub-view" id="nhub-trading">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Trading</h2><p>Buy, sell, and trade nano (XNO) on many exchanges</p>
               </div>
               <div class="nhub-result-count">52 Results</div>
@@ -2220,7 +2223,7 @@ const wm = {
             <!-- ── DEVELOPER TOOLS ── -->
             <div class="nhub-view" id="nhub-developer-tools">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Developer Tools</h2>
                 <p>Find the perfect software to help you develop with nano (XNO), or visit our documentation at <a href="https://docs.nano.org/" target="_blank" rel="noopener" style="color:#4C6FE4">docs.nano.org</a></p>
               </div>
@@ -2257,7 +2260,7 @@ const wm = {
             <!-- ── FAUCETS ── -->
             <div class="nhub-view" id="nhub-faucets">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Faucets</h2><p>Try nano (XNO) by getting a small amount for free</p>
               </div>
               <div class="nhub-result-count">14 Results</div>
@@ -2305,7 +2308,7 @@ const wm = {
             <!-- ── GAMING ── -->
             <div class="nhub-view" id="nhub-gaming">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Gaming</h2><p>Use and earn nano (XNO) in-game on a variety of platforms</p>
               </div>
               <div class="nhub-result-count">10 Results</div>
@@ -2359,7 +2362,7 @@ const wm = {
             <!-- ── EARN ── -->
             <div class="nhub-view" id="nhub-earn">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Earn</h2><p>Discover a wide range of ways to earn more nano (XNO)</p>
               </div>
               <div class="nhub-result-count">14 Results</div>
@@ -2401,7 +2404,7 @@ const wm = {
             <!-- ── AI ── -->
             <div class="nhub-view" id="nhub-ai">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>AI</h2><p>AI services and apps using nano (XNO)</p>
               </div>
               <div class="nhub-result-count">3 Results</div>
@@ -2431,7 +2434,7 @@ const wm = {
             <!-- ── CHARITIES ── -->
             <div class="nhub-view" id="nhub-charities">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Charities</h2><p>View charities accepting nano (XNO)</p>
               </div>
               <div class="nhub-result-count">6 Results</div>
@@ -2467,7 +2470,7 @@ const wm = {
             <!-- ── OTHER SERVICES ── -->
             <div class="nhub-view" id="nhub-other-services">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Other Services</h2><p>Other apps and services making use of nano (XNO)</p>
               </div>
               <div class="nhub-result-count">30 Results</div>
@@ -2503,7 +2506,7 @@ const wm = {
             <!-- ── RECENTLY ADDED ── -->
             <div class="nhub-view" id="nhub-recently-added">
               <div class="nhub-sub-header">
-
+                <button class="nhub-back-btn" onclick="hubNav('home')">◀ Back</button>
                 <h2>Recently Added</h2><p>What&#39;s new on Nano Hub</p>
               </div>
               <div class="nhub-result-count">247 Results</div>
@@ -2572,10 +2575,6 @@ const wm = {
 
     wrap.innerHTML = `
       <div class="browser-bar">
-        <div class="browser-nav">
-          <button title="Back">◀</button>
-          <button title="Forward">▶</button>
-        </div>
         <div class="browser-address" onclick="window.open('${app.url}','_blank')" title="Open in browser">${app.url}</div>
         <button class="browser-go" onclick="window.open('${app.url}','_blank')" title="Open in browser">↗</button>
       </div>
