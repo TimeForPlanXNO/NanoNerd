@@ -2009,11 +2009,11 @@ const wm = {
     area.appendChild(win);
     this.els[id].win = win;
 
-    /* On desktop/tablet (>768 px wide): start at 50% of win-area, centered */
+    /* On desktop/tablet (>768 px wide): start at 67% of win-area, centered */
     if (window.innerWidth > 768) {
       const ar = area.getBoundingClientRect();
-      const w  = Math.round(ar.width  * 0.50);
-      const h  = Math.round(ar.height * 0.50);
+      const w  = Math.round(ar.width  * 0.67);
+      const h  = Math.round(ar.height * 0.67);
       win.style.width  = w + 'px';
       win.style.height = h + 'px';
       win.style.left   = Math.round((ar.width  - w) / 2) + 'px';
