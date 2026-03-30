@@ -1429,6 +1429,12 @@
     }
     .lang-item:hover  { background: #316ac5; color: #fff; }
     .lang-item.active { background: #4a80d4; color: #fff; font-weight: bold; }
+    @media (max-width: 768px), (pointer: coarse) {
+      .lang-picker { width: min(260px, calc(100vw - 8px)); max-height: 55vh; }
+      .lang-list   { max-height: calc(55vh - 36px); }
+      .lang-item   { padding: 10px 14px; font-size: 13px; }
+      .lang-search { padding: 8px 10px; font-size: 13px; }
+    }
   </style>
 </head>
 <body>
@@ -1773,23 +1779,37 @@ function _buildLangList(filter) {
 function filterLangs(q) { _buildLangList(q); }
 
 function toggleLangPicker(e) {
-  if (e) e.stopPropagation();
+  if (e) { e.stopPropagation(); e.preventDefault(); }
   const picker = document.getElementById('lang-picker');
   if (_langPickerOpen) {
     closeLangPicker();
   } else {
-    /* Position below the language button */
+    /* Position below the language button, clamped within viewport */
     const btn = document.getElementById('lang-btn');
     if (btn) {
-      const r = btn.getBoundingClientRect();
-      picker.style.left = r.left + 'px';
-      picker.style.top  = (r.bottom + 2) + 'px';
+      const r   = btn.getBoundingClientRect();
+      const pw  = 220, ph = 320;
+      const vw  = window.innerWidth, vh = window.innerHeight;
+      let left  = r.left;
+      let top   = r.bottom + 2;
+      /* Clamp right edge */
+      if (left + pw > vw - 4) left = vw - pw - 4;
+      if (left < 4) left = 4;
+      /* If would fall off bottom, open upward */
+      if (top + ph > vh - 4) top = Math.max(4, r.top - ph - 2);
+      picker.style.left = left + 'px';
+      picker.style.top  = top  + 'px';
     }
     _buildLangList('');
     picker.classList.add('open');
     _langPickerOpen = true;
     const s = document.getElementById('lang-search');
-    if (s) { s.value = ''; s.focus(); }
+    if (s) {
+      s.value = '';
+      /* Skip auto-focus on touch devices — avoids virtual keyboard jumping the viewport */
+      const isTouch = navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
+      if (!isTouch) s.focus();
+    }
   }
 }
 
@@ -1813,12 +1833,14 @@ function setLanguage(lang) {
   showCopyToast(`🌐 Language: ${lang}`);
 }
 
-/* Close language picker on outside click */
-document.addEventListener('click', e => {
+/* Close language picker on outside click or touch */
+function _closeLangIfOutside(e) {
   if (_langPickerOpen && !e.target.closest('#lang-picker') && !e.target.closest('#lang-btn')) {
     closeLangPicker();
   }
-});
+}
+document.addEventListener('click',    _closeLangIfOutside);
+document.addEventListener('touchend', _closeLangIfOutside, { passive: true });
 
 /* ══════════════════════════════════════════
    WINDOW MANAGER
@@ -2006,9 +2028,9 @@ const wm = {
       drag.start(id, e.clientX, e.clientY);
     });
 
-    /* Drag — touchstart on title bar (not on buttons) */
+    /* Drag — touchstart on title bar (not on buttons or lang-btn) */
     tb.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.xp-btns')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
       e.preventDefault();
       const t = e.touches[0];
       drag.start(id, t.clientX, t.clientY);
