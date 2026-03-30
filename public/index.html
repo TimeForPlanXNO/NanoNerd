@@ -933,14 +933,24 @@
     .mv-close:hover { background: #e74c3c; }
     .mv-body {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      overflow: auto; background: #111;
+      overflow: hidden; background: #111; min-height: 0;
     }
     .mv-body img {
-      max-width: 100%; max-height: 100%; object-fit: contain; display: block;
+      width: 100%; height: 100%; object-fit: contain; display: block; flex-shrink: 0;
     }
     .mv-body video {
-      max-width: 100%; max-height: 100%; display: block; outline: none;
+      width: 100%; height: 100%; object-fit: contain; display: block; outline: none; flex-shrink: 0;
     }
+    /* ── Media viewer resize handles ── */
+    .mv-resize { position:absolute; z-index:20; user-select:none; touch-action:none; }
+    .mv-resize-n  { top:-4px;    left:10px;  right:10px;  height:8px;  cursor:n-resize;  }
+    .mv-resize-s  { bottom:-4px; left:10px;  right:10px;  height:8px;  cursor:s-resize;  }
+    .mv-resize-e  { top:10px; bottom:10px; right:-4px;  width:8px;   cursor:e-resize;  }
+    .mv-resize-w  { top:10px; bottom:10px; left:-4px;   width:8px;   cursor:w-resize;  }
+    .mv-resize-ne { top:-5px;    right:-5px;  width:12px; height:12px; cursor:ne-resize; }
+    .mv-resize-nw { top:-5px;    left:-5px;   width:12px; height:12px; cursor:nw-resize; }
+    .mv-resize-se { bottom:-5px; right:-5px;  width:12px; height:12px; cursor:se-resize; }
+    .mv-resize-sw { bottom:-5px; left:-5px;   width:12px; height:12px; cursor:sw-resize; }
 
     /* ═══════════════════════════
        WIFI / REPS BUTTON & POPUP
@@ -4081,22 +4091,66 @@ function openMediaViewer(idx) {
     win.remove();
   };
 
-  /* Drag */
+  /* ── Drag ── */
   const titlebar = win.querySelector('.mv-titlebar');
   let dragging = false, ox = 0, oy = 0;
-  const onDown = (cx, cy) => {
+  const onDragDown = (cx, cy) => {
     dragging = true; _mvZ++;
     win.style.zIndex = _mvZ;
     ox = cx - win.offsetLeft; oy = cy - win.offsetTop;
   };
-  const onMove = (cx, cy) => { if (!dragging) return; win.style.left = (cx - ox) + 'px'; win.style.top = (cy - oy) + 'px'; };
-  const onUp   = () => { dragging = false; };
-  titlebar.addEventListener('mousedown',  e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); onDown(e.clientX, e.clientY); } });
-  document.addEventListener('mousemove',  e => onMove(e.clientX, e.clientY));
-  document.addEventListener('mouseup',    onUp);
-  titlebar.addEventListener('touchstart', e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); const t = e.touches[0]; onDown(t.clientX, t.clientY); } }, {passive:false});
-  document.addEventListener('touchmove',  e => { const t = e.touches[0]; onMove(t.clientX, t.clientY); }, {passive:true});
-  document.addEventListener('touchend',   onUp);
+  const onDragMove = (cx, cy) => {
+    if (!dragging) return;
+    win.style.left = (cx - ox) + 'px';
+    win.style.top  = (cy - oy) + 'px';
+  };
+  const onDragUp = () => { dragging = false; };
+
+  titlebar.addEventListener('mousedown',  e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); onDragDown(e.clientX, e.clientY); } });
+  titlebar.addEventListener('touchstart', e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); const t = e.touches[0]; onDragDown(t.clientX, t.clientY); } }, {passive:false});
+
+  /* ── Resize ── */
+  const MV_MIN_W = 200, MV_MIN_H = 140;
+  let resizing = false, rDir = '', rSx = 0, rSy = 0, rW0 = 0, rH0 = 0, rX0 = 0, rY0 = 0;
+
+  const onResizeDown = (dir, cx, cy) => {
+    resizing = true; rDir = dir;
+    rSx = cx; rSy = cy;
+    rW0 = win.offsetWidth; rH0 = win.offsetHeight;
+    rX0 = win.offsetLeft;  rY0 = win.offsetTop;
+    _mvZ++; win.style.zIndex = _mvZ;
+  };
+  const onResizeMove = (cx, cy) => {
+    if (!resizing) return;
+    const dx = cx - rSx, dy = cy - rSy;
+    let w = rW0, h = rH0, x = rX0, y = rY0;
+    if (rDir.includes('e')) w = Math.max(MV_MIN_W, rW0 + dx);
+    if (rDir.includes('s')) h = Math.max(MV_MIN_H, rH0 + dy);
+    if (rDir.includes('w')) { const nw = Math.max(MV_MIN_W, rW0 - dx); x = rX0 + (rW0 - nw); w = nw; }
+    if (rDir.includes('n')) { const nh = Math.max(MV_MIN_H, rH0 - dy); y = rY0 + (rH0 - nh); h = nh; }
+    win.style.width  = w + 'px';
+    win.style.height = h + 'px';
+    win.style.left   = x + 'px';
+    win.style.top    = y + 'px';
+  };
+  const onResizeUp = () => { resizing = false; };
+
+  ['n','s','e','w','ne','nw','se','sw'].forEach(dir => {
+    const rh = document.createElement('div');
+    rh.className = `mv-resize mv-resize-${dir}`;
+    rh.addEventListener('mousedown',  e => { e.preventDefault(); e.stopPropagation(); onResizeDown(dir, e.clientX, e.clientY); });
+    rh.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); const t = e.touches[0]; onResizeDown(dir, t.clientX, t.clientY); }, {passive:false});
+    win.appendChild(rh);
+  });
+
+  /* ── Unified global pointer handlers ── */
+  const onGlobalMove = (cx, cy) => { onDragMove(cx, cy); onResizeMove(cx, cy); };
+  const onGlobalUp   = ()        => { onDragUp();         onResizeUp();         };
+  document.addEventListener('mousemove', e => onGlobalMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup',   onGlobalUp);
+  document.addEventListener('touchmove', e => { const t = e.touches[0]; onGlobalMove(t.clientX, t.clientY); }, {passive:true});
+  document.addEventListener('touchend',  onGlobalUp);
+
   win.addEventListener('mousedown', () => { _mvZ++; win.style.zIndex = _mvZ; });
 
   area.appendChild(win);
