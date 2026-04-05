@@ -42,14 +42,19 @@
       align-items: center; gap: 3px;
       padding: 5px 3px; border-radius: 4px;
       pointer-events: all;
+      touch-action: none;           /* tell browser: no pan/zoom on icons */
       cursor: pointer; -webkit-tap-highlight-color: transparent;
       user-select: none;
       transition: background .12s;
     }
 
     .desk-icon:hover  { background: rgba(49,106,197,.45); outline: 1px solid rgba(255,255,255,.5); }
-    .desk-icon.icon-dragging { cursor: grabbing !important; opacity: .88; z-index: 9999 !important;
-      background: rgba(49,106,197,.35); outline: 1px solid rgba(255,255,255,.4); }
+    .desk-icon.icon-dragging {
+      cursor: grabbing !important; opacity: .88; z-index: 9999 !important;
+      background: rgba(49,106,197,.35); outline: 1px solid rgba(255,255,255,.4);
+      will-change: left, top;       /* GPU-accelerated repositioning */
+      transition: none;             /* no transition lag while dragging */
+    }
 
     .desk-icon .di-img   { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5)); }
     .desk-icon .di-emoji { font-size: 32px; line-height: 1; filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5)); }
@@ -4474,11 +4479,13 @@ function _initIconDrag() {
   document.addEventListener('mousemove', e => _iconDragMove(e.clientX, e.clientY));
   document.addEventListener('mouseup',   _iconDragEnd);
   document.addEventListener('touchmove', e => {
-    if (_cur && _moved) {
-      e.preventDefault(); /* stop page scroll while dragging icon */
-      const t = e.touches[0];
-      _iconDragMove(t.clientX, t.clientY);
-    }
+    if (!_cur) return;
+    /* preventDefault must fire before _moved is checked — calling it here
+       (with passive:false) stops the browser from claiming the gesture as a
+       scroll/zoom before the threshold is reached, and keeps it applied after. */
+    e.preventDefault();
+    const t = e.touches[0];
+    _iconDragMove(t.clientX, t.clientY);
   }, { passive: false });
   document.addEventListener('touchend',    _iconDragEnd, { passive: true });
   document.addEventListener('touchcancel', _iconDragEnd, { passive: true }); /* phone call / system gesture */
