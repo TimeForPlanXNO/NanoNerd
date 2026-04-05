@@ -1485,6 +1485,10 @@
         </div>
         <span class="label">Nano videos<br>and memes</span>
       </div>
+      <div class="desk-icon" data-icon-id="recycle-bin" data-app="recycle_bin">
+        <img class="di-img" src="/bitcoin.png" alt="Recycle Bin" />
+        <span class="label">Recycle Bin</span>
+      </div>
     </div>
     <div class="win-area" id="win-area"></div>
   </div>
@@ -1649,6 +1653,12 @@ const APPS = {
     iconHtml: '<span class="xp-folder-icon"><svg width="16" height="14" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></span>',
     tbIconHtml: '<span class="xp-folder-icon"><svg width="14" height="12" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></span>',
     type: 'folder',
+  },
+  recycle_bin: {
+    id: 'recycle_bin', title: 'Recycle Bin',
+    iconHtml: '<img src="/bitcoin.png" style="width:14px;height:14px;border-radius:50%;object-fit:cover;">',
+    tbIconHtml: '<img src="/bitcoin.png" style="width:14px;height:14px;border-radius:50%;object-fit:cover;">',
+    type: 'recycle_bin',
   },
 };
 
@@ -2053,9 +2063,10 @@ const wm = {
     const content = document.createElement('div');
     content.className = 'xp-content';
     let bodyEl;
-    if (app.type === 'chat')         bodyEl = this._buildChat();
-    else if (app.type === 'folder')  bodyEl = this._buildFolder();
-    else                             bodyEl = this._buildBrowser(app);
+    if (app.type === 'chat')            bodyEl = this._buildChat();
+    else if (app.type === 'folder')     bodyEl = this._buildFolder();
+    else if (app.type === 'recycle_bin') bodyEl = this._buildRecycleBin();
+    else                                bodyEl = this._buildBrowser(app);
     content.appendChild(bodyEl);
 
     /* Resize handles (8 directions) */
@@ -3243,6 +3254,74 @@ const wm = {
     return wrap;
   },
 
+  _buildRecycleBin() {
+    const shell = document.createElement('div');
+    shell.className = 'folder-shell';
+    shell.innerHTML = `
+      <div class="folder-toolbar">
+        <span style="font-size:11px;color:#555;white-space:nowrap;">Address:</span>
+        <div class="folder-addr-bar">C:\\RECYCLED</div>
+      </div>
+      <div class="folder-sidebar">
+        <div class="folder-sidebar-section">
+          <div class="folder-sidebar-title">Recycle Bin Tasks</div>
+          <div class="folder-sidebar-link">Empty Recycle Bin</div>
+          <div class="folder-sidebar-link">Restore all items</div>
+        </div>
+        <div class="folder-sidebar-section" style="margin-top:12px;">
+          <div class="folder-sidebar-title">Details</div>
+          <div style="font-size:10px;color:#333;line-height:1.6;padding:4px 8px;">
+            <b>Bitcoin.exe</b><br>
+            Type: Proof-of-Work Coin<br>
+            Size: 21,000,000 BTC<br>
+            Date deleted: Today
+          </div>
+        </div>
+      </div>
+      <div class="folder-files" id="rb-files" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:28px 16px;flex:1;min-height:200px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="position:relative;width:80px;height:80px;">
+            <img src="/bitcoin.png" style="width:80px;height:80px;border-radius:50%;filter:grayscale(30%) brightness(0.8);opacity:0.75;" alt="Bitcoin">
+            <div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-end;">
+              <span style="font-size:28px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));">🗑️</span>
+            </div>
+          </div>
+          <div style="font-size:12px;font-weight:bold;color:#333;text-align:center;">Bitcoin.exe</div>
+          <div style="font-size:10px;color:#666;text-align:center;max-width:260px;line-height:1.5;">
+            Slow, expensive, energy-hungry proof-of-work coin.<br>
+            Destination: <b style="color:#c00;">Permanent deletion</b>
+          </div>
+          <div style="width:220px;background:#ddd;border-radius:4px;height:16px;overflow:hidden;border:1px solid #bbb;">
+            <div id="rb-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#c44,#f66);border-radius:4px;transition:width 2.5s ease;"></div>
+          </div>
+          <div id="rb-status" style="font-size:10px;color:#555;">Preparing deletion…</div>
+        </div>
+      </div>
+    `;
+    /* Animate the deletion progress bar */
+    requestAnimationFrame(() => {
+      const bar    = shell.querySelector('#rb-bar');
+      const status = shell.querySelector('#rb-status');
+      if (!bar || !status) return;
+      const steps = [
+        { w: '30%', t:  400, msg: 'Calculating wasted energy… ██░░░░░░░░ 30%' },
+        { w: '55%', t: 1200, msg: 'Removing slow blocks… █████░░░░░ 55%'      },
+        { w: '78%', t: 2200, msg: 'Deleting proof-of-work… ███████░░░ 78%'    },
+        { w: '100%',t: 2800, msg: 'Bitcoin.exe deleted. Nano thanks you. ✓'   },
+      ];
+      steps.forEach(({ w, t, msg }) => {
+        setTimeout(() => {
+          bar.style.width = w;
+          status.textContent = msg;
+          if (w === '100%') {
+            bar.style.background = 'linear-gradient(90deg,#3a3,#5d5)';
+          }
+        }, t);
+      });
+    });
+    return shell;
+  },
+
   _buildFolder() {
     const shell = document.createElement('div');
     shell.className = 'folder-shell';
@@ -4174,12 +4253,13 @@ function openMediaViewer(idx) {
    DESKTOP ICON DRAG ENGINE
 ══════════════════════════════════════════ */
 const _ICON_POS_KEY  = 'xp-icon-pos';
-const _ICON_DEFAULTS = { /* default column: x, y */
+const _ICON_DEFAULTS = { /* default column: x, y  |  anchor:'bottom-right' = dynamic */
   'nanonerd'     : { x: 6, y: 6   },
   'nano-org'     : { x: 6, y: 86  },
   'nano-gpt'     : { x: 6, y: 166 },
   'nano-hub'     : { x: 6, y: 246 },
   'media-folder' : { x: 6, y: 330 },
+  'recycle-bin'  : { anchor: 'bottom-right', margin: 6 },
 };
 
 function _loadIconPos() {
@@ -4195,11 +4275,23 @@ function _initIconDrag() {
 
   /* Collect icon metadata and set initial positions */
   const _iconMeta = [];
+  const _ICON_W = 72, _ICON_H = 76; /* approximate icon bounding box */
   document.querySelectorAll('.desk-icon').forEach(el => {
     const id  = el.dataset.iconId;
     const app = el.dataset.app;
     const def = _ICON_DEFAULTS[id] || { x: 6, y: 6 };
-    const pos = saved[id] || def;
+    let pos;
+    if (saved[id]) {
+      pos = saved[id];
+    } else if (def.anchor === 'bottom-right') {
+      const m = def.margin ?? 6;
+      pos = {
+        x: Math.max(0, desktop.offsetWidth  - _ICON_W - m),
+        y: Math.max(0, desktop.offsetHeight - _ICON_H - m),
+      };
+    } else {
+      pos = def;
+    }
     el.style.left = pos.x + 'px';
     el.style.top  = pos.y + 'px';
     _iconMeta.push({ el, id, app });
