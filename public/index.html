@@ -1330,17 +1330,16 @@
 
     /* ── WALLPAPER BUTTON ── */
     .wp-btn {
-      position: absolute; top: 8px; right: 10px; z-index: 200;
+      position: absolute; top: 8px; right: 10px;
+      z-index: 5;  /* sits behind open windows; taskbar (500) stays supreme */
+      width: 26px; height: 26px; box-sizing: border-box;
+      padding: 0; border-radius: 5px;
       background: linear-gradient(180deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.10) 100%);
-      border: 1px solid rgba(255,255,255,.38); border-radius: 5px;
-      color: #fff; font-size: 11px; font-weight: bold; font-family: "Tahoma", sans-serif;
-      padding: 4px 9px; cursor: pointer;
-      text-shadow: 0 1px 2px rgba(0,0,0,.7);
+      border: 1px solid rgba(255,255,255,.38);
       box-shadow: 0 2px 6px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 14px; line-height: 1;  /* emoji-only, no text */
       transition: filter .12s, background .12s;
-      display: flex; align-items: center; gap: 5px;
-      white-space: nowrap;       /* prevent wrapping on narrow screens  */
-      height: 26px; box-sizing: border-box; /* fixed height keeps it consistent */
     }
     .wp-btn:hover  { filter: brightness(1.25); }
     .wp-btn:active { filter: brightness(.85); }
@@ -1496,9 +1495,7 @@
   </div>
 
   <!-- Wallpaper Button -->
-  <button class="wp-btn" id="wp-btn" onclick="toggleWpPicker(event)" title="Change wallpaper">
-    🖼️ Wallpaper
-  </button>
+  <button class="wp-btn" id="wp-btn" onclick="toggleWpPicker(event)" title="Change wallpaper">🖼️</button>
 
   <!-- Wallpaper Picker Dialog -->
   <div class="wp-dialog" id="wp-dialog">
@@ -4334,8 +4331,10 @@ function _applyIconLayout() {
 /* ── Safe-area constants for mobile portrait icon rows ── */
 const _M_ICON_H  = 76; /* icon bounding height (38px img + label + padding) */
 const _M_MARGIN  = 6;  /* edge margin                                        */
-const _M_SAFE_T  = _M_ICON_H + _M_MARGIN * 2; /* 88 px — below top icons   */
-const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;     /* 82 px — above bottom icons */
+/* Recycle Bin (top-right) ends at _M_ICON_H + _M_MARGIN = 82 px from top.
+   Allow 2 px breathing room → window top at 84 px (was 88 px, +4 px upward). */
+const _M_SAFE_T  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — just below top icons */
+const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;     /* 82 px — above bottom icons   */
 
 /* ── Wallpaper button layout (left on mobile portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
