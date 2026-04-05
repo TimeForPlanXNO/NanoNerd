@@ -32,7 +32,7 @@
     /* ── ICON LAYER (full-desktop overlay) ── */
     .icon-col {
       position: absolute; inset: 0;
-      pointer-events: none; z-index: 2;
+      pointer-events: none; z-index: 490; /* above windows (<490), below taskbar (500) */
     }
 
     .desk-icon {
@@ -1956,6 +1956,8 @@ const wm = {
   },
 
   focus(id) {
+    /* Cap counter below icon-col (490) so icons always appear above windows */
+    if (this.z >= 480) { this.z = 100; }
     this.z++;
     const { win } = this.els[id];
     win.style.zIndex = this.z;
@@ -4261,7 +4263,8 @@ function openMediaViewer(idx) {
 /* ══════════════════════════════════════════
    DESKTOP ICON DRAG ENGINE
 ══════════════════════════════════════════ */
-const _ICON_POS_KEY  = 'xp-icon-pos';
+const _ICON_POS_KEY   = 'xp-icon-pos';   /* landscape / desktop positions */
+const _ICON_POS_P_KEY = 'xp-icon-pos-p'; /* portrait positions (separate) */
 const _ICON_DEFAULTS = { /* desktop col: x, y  |  anchor:'bottom-right' = dynamic */
   'nanonerd'     : { x: 6, y: 6   },
   'nano-org'     : { x: 6, y: 86  },
@@ -4271,12 +4274,10 @@ const _ICON_DEFAULTS = { /* desktop col: x, y  |  anchor:'bottom-right' = dynami
   'recycle-bin'  : { anchor: 'bottom-right', margin: 6 },
 };
 
-function _loadIconPos() {
-  try { return JSON.parse(localStorage.getItem(_ICON_POS_KEY)) || {}; } catch { return {}; }
-}
-function _saveIconPos(saved) {
-  localStorage.setItem(_ICON_POS_KEY, JSON.stringify(saved));
-}
+function _loadIconPos()   { try { return JSON.parse(localStorage.getItem(_ICON_POS_KEY))   || {}; } catch { return {}; } }
+function _saveIconPos(s)  { localStorage.setItem(_ICON_POS_KEY,   JSON.stringify(s)); }
+function _loadIconPosP()  { try { return JSON.parse(localStorage.getItem(_ICON_POS_P_KEY)) || {}; } catch { return {}; } }
+function _saveIconPosP(s) { localStorage.setItem(_ICON_POS_P_KEY, JSON.stringify(s)); }
 
 /* ── Layout detection ── */
 const _MOBILE_UA_RE = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i;
@@ -4295,20 +4296,24 @@ function _applyIconLayout() {
   const dw     = desktop.offsetWidth;
   const dh     = desktop.offsetHeight;
   const mobile = _isMobilePortrait();
-  const saved  = mobile ? {} : _loadIconPos();
+  const saved  = mobile ? _loadIconPosP() : _loadIconPos();
   const IW = 72, IH = 76, M = 6, G = 8; /* icon w/h, margin, gap */
 
-  let col = 0; /* row counter for mobile bottom strip */
+  let col = 0; /* column counter for mobile bottom strip (default layout) */
   document.querySelectorAll('.desk-icon').forEach(el => {
     const id  = el.dataset.iconId;
     const def = _ICON_DEFAULTS[id] || { x: M, y: M };
     if (mobile) {
       if (id === 'recycle-bin') {
-        /* Mobile portrait: Recycle Bin → upper-right */
+        /* Recycle Bin always anchored upper-right in portrait */
         el.style.left = Math.max(0, dw - IW - M) + 'px';
         el.style.top  = M + 'px';
+      } else if (saved[id]) {
+        /* Restore previously dragged portrait position */
+        el.style.left = saved[id].x + 'px';
+        el.style.top  = saved[id].y + 'px';
       } else {
-        /* Mobile portrait: all others → bottom row */
+        /* Default: bottom row */
         el.style.left = (M + col * (IW + G)) + 'px';
         el.style.top  = Math.max(0, dh - IH - M) + 'px';
         col++;
@@ -4331,10 +4336,12 @@ function _applyIconLayout() {
 /* ── Safe-area constants for mobile portrait icon rows ── */
 const _M_ICON_H  = 76; /* icon bounding height (38px img + label + padding) */
 const _M_MARGIN  = 6;  /* edge margin                                        */
-/* Recycle Bin (top-right) ends at _M_ICON_H + _M_MARGIN = 82 px from top.
-   Allow 2 px breathing room → window top at 84 px (was 88 px, +4 px upward). */
-const _M_SAFE_T  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — just below top icons */
-const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;     /* 82 px — above bottom icons   */
+/* Recycle Bin label text ends at ≈76 px from screen top
+   (6px top margin + 5px padding + 38px image + 3px gap + 24px two-line label).
+   Windows start exactly there: icon-col (z-index 490) renders above them so
+   the icon is never visually covered even if the window frame extends under it. */
+const _M_SAFE_T  = _M_ICON_H + _M_MARGIN - 6; /* 76 px — label-flush        */
+const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;      /* 82 px — above bottom icons */
 
 /* ── Wallpaper button layout (left on mobile portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
@@ -4432,8 +4439,15 @@ function _initIconDrag() {
     if (!_cur) return;
     _cur.el.classList.remove('icon-dragging');
     if (_moved) {
-      /* Only persist dragged position in desktop/landscape mode */
-      if (!_isMobilePortrait()) {
+      /* Persist position in whichever orientation the drag happened in */
+      if (_isMobilePortrait()) {
+        /* Portrait: save per-icon, but never save recycle-bin (always anchored) */
+        if (_cur.id !== 'recycle-bin') {
+          const all = _loadIconPosP();
+          all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
+          _saveIconPosP(all);
+        }
+      } else {
         const all = _loadIconPos();
         all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
         _saveIconPos(all);
@@ -4452,9 +4466,10 @@ function _initIconDrag() {
       _iconDragStart(meta, e.clientX, e.clientY);
     });
     meta.el.addEventListener('touchstart', e => {
+      e.preventDefault(); /* block browser scroll-begin so icon drag always wins */
       const t = e.touches[0];
       _iconDragStart(meta, t.clientX, t.clientY);
-    }, { passive: true });
+    }, { passive: false });
   });
 
   /* One set of global move/end listeners shared by ALL icons */
