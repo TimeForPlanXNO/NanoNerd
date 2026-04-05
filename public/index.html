@@ -2092,11 +2092,12 @@ const wm = {
     /* Initial window size based on layout mode */
     const ar = area.getBoundingClientRect();
     if (_isMobilePortrait()) {
-      /* Mobile portrait: full width, ~62% height, anchored top-left */
-      win.style.width  = ar.width + 'px';
-      win.style.height = Math.round(ar.height * 0.62) + 'px';
-      win.style.left   = '0';
-      win.style.top    = '0';
+      /* Mobile portrait: full width, fills space between top and bottom icon rows, centered */
+      const r = _mobilePWinRect(ar);
+      win.style.width  = r.w + 'px';
+      win.style.height = r.h + 'px';
+      win.style.left   = r.l + 'px';   /* full-width = inherently centered */
+      win.style.top    = r.t + 'px';   /* below wallpaper btn + recycle bin */
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
@@ -4328,18 +4329,36 @@ function _applyIconLayout() {
   });
 }
 
-/* ── Wallpaper button layout (left on mobile portrait, right on desktop) ── */
+/* ── Safe-area constants for mobile portrait icon rows ── */
+const _M_ICON_H  = 76; /* icon bounding height (38px img + label + padding) */
+const _M_MARGIN  = 6;  /* edge margin                                        */
+const _M_SAFE_T  = _M_ICON_H + _M_MARGIN * 2; /* 88 px — below top icons   */
+const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;     /* 82 px — above bottom icons */
+
+/* ── Wallpaper button layout (left + compact on mobile portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
   const btn = document.getElementById('wp-btn');
   const dlg = document.getElementById('wp-dialog');
   if (!btn) return;
   const mobile = _isMobilePortrait();
+  /* Position */
   btn.style.left  = mobile ? '10px' : '';
   btn.style.right = mobile ? ''      : '10px';
+  /* Compact size on mobile so it doesn't crowd the Recycle Bin */
+  btn.style.fontSize = mobile ? '10px' : '';
+  btn.style.padding  = mobile ? '3px 7px' : '';
   if (dlg) {
     dlg.style.left  = mobile ? '10px' : '';
     dlg.style.right = mobile ? ''      : '10px';
+    /* Dropdown anchors just below the (now smaller) button */
+    dlg.style.top   = mobile ? (_M_MARGIN + 30) + 'px' : '';
   }
+}
+
+/* ── Shared helper: compute mobile-portrait window rect ── */
+function _mobilePWinRect(ar) {
+  const h = Math.max(120, ar.height - _M_SAFE_T - _M_SAFE_B);
+  return { w: ar.width, h, l: 0, t: _M_SAFE_T };
 }
 
 /* ── Resize all open windows to fit current orientation ── */
@@ -4350,10 +4369,11 @@ function _applyWindowsLayout() {
   const mobile = _isMobilePortrait();
   document.querySelectorAll('.xp-win').forEach(win => {
     if (mobile) {
-      win.style.width  = ar.width + 'px';
-      win.style.height = Math.round(ar.height * 0.62) + 'px';
-      win.style.left   = '0';
-      win.style.top    = '0';
+      const r = _mobilePWinRect(ar);
+      win.style.width  = r.w + 'px';
+      win.style.height = r.h + 'px';
+      win.style.left   = r.l + 'px';      /* full-width = centered */
+      win.style.top    = r.t + 'px';      /* below top icons       */
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
