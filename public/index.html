@@ -32,7 +32,7 @@
     /* ── ICON LAYER (full-desktop overlay) ── */
     .icon-col {
       position: absolute; inset: 0;
-      pointer-events: none; z-index: 490; /* above windows (<490), below taskbar (500) */
+      pointer-events: none; z-index: 2; /* desktop background layer — windows rise above on focus */
     }
 
     .desk-icon {
@@ -1956,8 +1956,6 @@ const wm = {
   },
 
   focus(id) {
-    /* Cap counter below icon-col (490) so icons always appear above windows */
-    if (this.z >= 480) { this.z = 100; }
     this.z++;
     const { win } = this.els[id];
     win.style.zIndex = this.z;
