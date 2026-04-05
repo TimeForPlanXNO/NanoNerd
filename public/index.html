@@ -61,7 +61,7 @@
     }
 
     /* ── WINDOW AREA ── */
-    .win-area { position: absolute; inset: 0; z-index: 1; }
+    .win-area { position: absolute; inset: 0; }
 
     /* ═══════════════════════════
        WINDOW ANIMATIONS
@@ -2034,9 +2034,9 @@ const wm = {
     tb.querySelector('.max').onclick = (e) => { e.stopPropagation(); this.maximize(id); };
     tb.querySelector('.cls').onclick = (e) => { e.stopPropagation(); this.close(id); };
 
-    /* Drag — mousedown on title bar (not on buttons) */
+    /* Drag — mousedown on title bar (not on control buttons or lang-btn) */
     tb.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.xp-btns')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
       e.preventDefault();
       drag.start(id, e.clientX, e.clientY);
     });
@@ -4091,6 +4091,7 @@ function openMediaViewer(idx) {
   win.querySelector('.mv-close').onclick = () => {
     const v = win.querySelector('video');
     if (v) { v.pause(); v.src = ''; }
+    _mvCleanup();
     win.remove();
   };
 
@@ -4146,13 +4147,22 @@ function openMediaViewer(idx) {
     win.appendChild(rh);
   });
 
-  /* ── Unified global pointer handlers ── */
-  const onGlobalMove = (cx, cy) => { onDragMove(cx, cy); onResizeMove(cx, cy); };
-  const onGlobalUp   = ()        => { onDragUp();         onResizeUp();         };
-  document.addEventListener('mousemove', e => onGlobalMove(e.clientX, e.clientY));
+  /* ── Unified global pointer handlers (removed on close) ── */
+  const onGlobalMove  = e => { const cx = e.clientX ?? e.touches?.[0]?.clientX; const cy = e.clientY ?? e.touches?.[0]?.clientY; if (cx == null) return; onDragMove(cx, cy); onResizeMove(cx, cy); };
+  const onGlobalMoveT = e => { if (!dragging && !resizing) return; const t = e.touches[0]; onDragMove(t.clientX, t.clientY); onResizeMove(t.clientX, t.clientY); };
+  const onGlobalUp    = () => { onDragUp(); onResizeUp(); };
+  document.addEventListener('mousemove', onGlobalMove);
   document.addEventListener('mouseup',   onGlobalUp);
-  document.addEventListener('touchmove', e => { const t = e.touches[0]; onGlobalMove(t.clientX, t.clientY); }, {passive:true});
-  document.addEventListener('touchend',  onGlobalUp);
+  document.addEventListener('touchmove', onGlobalMoveT, { passive: true });
+  document.addEventListener('touchend',  onGlobalUp,    { passive: true });
+
+  /* Clean up global listeners when viewer is destroyed */
+  const _mvCleanup = () => {
+    document.removeEventListener('mousemove', onGlobalMove);
+    document.removeEventListener('mouseup',   onGlobalUp);
+    document.removeEventListener('touchmove', onGlobalMoveT);
+    document.removeEventListener('touchend',  onGlobalUp);
+  };
 
   win.addEventListener('mousedown', () => { _mvZ++; win.style.zIndex = _mvZ; });
 
@@ -4183,78 +4193,83 @@ function _initIconDrag() {
   const desktop = document.querySelector('.desktop');
   const saved   = _loadIconPos();
 
-  document.querySelectorAll('.desk-icon').forEach(icon => {
-    const id  = icon.dataset.iconId;
-    const app = icon.dataset.app;
-
-    /* Set initial position */
+  /* Collect icon metadata and set initial positions */
+  const _iconMeta = [];
+  document.querySelectorAll('.desk-icon').forEach(el => {
+    const id  = el.dataset.iconId;
+    const app = el.dataset.app;
     const def = _ICON_DEFAULTS[id] || { x: 6, y: 6 };
     const pos = saved[id] || def;
-    icon.style.left = pos.x + 'px';
-    icon.style.top  = pos.y + 'px';
+    el.style.left = pos.x + 'px';
+    el.style.top  = pos.y + 'px';
+    _iconMeta.push({ el, id, app });
+  });
 
-    /* Per-icon drag state */
-    let active = false, moved = false;
-    let sx = 0, sy = 0, ox = 0, oy = 0;
-    const THRESHOLD = 6;
+  /* Single shared drag state */
+  const THRESHOLD = 6;
+  let _cur = null;   /* { el, id, app } of icon being dragged */
+  let _moved = false, _sx = 0, _sy = 0, _ox = 0, _oy = 0;
 
-    const onStart = (cx, cy) => {
-      active = true; moved = false;
-      sx = cx; sy = cy;
-      ox = cx - icon.offsetLeft;
-      oy = cy - icon.offsetTop;
-    };
+  const _iconDragStart = (meta, cx, cy) => {
+    _cur   = meta;
+    _moved = false;
+    _sx = cx; _sy = cy;
+    _ox = cx - meta.el.offsetLeft;
+    _oy = cy - meta.el.offsetTop;
+  };
 
-    const onMove = (cx, cy) => {
-      if (!active) return;
-      if (!moved && Math.hypot(cx - sx, cy - sy) > THRESHOLD) {
-        moved = true;
-        icon.classList.add('icon-dragging');
-      }
-      if (!moved) return;
-      const dw = desktop.offsetWidth;
-      const dh = desktop.offsetHeight;
-      const nx = Math.max(0, Math.min(dw - icon.offsetWidth,  cx - ox));
-      const ny = Math.max(0, Math.min(dh - icon.offsetHeight, cy - oy));
-      icon.style.left = nx + 'px';
-      icon.style.top  = ny + 'px';
-    };
+  const _iconDragMove = (cx, cy) => {
+    if (!_cur) return;
+    if (!_moved && Math.hypot(cx - _sx, cy - _sy) > THRESHOLD) {
+      _moved = true;
+      _cur.el.classList.add('icon-dragging');
+    }
+    if (!_moved) return;
+    const dw = desktop.offsetWidth;
+    const dh = desktop.offsetHeight;
+    const nx = Math.max(0, Math.min(dw - _cur.el.offsetWidth,  cx - _ox));
+    const ny = Math.max(0, Math.min(dh - _cur.el.offsetHeight, cy - _oy));
+    _cur.el.style.left = nx + 'px';
+    _cur.el.style.top  = ny + 'px';
+  };
 
-    const onEnd = () => {
-      if (!active) return;
-      active = false;
-      icon.classList.remove('icon-dragging');
-      if (moved) {
-        /* Persist new position */
-        const all = _loadIconPos();
-        all[id] = { x: icon.offsetLeft, y: icon.offsetTop };
-        _saveIconPos(all);
-      } else {
-        /* Short tap/click → open app */
-        if (app) wm.open(app);
-      }
-      moved = false;
-    };
+  const _iconDragEnd = () => {
+    if (!_cur) return;
+    _cur.el.classList.remove('icon-dragging');
+    if (_moved) {
+      const all = _loadIconPos();
+      all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
+      _saveIconPos(all);
+    } else {
+      wm.open(_cur.app);
+    }
+    _cur = null; _moved = false;
+  };
 
-    /* Mouse */
-    icon.addEventListener('mousedown', e => {
+  /* Per-icon start handlers (mousedown / touchstart only) */
+  _iconMeta.forEach(meta => {
+    meta.el.addEventListener('mousedown', e => {
       if (e.button !== 0) return;
       e.preventDefault();
-      onStart(e.clientX, e.clientY);
+      _iconDragStart(meta, e.clientX, e.clientY);
     });
-
-    /* Touch */
-    icon.addEventListener('touchstart', e => {
+    meta.el.addEventListener('touchstart', e => {
       const t = e.touches[0];
-      onStart(t.clientX, t.clientY);
+      _iconDragStart(meta, t.clientX, t.clientY);
     }, { passive: true });
-
-    /* Shared global listeners (one set per icon, lightweight) */
-    document.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
-    document.addEventListener('mouseup',   onEnd);
-    document.addEventListener('touchmove', e => { if (active) { const t = e.touches[0]; onMove(t.clientX, t.clientY); } }, { passive: true });
-    document.addEventListener('touchend',  onEnd, { passive: true });
   });
+
+  /* One set of global move/end listeners shared by ALL icons */
+  document.addEventListener('mousemove', e => _iconDragMove(e.clientX, e.clientY));
+  document.addEventListener('mouseup',   _iconDragEnd);
+  document.addEventListener('touchmove', e => {
+    if (_cur && _moved) {
+      e.preventDefault(); /* stop page scroll while dragging icon */
+      const t = e.touches[0];
+      _iconDragMove(t.clientX, t.clientY);
+    }
+  }, { passive: false });
+  document.addEventListener('touchend', _iconDragEnd, { passive: true });
 }
 
 wm.init();
