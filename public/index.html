@@ -27,26 +27,29 @@
     }
 
     /* ── DESKTOP ── */
-    .desktop { flex: 1; display: flex; flex-direction: row; overflow: visible; }
+    .desktop { flex: 1; position: relative; overflow: hidden; }
 
-    /* ── ICON COLUMN ── */
+    /* ── ICON LAYER (full-desktop overlay) ── */
     .icon-col {
-      width: 78px; flex-shrink: 0;
-      display: flex; flex-direction: column;
-      gap: 8px; padding: 8px 3px;
-      position: relative; z-index: 1;
+      position: absolute; inset: 0;
+      pointer-events: none; z-index: 2;
     }
 
     .desk-icon {
+      position: absolute;
+      width: 72px;
       display: flex; flex-direction: column;
       align-items: center; gap: 3px;
       padding: 5px 3px; border-radius: 4px;
+      pointer-events: all;
       cursor: pointer; -webkit-tap-highlight-color: transparent;
-      transition: background .15s;
+      user-select: none;
+      transition: background .12s;
     }
 
     .desk-icon:hover  { background: rgba(49,106,197,.45); outline: 1px solid rgba(255,255,255,.5); }
-    .desk-icon:active { background: rgba(49,106,197,.6); }
+    .desk-icon.icon-dragging { cursor: grabbing !important; opacity: .88; z-index: 9999 !important;
+      background: rgba(49,106,197,.35); outline: 1px solid rgba(255,255,255,.4); }
 
     .desk-icon .di-img   { width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5)); }
     .desk-icon .di-emoji { font-size: 32px; line-height: 1; filter: drop-shadow(1px 2px 3px rgba(0,0,0,.5)); }
@@ -54,11 +57,11 @@
     .desk-icon .label {
       font-size: 10px; color: #fff; text-align: center;
       text-shadow: 1px 1px 2px rgba(0,0,0,.9), -1px -1px 2px rgba(0,0,0,.7);
-      line-height: 1.2; word-break: break-word;
+      line-height: 1.2; word-break: break-word; pointer-events: none;
     }
 
     /* ── WINDOW AREA ── */
-    .win-area { flex: 1; position: relative; overflow: visible; }
+    .win-area { position: absolute; inset: 0; z-index: 1; }
 
     /* ═══════════════════════════
        WINDOW ANIMATIONS
@@ -1451,28 +1454,28 @@
 <div class="app-shell" id="app-shell">
 
   <div class="desktop">
-    <div class="icon-col">
-      <div class="desk-icon" onclick="wm.open('nanonerd')">
+    <div class="icon-col" id="icon-col">
+      <div class="desk-icon" data-icon-id="nanonerd" data-app="nanonerd">
         <div class="di-emoji" style="position:relative;display:inline-flex;align-items:center;justify-content:center;">🧠<span class="xno-gold" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:20px;">Ӿ</span></div>
         <span class="label">NanoNerd</span>
       </div>
-      <div class="desk-icon" onclick="wm.open('nano_org')">
+      <div class="desk-icon" data-icon-id="nano-org" data-app="nano_org">
         <img class="di-img"
           src="https://www.google.com/s2/favicons?domain=nano.org&sz=64"
           onerror="this.outerHTML='<div class=di-emoji>🔵</div>'" alt="nano.org" />
         <span class="label">nano.org</span>
       </div>
-      <div class="desk-icon" onclick="wm.open('nano_gpt')">
+      <div class="desk-icon" data-icon-id="nano-gpt" data-app="nano_gpt">
         <img class="di-img"
           src="https://www.google.com/s2/favicons?domain=nano-gpt.com&sz=64"
           onerror="this.outerHTML='<div class=di-emoji>⚡</div>'" alt="NanoGPT" />
         <span class="label">NanoGPT</span>
       </div>
-      <div class="desk-icon" onclick="wm.open('nano_hub')">
+      <div class="desk-icon" data-icon-id="nano-hub" data-app="nano_hub">
         <img class="di-img" src="/nanohub-icon.png" alt="Nano Hub" />
         <span class="label">Nano Hub</span>
       </div>
-      <div class="desk-icon" ondblclick="wm.open('media_folder')" onclick="wm.open('media_folder')" style="margin-top:4px;">
+      <div class="desk-icon" data-icon-id="media-folder" data-app="media_folder">
         <div class="di-emoji" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));">
           <svg width="38" height="32" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg">
             <path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/>
@@ -4157,7 +4160,105 @@ function openMediaViewer(idx) {
   _mvWins.push(win);
 }
 
+/* ══════════════════════════════════════════
+   DESKTOP ICON DRAG ENGINE
+══════════════════════════════════════════ */
+const _ICON_POS_KEY  = 'xp-icon-pos';
+const _ICON_DEFAULTS = { /* default column: x, y */
+  'nanonerd'     : { x: 6, y: 6   },
+  'nano-org'     : { x: 6, y: 86  },
+  'nano-gpt'     : { x: 6, y: 166 },
+  'nano-hub'     : { x: 6, y: 246 },
+  'media-folder' : { x: 6, y: 330 },
+};
+
+function _loadIconPos() {
+  try { return JSON.parse(localStorage.getItem(_ICON_POS_KEY)) || {}; } catch { return {}; }
+}
+function _saveIconPos(saved) {
+  localStorage.setItem(_ICON_POS_KEY, JSON.stringify(saved));
+}
+
+function _initIconDrag() {
+  const desktop = document.querySelector('.desktop');
+  const saved   = _loadIconPos();
+
+  document.querySelectorAll('.desk-icon').forEach(icon => {
+    const id  = icon.dataset.iconId;
+    const app = icon.dataset.app;
+
+    /* Set initial position */
+    const def = _ICON_DEFAULTS[id] || { x: 6, y: 6 };
+    const pos = saved[id] || def;
+    icon.style.left = pos.x + 'px';
+    icon.style.top  = pos.y + 'px';
+
+    /* Per-icon drag state */
+    let active = false, moved = false;
+    let sx = 0, sy = 0, ox = 0, oy = 0;
+    const THRESHOLD = 6;
+
+    const onStart = (cx, cy) => {
+      active = true; moved = false;
+      sx = cx; sy = cy;
+      ox = cx - icon.offsetLeft;
+      oy = cy - icon.offsetTop;
+    };
+
+    const onMove = (cx, cy) => {
+      if (!active) return;
+      if (!moved && Math.hypot(cx - sx, cy - sy) > THRESHOLD) {
+        moved = true;
+        icon.classList.add('icon-dragging');
+      }
+      if (!moved) return;
+      const dw = desktop.offsetWidth;
+      const dh = desktop.offsetHeight;
+      const nx = Math.max(0, Math.min(dw - icon.offsetWidth,  cx - ox));
+      const ny = Math.max(0, Math.min(dh - icon.offsetHeight, cy - oy));
+      icon.style.left = nx + 'px';
+      icon.style.top  = ny + 'px';
+    };
+
+    const onEnd = () => {
+      if (!active) return;
+      active = false;
+      icon.classList.remove('icon-dragging');
+      if (moved) {
+        /* Persist new position */
+        const all = _loadIconPos();
+        all[id] = { x: icon.offsetLeft, y: icon.offsetTop };
+        _saveIconPos(all);
+      } else {
+        /* Short tap/click → open app */
+        if (app) wm.open(app);
+      }
+      moved = false;
+    };
+
+    /* Mouse */
+    icon.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      onStart(e.clientX, e.clientY);
+    });
+
+    /* Touch */
+    icon.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      onStart(t.clientX, t.clientY);
+    }, { passive: true });
+
+    /* Shared global listeners (one set per icon, lightweight) */
+    document.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+    document.addEventListener('mouseup',   onEnd);
+    document.addEventListener('touchmove', e => { if (active) { const t = e.touches[0]; onMove(t.clientX, t.clientY); } }, { passive: true });
+    document.addEventListener('touchend',  onEnd, { passive: true });
+  });
+}
+
 wm.init();
+_initIconDrag();
 wm.open('nanonerd');
 showWelcome();
 setupChatScroll();
