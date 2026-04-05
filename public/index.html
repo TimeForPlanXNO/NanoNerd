@@ -1330,7 +1330,7 @@
 
     /* ── WALLPAPER BUTTON ── */
     .wp-btn {
-      position: absolute; top: 8px; right: 10px; z-index: 1;
+      position: absolute; top: 8px; right: 10px; z-index: 200;
       background: linear-gradient(180deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.10) 100%);
       border: 1px solid rgba(255,255,255,.38); border-radius: 5px;
       color: #fff; font-size: 11px; font-weight: bold; font-family: "Tahoma", sans-serif;
@@ -1339,13 +1339,15 @@
       box-shadow: 0 2px 6px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
       transition: filter .12s, background .12s;
       display: flex; align-items: center; gap: 5px;
+      white-space: nowrap;       /* prevent wrapping on narrow screens  */
+      height: 26px; box-sizing: border-box; /* fixed height keeps it consistent */
     }
     .wp-btn:hover  { filter: brightness(1.25); }
     .wp-btn:active { filter: brightness(.85); }
 
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
-      position: absolute; top: 38px; right: 10px; z-index: 1;
+      position: absolute; top: 38px; right: 10px; z-index: 201;
       width: 320px; max-height: 420px;
       background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
       border: 2px solid #0a36a0; border-top: 3px solid #2259c8;
@@ -4335,23 +4337,19 @@ const _M_MARGIN  = 6;  /* edge margin                                        */
 const _M_SAFE_T  = _M_ICON_H + _M_MARGIN * 2; /* 88 px — below top icons   */
 const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;     /* 82 px — above bottom icons */
 
-/* ── Wallpaper button layout (left + compact on mobile portrait, right on desktop) ── */
+/* ── Wallpaper button layout (left on mobile portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
   const btn = document.getElementById('wp-btn');
   const dlg = document.getElementById('wp-dialog');
   if (!btn) return;
   const mobile = _isMobilePortrait();
-  /* Position */
+  /* Only touch positioning — CSS handles size (height: 26px keeps it consistent) */
   btn.style.left  = mobile ? '10px' : '';
   btn.style.right = mobile ? ''      : '10px';
-  /* Compact size on mobile so it doesn't crowd the Recycle Bin */
-  btn.style.fontSize = mobile ? '10px' : '';
-  btn.style.padding  = mobile ? '3px 7px' : '';
   if (dlg) {
     dlg.style.left  = mobile ? '10px' : '';
     dlg.style.right = mobile ? ''      : '10px';
-    /* Dropdown anchors just below the (now smaller) button */
-    dlg.style.top   = mobile ? (_M_MARGIN + 30) + 'px' : '';
+    dlg.style.top   = mobile ? '42px'  : ''; /* below button (8px top + 26px height + 8px gap) */
   }
 }
 
@@ -4409,8 +4407,11 @@ function _initIconDrag() {
     _cur   = meta;
     _moved = false;
     _sx = cx; _sy = cy;
-    _ox = cx - meta.el.offsetLeft;
-    _oy = cy - meta.el.offsetTop;
+    /* Convert viewport coords → parent-local coords to avoid offset mismatch
+       (icon.offsetLeft is relative to offsetParent, but e.clientX is viewport-relative) */
+    const pr = (meta.el.offsetParent || desktop).getBoundingClientRect();
+    _ox = cx - pr.left - meta.el.offsetLeft;
+    _oy = cy - pr.top  - meta.el.offsetTop;
   };
 
   const _iconDragMove = (cx, cy) => {
@@ -4420,10 +4421,10 @@ function _initIconDrag() {
       _cur.el.classList.add('icon-dragging');
     }
     if (!_moved) return;
-    const dw = desktop.offsetWidth;
-    const dh = desktop.offsetHeight;
-    const nx = Math.max(0, Math.min(dw - _cur.el.offsetWidth,  cx - _ox));
-    const ny = Math.max(0, Math.min(dh - _cur.el.offsetHeight, cy - _oy));
+    /* Re-read parent rect each frame so orientation changes mid-drag are handled */
+    const pr = (_cur.el.offsetParent || desktop).getBoundingClientRect();
+    const nx = Math.max(0, Math.min(pr.width  - _cur.el.offsetWidth,  cx - pr.left - _ox));
+    const ny = Math.max(0, Math.min(pr.height - _cur.el.offsetHeight, cy - pr.top  - _oy));
     _cur.el.style.left = nx + 'px';
     _cur.el.style.top  = ny + 'px';
   };
@@ -4467,7 +4468,8 @@ function _initIconDrag() {
       _iconDragMove(t.clientX, t.clientY);
     }
   }, { passive: false });
-  document.addEventListener('touchend', _iconDragEnd, { passive: true });
+  document.addEventListener('touchend',    _iconDragEnd, { passive: true });
+  document.addEventListener('touchcancel', _iconDragEnd, { passive: true }); /* phone call / system gesture */
 }
 
 wm.init();
