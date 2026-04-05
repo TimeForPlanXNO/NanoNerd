@@ -2089,10 +2089,19 @@ const wm = {
     area.appendChild(win);
     this.els[id].win = win;
 
-    /* On desktop/tablet (>768 px wide): start at 67% width, full height, centered horizontally */
-    if (window.innerWidth > 768) {
-      const ar = area.getBoundingClientRect();
-      const w  = Math.round(ar.width * 0.67);
+    /* Initial window size based on layout mode */
+    const ar = area.getBoundingClientRect();
+    if (_isMobilePortrait()) {
+      /* Mobile portrait: full width, ~62% height, anchored top-left */
+      win.style.width  = ar.width + 'px';
+      win.style.height = Math.round(ar.height * 0.62) + 'px';
+      win.style.left   = '0';
+      win.style.top    = '0';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
+    } else if (window.innerWidth > 768) {
+      /* Desktop / landscape: 67% width, full height, horizontally centered */
+      const w = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
       win.style.height = ar.height + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
@@ -4253,7 +4262,7 @@ function openMediaViewer(idx) {
    DESKTOP ICON DRAG ENGINE
 ══════════════════════════════════════════ */
 const _ICON_POS_KEY  = 'xp-icon-pos';
-const _ICON_DEFAULTS = { /* default column: x, y  |  anchor:'bottom-right' = dynamic */
+const _ICON_DEFAULTS = { /* desktop col: x, y  |  anchor:'bottom-right' = dynamic */
   'nanonerd'     : { x: 6, y: 6   },
   'nano-org'     : { x: 6, y: 86  },
   'nano-gpt'     : { x: 6, y: 166 },
@@ -4269,32 +4278,106 @@ function _saveIconPos(saved) {
   localStorage.setItem(_ICON_POS_KEY, JSON.stringify(saved));
 }
 
-function _initIconDrag() {
-  const desktop = document.querySelector('.desktop');
-  const saved   = _loadIconPos();
+/* ── Layout detection ── */
+const _MOBILE_UA_RE = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i;
+function _isMobileDevice() {
+  return _MOBILE_UA_RE.test(navigator.userAgent) ||
+         (('ontouchstart' in window) && window.matchMedia('(pointer: coarse)').matches);
+}
+function _isMobilePortrait() {
+  return _isMobileDevice() && window.innerHeight > window.innerWidth;
+}
 
-  /* Collect icon metadata and set initial positions */
-  const _iconMeta = [];
-  const _ICON_W = 72, _ICON_H = 76; /* approximate icon bounding box */
+/* ── Icon layout (called on init and every orientation/resize change) ── */
+function _applyIconLayout() {
+  const desktop = document.querySelector('.desktop');
+  if (!desktop) return;
+  const dw     = desktop.offsetWidth;
+  const dh     = desktop.offsetHeight;
+  const mobile = _isMobilePortrait();
+  const saved  = mobile ? {} : _loadIconPos();
+  const IW = 72, IH = 76, M = 6, G = 8; /* icon w/h, margin, gap */
+
+  let col = 0; /* row counter for mobile bottom strip */
   document.querySelectorAll('.desk-icon').forEach(el => {
     const id  = el.dataset.iconId;
-    const app = el.dataset.app;
-    const def = _ICON_DEFAULTS[id] || { x: 6, y: 6 };
-    let pos;
-    if (saved[id]) {
-      pos = saved[id];
-    } else if (def.anchor === 'bottom-right') {
-      const m = def.margin ?? 6;
-      pos = {
-        x: Math.max(0, desktop.offsetWidth  - _ICON_W - m),
-        y: Math.max(0, desktop.offsetHeight - _ICON_H - m),
-      };
+    const def = _ICON_DEFAULTS[id] || { x: M, y: M };
+    if (mobile) {
+      if (id === 'recycle-bin') {
+        /* Mobile portrait: Recycle Bin → upper-right */
+        el.style.left = Math.max(0, dw - IW - M) + 'px';
+        el.style.top  = M + 'px';
+      } else {
+        /* Mobile portrait: all others → bottom row */
+        el.style.left = (M + col * (IW + G)) + 'px';
+        el.style.top  = Math.max(0, dh - IH - M) + 'px';
+        col++;
+      }
     } else {
-      pos = def;
+      let pos;
+      if (saved[id]) {
+        pos = saved[id];
+      } else if (def.anchor === 'bottom-right') {
+        pos = { x: Math.max(0, dw - IW - M), y: Math.max(0, dh - IH - M) };
+      } else {
+        pos = def;
+      }
+      el.style.left = pos.x + 'px';
+      el.style.top  = pos.y + 'px';
     }
-    el.style.left = pos.x + 'px';
-    el.style.top  = pos.y + 'px';
-    _iconMeta.push({ el, id, app });
+  });
+}
+
+/* ── Wallpaper button layout (left on mobile portrait, right on desktop) ── */
+function _applyWpBtnLayout() {
+  const btn = document.getElementById('wp-btn');
+  const dlg = document.getElementById('wp-dialog');
+  if (!btn) return;
+  const mobile = _isMobilePortrait();
+  btn.style.left  = mobile ? '10px' : '';
+  btn.style.right = mobile ? ''      : '10px';
+  if (dlg) {
+    dlg.style.left  = mobile ? '10px' : '';
+    dlg.style.right = mobile ? ''      : '10px';
+  }
+}
+
+/* ── Resize all open windows to fit current orientation ── */
+function _applyWindowsLayout() {
+  const area = document.getElementById('win-area');
+  if (!area) return;
+  const ar     = area.getBoundingClientRect();
+  const mobile = _isMobilePortrait();
+  document.querySelectorAll('.xp-win').forEach(win => {
+    if (mobile) {
+      win.style.width  = ar.width + 'px';
+      win.style.height = Math.round(ar.height * 0.62) + 'px';
+      win.style.left   = '0';
+      win.style.top    = '0';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
+    } else {
+      const w = Math.round(ar.width * 0.67);
+      win.style.width  = w + 'px';
+      win.style.height = ar.height + 'px';
+      win.style.left   = Math.round((ar.width - w) / 2) + 'px';
+      win.style.top    = '0';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
+    }
+  });
+}
+
+function _initIconDrag() {
+  const desktop = document.querySelector('.desktop');
+
+  /* Set initial positions via layout engine */
+  _applyIconLayout();
+
+  /* Collect icon metadata for drag handlers */
+  const _iconMeta = [];
+  document.querySelectorAll('.desk-icon').forEach(el => {
+    _iconMeta.push({ el, id: el.dataset.iconId, app: el.dataset.app });
   });
 
   /* Single shared drag state */
@@ -4329,9 +4412,12 @@ function _initIconDrag() {
     if (!_cur) return;
     _cur.el.classList.remove('icon-dragging');
     if (_moved) {
-      const all = _loadIconPos();
-      all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
-      _saveIconPos(all);
+      /* Only persist dragged position in desktop/landscape mode */
+      if (!_isMobilePortrait()) {
+        const all = _loadIconPos();
+        all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
+        _saveIconPos(all);
+      }
     } else {
       wm.open(_cur.app);
     }
@@ -4366,11 +4452,28 @@ function _initIconDrag() {
 
 wm.init();
 _initIconDrag();
+_applyWpBtnLayout();  /* position wallpaper button based on initial layout mode */
 wm.open('nanonerd');
 showWelcome();
 setupChatScroll();
 updateClock();
 setInterval(updateClock, 10000);
+
+/* ── Orientation / resize handler ── *
+ * Fires when the device rotates or the browser window is resized.
+ * Debounced 160 ms so rapid resize events don't thrash layout.
+ */
+let _layoutTimer = null;
+function _onLayoutChange() {
+  clearTimeout(_layoutTimer);
+  _layoutTimer = setTimeout(() => {
+    _applyIconLayout();    /* reposition desktop icons for new mode  */
+    _applyWpBtnLayout();   /* move wallpaper button left ↔ right      */
+    _applyWindowsLayout(); /* resize all open windows to fit new mode */
+  }, 160);
+}
+window.addEventListener('orientationchange', _onLayoutChange);
+window.addEventListener('resize',            _onLayoutChange);
 
 /* Apply saved wallpaper on load */
 (function() {
