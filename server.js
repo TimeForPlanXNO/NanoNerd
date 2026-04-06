@@ -362,4 +362,40 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+/* ── Translate existing chat messages to a new language ── */
+app.post("/api/translate-messages", async (req, res) => {
+  const { lang, messages } = req.body;
+  if (!lang || !Array.isArray(messages)) {
+    return res.status(400).json({ error: "lang and messages required" });
+  }
+  if (lang === 'English') return res.json({ messages });
+
+  /* Only translate assistant messages */
+  const indices = [], texts = [];
+  messages.forEach((m, i) => {
+    if (m.role === 'assistant' && m.content) { indices.push(i); texts.push(m.content); }
+  });
+  if (!texts.length) return res.json({ messages });
+
+  try {
+    const prompt = `Translate the following AI assistant messages about Nano (XNO) cryptocurrency into ${lang}. Return ONLY a JSON array of exactly ${texts.length} translated strings in the same order. Preserve all markdown formatting (**bold**, *italic*, line breaks, bullet points). No extra explanations.\n\n${JSON.stringify(texts)}`;
+    const completion = await openai.chat.completions.create({
+      model: "gpt-5.1",
+      messages: [{ role: "user", content: prompt }],
+      max_completion_tokens: 8192,
+    });
+    const raw  = completion.choices[0]?.message?.content?.trim() || '[]';
+    const match = raw.match(/\[[\s\S]*\]/);
+    const translated = match ? JSON.parse(match[0]) : texts;
+    const result = messages.map((m, i) => {
+      const pos = indices.indexOf(i);
+      return pos >= 0 ? { ...m, content: translated[pos] ?? m.content } : m;
+    });
+    res.json({ messages: result });
+  } catch (e) {
+    console.error("translate-messages error:", e);
+    res.status(500).json({ error: "Translation failed" });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => console.log(`Nano Chat server running on port ${PORT}`));

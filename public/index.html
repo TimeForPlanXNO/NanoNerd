@@ -1990,6 +1990,44 @@ function _langCode(lang) {
   return map[lang] || lang.slice(0,2).toUpperCase();
 }
 
+/* ── Flag emojis for each language ── */
+const _LANG_FLAGS = {
+  'Afrikaans':'🇿🇦','Albanian':'🇦🇱','Amharic':'🇪🇹',
+  'Arabic':'🇸🇦🇦🇪🇪🇬','Armenian':'🇦🇲','Azerbaijani':'🇦🇿',
+  'Basque':'🇪🇸','Belarusian':'🇧🇾','Bengali':'🇧🇩🇮🇳',
+  'Bosnian':'🇧🇦','Bulgarian':'🇧🇬','Burmese':'🇲🇲',
+  'Catalan':'🇪🇸','Chinese (Simplified)':'🇨🇳','Chinese (Traditional)':'🇹🇼🇭🇰',
+  'Croatian':'🇭🇷','Czech':'🇨🇿','Danish':'🇩🇰','Dutch':'🇳🇱🇧🇪',
+  'English':'🇺🇸🇬🇧','Estonian':'🇪🇪','Faroese':'🇫🇴','Filipino':'🇵🇭',
+  'Finnish':'🇫🇮','French':'🇫🇷🇨🇦🇧🇪','Galician':'🇪🇸','Georgian':'🇬🇪',
+  'German':'🇩🇪🇦🇹🇨🇭','Greek':'🇬🇷🇨🇾','Gujarati':'🇮🇳',
+  'Hausa':'🇳🇬','Hebrew':'🇮🇱','Hindi':'🇮🇳','Hungarian':'🇭🇺',
+  'Icelandic':'🇮🇸','Igbo':'🇳🇬','Indonesian':'🇮🇩','Irish':'🇮🇪','Italian':'🇮🇹🇨🇭',
+  'Japanese':'🇯🇵','Kannada':'🇮🇳','Kazakh':'🇰🇿','Khmer':'🇰🇭','Korean':'🇰🇷',
+  'Lao':'🇱🇦','Latin':'🇻🇦','Latvian':'🇱🇻','Lithuanian':'🇱🇹','Luxembourgish':'🇱🇺',
+  'Macedonian':'🇲🇰','Malay':'🇲🇾🇸🇬🇧🇳','Malayalam':'🇮🇳','Maltese':'🇲🇹',
+  'Marathi':'🇮🇳','Mongolian':'🇲🇳','Nepali':'🇳🇵','Norwegian':'🇳🇴',
+  'Persian (Farsi)':'🇮🇷🇦🇫','Polish':'🇵🇱','Portuguese':'🇧🇷🇵🇹','Punjabi':'🇮🇳🇵🇰',
+  'Romanian':'🇷🇴🇲🇩','Russian':'🇷🇺','Scottish Gaelic':'🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Serbian':'🇷🇸','Sinhala':'🇱🇰','Slovak':'🇸🇰','Slovenian':'🇸🇮',
+  'Somali':'🇸🇴','Spanish':'🇪🇸🇲🇽🇦🇷','Swahili':'🇰🇪🇹🇿🇺🇬','Swedish':'🇸🇪',
+  'Tamil':'🇮🇳🇱🇰','Telugu':'🇮🇳','Thai':'🇹🇭','Turkish':'🇹🇷',
+  'Ukrainian':'🇺🇦','Urdu':'🇵🇰🇮🇳','Uzbek':'🇺🇿','Vietnamese':'🇻🇳',
+  'Welsh':'🏴󠁧󠁢󠁷󠁬󠁳󠁿','Yoruba':'🇳🇬','Zulu':'🇿🇦',
+};
+
+/* All flags for a language (used in list items) */
+function _langFlagsStr(lang) { return _LANG_FLAGS[lang] || '🌐'; }
+
+/* Max 2 flags for the compact title-bar button */
+function _langFlagsBtn(lang) {
+  const all = _LANG_FLAGS[lang] || '🌐';
+  try {
+    const segs = [...new Intl.Segmenter().segment(all)].map(s => s.segment);
+    return segs.slice(0, 2).join('');
+  } catch { return all.slice(0, 8) || '🌐'; }
+}
+
 function _buildLangList(filter) {
   const list = document.getElementById('lang-list');
   list.innerHTML = '';
@@ -1997,7 +2035,7 @@ function _buildLangList(filter) {
   LANGUAGES.filter(l => l.toLowerCase().includes(q)).forEach(lang => {
     const item = document.createElement('div');
     item.className = 'lang-item' + (lang === currentLang ? ' active' : '');
-    item.textContent = lang;
+    item.innerHTML = `<span style="margin-right:5px;letter-spacing:1px">${_langFlagsStr(lang)}</span>${lang}`;
     item.onclick = () => setLanguage(lang);
     list.appendChild(item);
   });
@@ -2045,21 +2083,51 @@ function closeLangPicker() {
   _langPickerOpen = false;
 }
 
-function setLanguage(lang) {
+async function setLanguage(lang) {
+  if (lang === currentLang) { closeLangPicker(); return; }
   currentLang = lang;
   localStorage.setItem('xp-lang', lang);
   closeLangPicker();
-  /* Update button label */
-  const lbl = document.getElementById('lang-btn-label');
-  if (lbl) lbl.textContent = _langCode(lang);
-  /* Reset conversation and show a new welcome */
-  _histSave();           /* persist the current session before clearing */
-  _histSessionId = null;
-  conversationHistory = [];
+
+  /* Update button flags + code */
+  const flagEl = document.getElementById('lang-btn-flags');
+  const lbl    = document.getElementById('lang-btn-label');
+  if (flagEl) flagEl.textContent = _langFlagsBtn(lang);
+  if (lbl)    lbl.textContent    = _langCode(lang);
+
   const chat = getEl('chat');
-  if (chat) { chat.innerHTML = ''; showWelcome(); }
-  /* Notify user */
-  showCopyToast(`🌐 Language: ${lang}`);
+
+  if (!conversationHistory.length) {
+    /* No active messages — refresh welcome screen only */
+    if (chat) { chat.innerHTML = ''; showWelcome(); }
+    showCopyToast(`${_langFlagsBtn(lang)} ${lang}`);
+    return;
+  }
+
+  /* Has messages — translate all assistant responses in-place without clearing chat */
+  showCopyToast(`⏳ Translating to ${lang}…`);
+  try {
+    const r = await fetch('/api/translate-messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lang, messages: conversationHistory }),
+    });
+    const data = await r.json();
+    if (data.messages && Array.isArray(data.messages)) {
+      conversationHistory = data.messages;
+      /* Re-render chat bubbles with translated text */
+      if (chat) {
+        chat.innerHTML = '';
+        conversationHistory.forEach(m => addMsg(m.role, m.content, true));
+        chat.scrollTop = chat.scrollHeight;
+      }
+      if (typeof updateScrollArrow === 'function') updateScrollArrow();
+      _histSave();
+      showCopyToast(`${_langFlagsBtn(lang)} Now in ${lang}`);
+    }
+  } catch {
+    showCopyToast(`❌ Translation failed`);
+  }
 }
 
 /* Close language picker on outside click or touch */
@@ -2273,7 +2341,7 @@ const wm = {
     const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
-      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)">🌐 <span id="lang-btn-label">${_langCode(currentLang)}</span></button>` : ''}
+      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button>` : ''}
       <div class="xp-btns">
         <button class="xp-btn min" title="Minimize">&#8211;</button>
         <button class="xp-btn max" title="${maxTitle}"><span class="max-icon"></span></button>
