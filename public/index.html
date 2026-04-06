@@ -2077,7 +2077,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   let running      = true;
   let wsConnected  = false;
   let txCount      = 0;
-  let txQueue      = [];   /* only real confirmed TX objects {hash, account} */
+  let txQueue      = [];   /* priority queue — brand-new confirmed TX {hash,account,fresh:true} */
+  let _hashPool    = [];   /* circular buffer of recent hashes used to keep rain continuous */
+  const _POOL_MAX  = 60;   /* recycle last 60 real hashes */
 
   /* ── Canvas sizing ── */
   function resize() {
@@ -2093,27 +2095,43 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       drops   = new Array(cols).fill(0);
       /* All columns start DORMANT — they wait for a real TX hash */
       colData = Array.from({ length: cols }, () => ({
-        hash: null, account: null, speed: 0, done: true,
+        hash: null, account: null, speed: 0, done: true, fresh: false,
       }));
     }
   }
 
-  /* ── Assign a real queued TX to column i ── */
+  /* ── Assign a TX (real or recycled) to column i ── */
   function assignCol(i) {
-    if (txQueue.length === 0) { colData[i].done = true; return; }
-    const tx         = txQueue.shift();
-    colData[i].hash    = tx.hash;    /* 64-char uppercase hex — the literal TX hash */
-    colData[i].account = tx.account;
-    colData[i].speed   = 0.25 + Math.random() * 0.85;
+    let hash, account, fresh;
+    if (txQueue.length > 0) {
+      /* Real brand-new confirmed TX — priority */
+      const tx = txQueue.shift();
+      hash = tx.hash; account = tx.account; fresh = true;
+    } else if (_hashPool.length > 0) {
+      /* Recycle a random recent hash to keep the rain continuous */
+      hash    = _hashPool[Math.floor(Math.random() * _hashPool.length)];
+      account = null;
+      fresh   = false;
+    } else {
+      colData[i].done = true;
+      return;
+    }
+    colData[i].hash    = hash;
+    colData[i].account = account;
+    colData[i].fresh   = fresh;
+    colData[i].speed   = 0.35 + Math.random() * 0.75;   /* 0.35–1.1 chars/frame */
     colData[i].done    = false;
-    drops[i] = -Math.floor(Math.random() * 30);
+    drops[i] = -Math.floor(Math.random() * 20);
   }
 
-  /* Wake the next dormant column with the next queued TX (FIFO) */
+  /* Wake every dormant column that can be filled (real TX or recycled) */
   function _tryWakeCol() {
-    if (txQueue.length === 0) return;
-    const i = colData.findIndex(cd => cd.done);
-    if (i !== -1) assignCol(i);
+    let idx;
+    /* eslint-disable-next-line no-cond-assign */
+    while ((idx = colData.findIndex(cd => cd.done)) !== -1
+           && (txQueue.length > 0 || _hashPool.length > 0)) {
+      assignCol(idx);
+    }
   }
 
   /* ── SSE relay — live Nano confirmations via server-side proxy ────────────
@@ -2143,10 +2161,14 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
         }
         if (msg.type === 'tx' && msg.hash) {
           txCount++;
-          /* Every hash pushed here is a REAL confirmed Nano block */
-          txQueue.push({ hash: msg.hash, account: msg.account || null });
+          /* Every hash is a REAL confirmed Nano block */
+          txQueue.push({ hash: msg.hash, account: msg.account || null, fresh: true });
           if (txQueue.length > 2000) txQueue.shift();
+          /* Also add to the recycling pool */
+          _hashPool.push(msg.hash);
+          if (_hashPool.length > _POOL_MAX) _hashPool.shift();
           onStatus?.({ connected: true, txCount });
+          /* Wake ALL dormant columns — fills the whole canvas at once */
           _tryWakeCol();
         }
       } catch {}
@@ -2258,10 +2280,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       drops[i] += speed * dt;
       const head = Math.floor(drops[i]);
 
-      /* Column finished — mark dormant; try to wake it with the next queued TX */
+      /* Column finished — immediately reassign; skip to next frame for new values */
       if (head - hash.length > rows) {
-        cd.done = true;
-        _tryWakeCol();   /* may immediately reuse this column if queue has items */
+        assignCol(i);
         continue;
       }
       if (head < 0) continue;
@@ -2275,12 +2296,13 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
         const isHead = (j === hash.length - 1);
         if (isHead) {
-          /* Bright leading character — bright white/green "head" of the drop */
-          ctx.fillStyle = isHov ? '#ffffff' : '#ccffcc';
+          /* Fresh real TX → white head; recycled → soft green head */
+          ctx.fillStyle = isHov ? '#ffffff'
+                        : cd.fresh ? '#ffffff' : '#88ff88';
         } else {
-          /* Body: gradient from dim green (top) to vivid green (near head) */
+          /* Body: gradient from dim (top) to vivid (near head) */
           const ratio = j / (hash.length - 1);
-          const g     = Math.floor(30 + ratio * 185);
+          const g     = Math.floor(20 + ratio * (cd.fresh ? 215 : 175));
           ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
         }
         /* Each character drawn IS a hex digit from the real confirmed TX hash */
