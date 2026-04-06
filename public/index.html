@@ -1095,13 +1095,14 @@
     .mv-close:hover { background: #e74c3c; }
     .mv-body {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      overflow: hidden; background: #111; min-height: 0;
+      overflow: hidden; min-height: 0; background: #000;
     }
+    /* object-fit:fill — the window is sized to exactly the media AR so no bars appear */
     .mv-body img {
-      width: 100%; height: 100%; object-fit: contain; display: block; flex-shrink: 0;
+      width: 100%; height: 100%; object-fit: fill; display: block; flex-shrink: 0;
     }
     .mv-body video {
-      width: 100%; height: 100%; object-fit: contain; display: block; outline: none; flex-shrink: 0;
+      width: 100%; height: 100%; object-fit: fill; display: block; outline: none; flex-shrink: 0;
     }
     /* ── Media viewer resize handles ── */
     .mv-resize { position:absolute; z-index:20; user-select:none; touch-action:none; }
@@ -4881,13 +4882,15 @@ function openMediaViewer(idx) {
   const area = document.getElementById('win-area');
   _mvZ++;
 
-  /* Build window */
+  /* Aspect ratio of the actual media; set once the element fires load/loadedmetadata */
+  let _mediaAR = null;
+
+  /* Build window — hidden until _fitToMedia sizes it correctly */
   const win = document.createElement('div');
   win.className = 'mv-win';
   win.style.cssText = `
-    display:flex; z-index:${_mvZ};
-    width:${file.type === 'video' ? 480 : 420}px;
-    height:${file.type === 'video' ? 320 : 380}px;
+    display:none; z-index:${_mvZ};
+    width:320px; height:240px;
     left:${80 + (_mvZ % 12) * 22}px;
     top:${60 + (_mvZ % 10) * 18}px;
   `;
@@ -4988,10 +4991,28 @@ function openMediaViewer(idx) {
     if (!resizing) return;
     const dx = cx - rSx, dy = cy - rSy;
     let w = rW0, h = rH0, x = rX0, y = rY0;
-    if (rDir.includes('e')) w = Math.max(MV_MIN_W, rW0 + dx);
-    if (rDir.includes('s')) h = Math.max(MV_MIN_H, rH0 + dy);
-    if (rDir.includes('w')) { const nw = Math.max(MV_MIN_W, rW0 - dx); x = rX0 + (rW0 - nw); w = nw; }
-    if (rDir.includes('n')) { const nh = Math.max(MV_MIN_H, rH0 - dy); y = rY0 + (rH0 - nh); h = nh; }
+    const tbH = titlebar.offsetHeight || 24;
+
+    if (_mediaAR) {
+      /* AR-locked resize — width leads for E/W/corner handles, height for N/S */
+      const widthLed = rDir.includes('e') || rDir.includes('w');
+      if (widthLed) {
+        if (rDir.includes('e')) w = Math.max(MV_MIN_W, rW0 + dx);
+        if (rDir.includes('w')) { w = Math.max(MV_MIN_W, rW0 - dx); x = rX0 + (rW0 - w); }
+        h = Math.round(w / _mediaAR + tbH);
+        if (rDir.includes('n')) y = rY0 + (rH0 - h);
+      } else {
+        if (rDir.includes('s')) h = Math.max(MV_MIN_H, rH0 + dy);
+        if (rDir.includes('n')) { h = Math.max(MV_MIN_H, rH0 - dy); y = rY0 + (rH0 - h); }
+        w = Math.max(MV_MIN_W, Math.round((h - tbH) * _mediaAR));
+      }
+    } else {
+      /* Free resize before media AR is known */
+      if (rDir.includes('e')) w = Math.max(MV_MIN_W, rW0 + dx);
+      if (rDir.includes('s')) h = Math.max(MV_MIN_H, rH0 + dy);
+      if (rDir.includes('w')) { const nw = Math.max(MV_MIN_W, rW0 - dx); x = rX0 + (rW0 - nw); w = nw; }
+      if (rDir.includes('n')) { const nh = Math.max(MV_MIN_H, rH0 - dy); y = rY0 + (rH0 - nh); h = nh; }
+    }
     win.style.width  = w + 'px';
     win.style.height = h + 'px';
     win.style.left   = x + 'px';
@@ -5025,6 +5046,50 @@ function openMediaViewer(idx) {
   };
 
   win.addEventListener('mousedown', () => { _mvZ++; win.style.zIndex = _mvZ; });
+
+  /* ── Auto-size window to media's natural aspect ratio ─────────────────
+     Called once the image/video fires its load event.
+     • Works out the largest size that fits in win-area (90% each axis).
+     • Stores the ratio in _mediaAR so the resize handler can lock to it.
+     • Centers the window and shows it.                                  */
+  function _fitToMedia(mw, mh) {
+    if (!mw || !mh) { win.style.display = 'flex'; return; } /* fallback */
+    _mediaAR = mw / mh;
+    const tbH   = titlebar.offsetHeight || 24;
+    const maxW  = area.offsetWidth  * 0.92;
+    const maxH  = area.offsetHeight * 0.92;
+    /* Start from natural size, shrink only if needed */
+    let bW = Math.min(mw, maxW);
+    let bH = bW / _mediaAR;
+    if (bH + tbH > maxH) { bH = maxH - tbH; bW = bH * _mediaAR; }
+    const winW = Math.max(200, Math.round(bW));
+    const winH = Math.max(120, Math.round(bH + tbH));
+    win.style.width  = winW + 'px';
+    win.style.height = winH + 'px';
+    win.style.left   = Math.max(0, Math.round((area.offsetWidth  - winW) / 2)) + 'px';
+    win.style.top    = Math.max(0, Math.round((area.offsetHeight - winH) / 2)) + 'px';
+    win.style.display = 'flex';
+  }
+
+  if (file.type === 'image') {
+    const img = win.querySelector('.mv-body img');
+    if (img && img.complete && img.naturalWidth > 0) {
+      _fitToMedia(img.naturalWidth, img.naturalHeight);
+    } else if (img) {
+      img.addEventListener('load',  () => _fitToMedia(img.naturalWidth, img.naturalHeight), { once: true });
+      img.addEventListener('error', () => { win.style.display = 'flex'; },                   { once: true });
+    }
+  } else {
+    const vid = win.querySelector('.mv-body video');
+    if (vid) {
+      if (vid.videoWidth > 0) {
+        _fitToMedia(vid.videoWidth, vid.videoHeight);
+      } else {
+        vid.addEventListener('loadedmetadata', () => _fitToMedia(vid.videoWidth, vid.videoHeight), { once: true });
+        vid.addEventListener('error',          () => { win.style.display = 'flex'; },                { once: true });
+      }
+    }
+  }
 
   area.appendChild(win);
   _mvWins.push(win);
