@@ -4486,11 +4486,11 @@ const _M_ICON_H  = 76; /* icon bounding height (38px img + label + padding) */
 const _M_MARGIN  = 6;  /* edge margin                                        */
 /* Portrait window safe areas.
    _M_SAFE_T: distance from desktop top to window top edge.
-              Top icons occupy y = 6 → 82 px.  2 px air gap → window starts at 84 px.
+              Top icons occupy y = 6 → 82 px.  Window starts flush at 82 px (0 px gap).
    _M_SAFE_B: distance from desktop bottom to window bottom edge.
               Bottom icons occupy y = (dh-82) → (dh-6).  2 px air gap → window ends at (dh-84).
-   No outward drop-shadow in portrait (see CSS), so 2 px is sufficient clearance. */
-const _M_SAFE_T  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — 2 px air above top icon row    */
+   No outward drop-shadow in portrait (see CSS) so shadow bleed is not a concern. */
+const _M_SAFE_T  = _M_ICON_H + _M_MARGIN;     /* 82 px — flush with top icon row bottom */
 const _M_SAFE_B  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — 2 px air below bottom icon row */
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
