@@ -414,8 +414,8 @@ let   _nanoWsAlive   = false;
 let   _lastTxTime    = 0;         /* epoch ms of last relayed TX */
 let   _totalRelayed  = 0;
 const _seenHashes    = new Set(); /* deduplication across all sources */
-const _replayBuffer  = [];        /* last 10 hashes for new SSE clients */
-const REPLAY_MAX     = 10;
+const _replayBuffer  = [];        /* last N hashes for new SSE clients */
+const REPLAY_MAX     = 20;
 
 function _broadcastTx(tx) {
   const payload = `data: ${JSON.stringify(tx)}\n\n`;
@@ -541,12 +541,33 @@ async function _updateOnlineReps() {
   }
 }
 
+/* ── Pre-fill replay buffer on server start using account_history ── */
+/* Ensures new clients always get hashes immediately, even after restart.    */
+async function _prefillReplayBuffer() {
+  if (_rainAccounts.length === 0) return;
+  const accounts = _rainAccounts.slice(0, 5);
+  let added = 0;
+  for (const account of accounts) {
+    if (_replayBuffer.length >= REPLAY_MAX) break;
+    try {
+      const data = await postJson('nanoslo.0x.no', '/proxy', {
+        action: 'account_history', account, count: '5',
+      });
+      for (const block of (data.history || [])) {
+        if (block.hash) { _relayHash(block.hash, account); added++; }
+        if (_replayBuffer.length >= REPLAY_MAX) break;
+      }
+    } catch {}
+  }
+  console.log(`[nano-relay] Prefilled replay buffer: ${added} hashes`);
+}
+
 /* ── Frontier-polling fallback ── */
-/* When WS has been silent for 90 s, poll account_info for online reps      */
+/* When WS has been silent for 15 s, poll account_info for online reps      */
 /* and broadcast any newly-confirmed frontier hashes (real block hashes).    */
 let _pollIdx = 0;
 async function _frontierPollTick() {
-  if (Date.now() - _lastTxTime < 30000) return; /* WS active — skip */
+  if (Date.now() - _lastTxTime < 15000) return; /* skip if WS recently active */
   if (_rainAccounts.length === 0) return;
 
   /* Poll up to 20 accounts per tick in a round-robin (covers all 77 reps ~every 60 s) */
@@ -576,9 +597,10 @@ async function _frontierPollTick() {
   }
 }
 
-/* Bootstrap: fetch reps → connect rainstorm → start poll loop */
+/* Bootstrap: fetch reps → pre-fill buffer → connect rainstorm → start polls */
 (async () => {
   await _updateOnlineReps();
+  await _prefillReplayBuffer();              /* pre-load recent hashes immediately */
   _connectRainWs();
   setInterval(_updateOnlineReps, 5 * 60 * 1000);    /* refresh reps every 5 min  */
   setInterval(_frontierPollTick, 15 * 1000);         /* frontier check every 15 s */
@@ -613,6 +635,11 @@ app.get('/api/nano-stream', (req, res) => {
     _sseClients.delete(res);
     console.log(`[nano-relay] SSE client disconnected (total: ${_sseClients.size})`);
   });
+});
+
+/* REST endpoint — returns current replay buffer hashes for client fallback polling */
+app.get('/api/nano-hashes', (req, res) => {
+  res.json(_replayBuffer.map(e => e.hash));
 });
 
 app.listen(PORT, "0.0.0.0", () => console.log(`Nano Chat server running on port ${PORT}`));

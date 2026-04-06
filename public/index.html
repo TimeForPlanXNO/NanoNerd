@@ -2182,6 +2182,40 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   }
   connectSSE();
 
+  /* ── HTTP fallback — polls /api/nano-hashes every 10 s ─────────────────
+     Guards against SSE delivery gaps (proxy buffering, brief disconnects,
+     empty replay buffer on fresh server start).  Only runs if the local
+     hash pool has fewer than 5 entries so we don't waste requests.       */
+  let _fallbackTimer = null;
+  async function _fetchHashes() {
+    try {
+      const r = await fetch('/api/nano-hashes');
+      if (!r.ok) return;
+      const hashes = await r.json();
+      if (!Array.isArray(hashes) || hashes.length === 0) return;
+      let added = 0;
+      for (const h of hashes) {
+        if (typeof h !== 'string') continue;
+        if (!_hashPool.includes(h)) {
+          _hashPool.push(h);
+          if (_hashPool.length > _POOL_MAX) _hashPool.shift();
+          added++;
+        }
+      }
+      if (added > 0) {
+        wsConnected = true;
+        onStatus?.({ connected: true, txCount });
+        _tryWakeCol();
+        console.log(`[matrix] HTTP fallback: added ${added} hashes, pool=${_hashPool.length}`);
+      }
+    } catch {}
+  }
+  /* Immediate fetch so new clients get rain even before SSE replay arrives */
+  _fetchHashes();
+  _fallbackTimer = setInterval(() => {
+    if (_hashPool.length < 5) _fetchHashes();
+  }, 10000);
+
   /* ── Hover / click (app-window mode only) ── */
   let hoveredCol = -1;
   function getTooltip() {
@@ -2366,6 +2400,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     stop() {
       running = false;
       cancelAnimationFrame(frame);
+      clearInterval(_fallbackTimer);
       try { evtSrc?.close(); } catch {}
       if (!wallpaperMode) {
         canvas.removeEventListener('mousemove',  onMove);
