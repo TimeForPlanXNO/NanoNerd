@@ -414,8 +414,8 @@ let   _nanoWsAlive   = false;
 let   _lastTxTime    = 0;         /* epoch ms of last relayed TX */
 let   _totalRelayed  = 0;
 const _seenHashes    = new Set(); /* deduplication across all sources */
-const _replayBuffer  = [];        /* last 10 hashes for new SSE clients */
-const REPLAY_MAX     = 10;
+const _replayBuffer  = [];        /* last 30 hashes for new SSE clients */
+const REPLAY_MAX     = 30;
 
 function _broadcastTx(tx) {
   const payload = `data: ${JSON.stringify(tx)}\n\n`;
@@ -513,7 +513,7 @@ function _connectRainWs() {
       _rainWsRef = ws;
       ws.send(JSON.stringify({
         action: 'subscribe', topic: 'confirmation',
-        options: { accounts: _rainAccounts.slice(0, 50), confirmation_type: 'all' },
+        options: { accounts: _rainAccounts.slice(0, 50) },
       }));
       console.log(`[nano-relay] rainstorm watching ${Math.min(_rainAccounts.length, 50)} accounts`);
     },
@@ -541,22 +541,26 @@ async function _updateOnlineReps() {
   }
 }
 
-/* ── Frontier-polling fallback ── */
-/* When WS has been silent for 90 s, poll account_info for online reps      */
-/* and broadcast any newly-confirmed frontier hashes (real block hashes).    */
-let _pollIdx = 0;
+/* ── Frontier-polling — primary feed when WS nodes don't deliver ── */
+/* Polls account_info for online reps, relays any changed (or new) frontier  */
+/* On first tick: ALL frontiers are relayed → instant replay-buffer bootstrap */
+let _pollIdx     = 0;
+let _firstTick   = true;                  /* first tick → relay all frontiers */
+
 async function _frontierPollTick() {
-  if (Date.now() - _lastTxTime < 30000) return; /* WS active — skip */
+  /* Skip only if WS delivered very recently AND we already have a warm buffer */
+  if (!_firstTick && Date.now() - _lastTxTime < 8000) return;
   if (_rainAccounts.length === 0) return;
 
-  /* Poll up to 20 accounts per tick in a round-robin (covers all 77 reps ~every 60 s) */
+  /* On first tick poll 30 accounts for faster bootstrap, else 10 to save quota */
+  const batchSize = _firstTick ? Math.min(30, _rainAccounts.length) : Math.min(10, _rainAccounts.length);
   const batch = [];
-  const batchSize = Math.min(20, _rainAccounts.length);
   for (let i = 0; i < batchSize; i++) {
     batch.push(_rainAccounts[_pollIdx % _rainAccounts.length]);
     _pollIdx++;
   }
 
+  let relayed = 0;
   for (const account of batch) {
     try {
       const info = await postJson('nanoslo.0x.no', '/proxy', {
@@ -566,13 +570,22 @@ async function _frontierPollTick() {
       });
       const frontier = info.confirmed_frontier;
       if (!frontier || /^0+$/.test(frontier)) continue;
-      if (_pollFrontiers[account] !== null && _pollFrontiers[account] !== frontier) {
-        /* Account received a new confirmed block — relay its frontier hash */
+      /* First tick: relay all frontiers to bootstrap replay buffer.
+         Subsequent ticks: only relay when frontier actually changed. */
+      if (_pollFrontiers[account] !== frontier) {
         _relayHash(frontier, account);
-        console.log(`[nano-relay] Poll new frontier: ${frontier.slice(0, 16)}… → ${account.slice(0, 20)}`);
+        relayed++;
+        if (_firstTick || relayed <= 3) {
+          console.log(`[nano-relay] Poll frontier: ${frontier.slice(0, 16)}… → ${account.slice(0, 20)}`);
+        }
       }
       _pollFrontiers[account] = frontier;
     } catch {}
+  }
+
+  if (_firstTick) {
+    console.log(`[nano-relay] Bootstrap tick done — relayed ${relayed} frontier hashes`);
+    _firstTick = false;
   }
 }
 
@@ -581,7 +594,9 @@ async function _frontierPollTick() {
   await _updateOnlineReps();
   _connectRainWs();
   setInterval(_updateOnlineReps, 5 * 60 * 1000);    /* refresh reps every 5 min  */
-  setInterval(_frontierPollTick, 15 * 1000);         /* frontier check every 15 s */
+  /* First tick after 2 s — bootstraps replay buffer before first user arrives */
+  setTimeout(_frontierPollTick, 2000);
+  setInterval(_frontierPollTick, 20 * 1000);         /* subsequent checks every 20 s */
 })();
 
 /* SSE endpoint — browsers subscribe here to receive live TX events */
@@ -603,10 +618,10 @@ app.get('/api/nano-stream', (req, res) => {
   _sseClients.add(res);
   console.log(`[nano-relay] SSE client connected (total: ${_sseClients.size}, replay=${_replayBuffer.length})`);
 
-  /* Keep-alive ping every 20 s to prevent proxy timeouts */
+  /* Keep-alive ping every 12 s to prevent proxy timeouts */
   const ping = setInterval(() => {
     try { res.write(': ping\n\n'); } catch { clearInterval(ping); }
-  }, 20000);
+  }, 12000);
 
   req.on('close', () => {
     clearInterval(ping);
