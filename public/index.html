@@ -1487,7 +1487,7 @@
     }
 
     /* ── Mobile portrait taskbar: hide "start" label, shrink buttons ── */
-    @media (max-width: 480px) and (orientation: portrait) {
+    @media (max-width: 767px) and (orientation: portrait) {
       .start-text          { display: none; }
       .start-btn           { padding: 0 6px; min-width: 0; }
       .tb-btn              { max-width: 72px; padding: 0 3px; font-size: 9px; }
@@ -4377,9 +4377,13 @@ function _saveIconPos(s)  { localStorage.setItem(_ICON_POS_KEY,   JSON.stringify
 function _loadIconPosP()  { try { return JSON.parse(localStorage.getItem(_ICON_POS_P_KEY)) || {}; } catch { return {}; } }
 function _saveIconPosP(s) { localStorage.setItem(_ICON_POS_P_KEY, JSON.stringify(s)); }
 
-/* ── Layout detection (purely dimension-based — no UA sniffing) ── */
+/* ── Layout detection ── */
+/* Portrait = screen is taller than it is wide AND narrower than 1024 px.
+   1024 covers phones (320-480 px), large-phone phablets (480-768 px),
+   and most tablets (768-1024 px) in portrait orientation.
+   Landscape mode and desktop browsers (width ≥ 1024) keep the desktop layout. */
 function _isMobilePortrait() {
-  return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+  return window.innerHeight > window.innerWidth && window.innerWidth < 1024;
 }
 
 /* ── Icon layout (called on init and every orientation/resize change) ── */
@@ -4398,9 +4402,6 @@ function _applyIconLayout() {
   const rowStartX = Math.max(M, Math.round((dw - rowW) / 2));    /* centred, min 6 px */
   let col = 0; /* column counter for bottom-row icons */
 
-  /* Validate a saved position fits fully within current screen */
-  const _validPos = (p) => p && p.x >= 0 && p.y >= 0 && p.x + IW <= dw && p.y + IH <= dh;
-
   document.querySelectorAll('.desk-icon').forEach(el => {
     const id  = el.dataset.iconId;
     const def = _ICON_DEFAULTS[id] || { x: M, y: M };
@@ -4413,12 +4414,10 @@ function _applyIconLayout() {
         /* NanoNerd: always anchored upper-left — never moved (companion to Recycle Bin) */
         el.style.left = M + 'px';
         el.style.top  = M + 'px';
-      } else if (_validPos(saved[id])) {
-        /* Restore a previously dragged portrait position only if still on-screen */
-        el.style.left = saved[id].x + 'px';
-        el.style.top  = saved[id].y + 'px';
       } else {
-        /* Bottom row (centred): nano-org, nano-gpt, nano-hub, media-folder */
+        /* Bottom row (centred): nano-org, nano-gpt, nano-hub, media-folder.
+           Always use the computed grid — no saved positions — so the col counter
+           is never skipped and media-folder always ends up at the correct slot. */
         el.style.left = (rowStartX + col * (IW + G)) + 'px';
         el.style.top  = Math.max(0, dh - IH - M) + 'px';
         col++;
@@ -4520,8 +4519,11 @@ function _applyWindowsLayout() {
 function _initIconDrag() {
   const desktop = document.querySelector('.desktop');
 
-  /* Set initial positions via layout engine */
+  /* Set initial positions via layout engine.
+     Run twice: immediately (best-effort) and after the next paint so the flex
+     container has its final offsetHeight before computing the bottom-row y. */
   _applyIconLayout();
+  requestAnimationFrame(_applyIconLayout);
 
   /* Collect icon metadata for drag handlers */
   const _iconMeta = [];
