@@ -2077,11 +2077,26 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   let running      = true;
   let wsConnected  = false;
   let txCount      = 0;
-  /* Single FIFO queue — every entry is a real unique confirmed Nano TX.
-     Each hash is dequeued exactly once and shown in exactly one column.
-     No recycling. When the queue is empty, columns wait dormant.          */
-  let txQueue      = [];
-  const _queuedHashes = new Set(); /* dedup guard: prevents same hash entering twice */
+
+  /* ── Live TX queue ────────────────────────────────────────────────────────
+     New confirmed Nano TX arrive here via SSE (fresh=true) or HTTP seed
+     (fresh=false).  Each hash enters ONCE and is dequeued ONCE.           */
+  let txQueue         = [];
+  const _queuedHashes = new Set();   /* prevents same hash entering queue twice  */
+
+  /* ── Completed-hash recycling buffer ─────────────────────────────────────
+     After a column finishes displaying a hash, that hash is added here.
+     When txQueue is empty, assignCol picks from this list — but ONLY if
+     the hash is not currently visible in any other column (uniqueness at
+     any moment is always guaranteed).  This keeps rain continuous between
+     live confirmations without ever showing the same hash in two columns
+     at the same time.                                                       */
+  let _recentHashes   = [];
+  const _RECENT_MAX   = 120;
+
+  /* Timestamp of the last frame that had at least one active column.
+     Initialized to now so the overlay doesn't flash on immediate load.    */
+  let _lastActiveTime = Date.now();
 
   /* ── Canvas sizing ── */
   function resize() {
@@ -2104,38 +2119,87 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
   /* ── Enqueue a real confirmed TX (deduped) ── */
   function _enqueue(hash, account, fresh) {
-    if (_queuedHashes.has(hash)) return; /* already queued — skip */
+    if (_queuedHashes.has(hash)) return;
     _queuedHashes.add(hash);
     txQueue.push({ hash, account: account || null, fresh: !!fresh });
-    /* Hard cap so the queue never grows unbounded on extremely busy networks */
     if (txQueue.length > 2000) {
       const dropped = txQueue.shift();
       _queuedHashes.delete(dropped.hash);
     }
   }
 
-  /* ── Assign the next real TX to column i (one TX → one column, once) ── */
-  function assignCol(i) {
-    if (txQueue.length === 0) {
-      colData[i].done = true;   /* nothing to show — wait for next confirmation */
-      return;
+  /* ── Record a completed hash so it can recycle (one-at-a-time guarantee) ── */
+  function _markFinished(i) {
+    const h = colData[i].hash;
+    if (!h) return;
+    if (!_recentHashes.includes(h)) {
+      _recentHashes.push(h);
+      if (_recentHashes.length > _RECENT_MAX) _recentHashes.shift();
     }
-    const tx = txQueue.shift();
-    _queuedHashes.delete(tx.hash); /* allow re-queuing if the same hash appears again */
-    colData[i].hash    = tx.hash;
-    colData[i].account = tx.account;
-    colData[i].fresh   = tx.fresh;
-    colData[i].speed   = 0.35 + Math.random() * 0.75;   /* 0.35–1.1 chars/frame */
-    colData[i].done    = false;
-    drops[i] = -Math.floor(Math.random() * 20);
   }
 
-  /* Wake every dormant column that has a queued TX waiting */
+  /* ── Assign the next TX to column i ────────────────────────────────────────
+     Priority 1: live txQueue (brand-new confirmed TX, white head)
+     Priority 2: _recentHashes recycle — ONLY if that hash is not currently
+                 visible in any other column (uniqueness at any moment)         */
+  function assignCol(i) {
+    let hash, account, fresh;
+
+    if (txQueue.length > 0) {
+      /* Dequeue a new real TX — shown exactly once as a live drop */
+      const tx = txQueue.shift();
+      _queuedHashes.delete(tx.hash);
+      hash    = tx.hash;
+      account = tx.account;
+      fresh   = tx.fresh;
+    } else if (_recentHashes.length > 0) {
+      /* Recycle: find a hash NOT currently visible in any active column */
+      const active = new Set(
+        colData.filter((cd, idx) => idx !== i && !cd.done && cd.hash).map(cd => cd.hash)
+      );
+      const pool = _recentHashes.filter(h => !active.has(h));
+      if (pool.length === 0) { colData[i].done = true; return; }
+      hash    = pool[Math.floor(Math.random() * pool.length)];
+      account = null;
+      fresh   = false;   /* dimmer green head — visually distinct from live TX */
+    } else {
+      colData[i].done = true;   /* truly empty — column waits */
+      return;
+    }
+
+    colData[i].hash    = hash;
+    colData[i].account = account;
+    colData[i].fresh   = fresh;
+    colData[i].speed   = 0.35 + Math.random() * 0.75;
+    colData[i].done    = false;
+    /* Stagger start positions so columns finish at very different times.
+       Range: head already mid-screen (positive) down to fully-above-screen.
+       This prevents the wave-reset pattern where all columns stop together. */
+    const rows = canvas.height > 0 ? Math.ceil(canvas.height / CH) + 2 : 30;
+    drops[i] = Math.floor(Math.random() * (rows + hash.length)) - hash.length;
+  }
+
+  /* Wake dormant columns — one per queued TX for fresh ones,
+     then fill remaining with recycled hashes to keep rain flowing */
   function _tryWakeCol() {
-    let idx;
-    /* eslint-disable-next-line no-cond-assign */
-    while ((idx = colData.findIndex(cd => cd.done)) !== -1 && txQueue.length > 0) {
+    if (!colData) return;
+    /* First pass: give each live TX its own column */
+    while (txQueue.length > 0) {
+      const idx = colData.findIndex(cd => cd.done);
+      if (idx === -1) break;
       assignCol(idx);
+    }
+    /* Second pass: if rain would otherwise stop, top up with recycled hashes */
+    if (_recentHashes.length > 0) {
+      const target = Math.min(Math.ceil(cols * 0.4), _recentHashes.length);
+      let active   = colData.filter(cd => !cd.done).length;
+      while (active < target) {
+        const idx = colData.findIndex(cd => cd.done);
+        if (idx === -1) break;
+        assignCol(idx);
+        if (colData[idx].done) break;   /* recycler ran out of available hashes */
+        active++;
+      }
     }
   }
 
@@ -2319,19 +2383,23 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     ctx.font = `bold ${CH - 1}px 'Courier New',monospace`;
     const rows = Math.ceil(canvas.height / CH) + 2;
 
+    let anyActive = false;
     for (let i = 0; i < cols; i++) {
       const cd = colData[i];
       /* Dormant columns: skip — their last characters fade out naturally */
       if (cd.done || !cd.hash) continue;
+      anyActive = true;
 
       const { hash, speed } = cd;
       const isHov = !wallpaperMode && i === hoveredCol;
       drops[i] += speed * dt;
       const head = Math.floor(drops[i]);
 
-      /* Column finished — immediately reassign; skip to next frame for new values */
+      /* Column finished — record hash for recycling, then immediately reassign */
       if (head - hash.length > rows) {
+        _markFinished(i);
         assignCol(i);
+        if (!colData[i].done) anyActive = true;
         continue;
       }
       if (head < 0) continue;
@@ -2359,13 +2427,19 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       }
     }
 
-    /* Self-heal: if queue has TX but all columns went dormant, wake them now */
-    if (colData && txQueue.length > 0 && !colData.some(cd => !cd.done)) {
+    /* Track last time any column was active, for overlay delay */
+    if (anyActive) _lastActiveTime = Date.now();
+
+    /* Self-heal: if rain could run but all columns are dormant, wake them */
+    if (colData && !anyActive && (txQueue.length > 0 || _recentHashes.length > 0)) {
       _tryWakeCol();
     }
 
-    /* Show status overlay whenever all columns are dormant */
-    _drawStatus();
+    /* Show status overlay only after >3 s of genuinely empty canvas
+       (prevents the "flashing refresh" between TX bursts)              */
+    if (!anyActive && Date.now() - _lastActiveTime > 3000) {
+      _drawStatus();
+    }
 
     frame = requestAnimationFrame(draw);
   }
