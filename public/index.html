@@ -2077,9 +2077,11 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   let running      = true;
   let wsConnected  = false;
   let txCount      = 0;
-  let txQueue      = [];   /* priority queue — brand-new confirmed TX {hash,account,fresh:true} */
-  let _hashPool    = [];   /* circular buffer of recent hashes used to keep rain continuous */
-  const _POOL_MAX  = 60;   /* recycle last 60 real hashes */
+  /* Single FIFO queue — every entry is a real unique confirmed Nano TX.
+     Each hash is dequeued exactly once and shown in exactly one column.
+     No recycling. When the queue is empty, columns wait dormant.          */
+  let txQueue      = [];
+  const _queuedHashes = new Set(); /* dedup guard: prevents same hash entering twice */
 
   /* ── Canvas sizing ── */
   function resize() {
@@ -2100,36 +2102,39 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     }
   }
 
-  /* ── Assign a TX (real or recycled) to column i ── */
+  /* ── Enqueue a real confirmed TX (deduped) ── */
+  function _enqueue(hash, account, fresh) {
+    if (_queuedHashes.has(hash)) return; /* already queued — skip */
+    _queuedHashes.add(hash);
+    txQueue.push({ hash, account: account || null, fresh: !!fresh });
+    /* Hard cap so the queue never grows unbounded on extremely busy networks */
+    if (txQueue.length > 2000) {
+      const dropped = txQueue.shift();
+      _queuedHashes.delete(dropped.hash);
+    }
+  }
+
+  /* ── Assign the next real TX to column i (one TX → one column, once) ── */
   function assignCol(i) {
-    let hash, account, fresh;
-    if (txQueue.length > 0) {
-      /* Real brand-new confirmed TX — priority */
-      const tx = txQueue.shift();
-      hash = tx.hash; account = tx.account; fresh = true;
-    } else if (_hashPool.length > 0) {
-      /* Recycle a random recent hash to keep the rain continuous */
-      hash    = _hashPool[Math.floor(Math.random() * _hashPool.length)];
-      account = null;
-      fresh   = false;
-    } else {
-      colData[i].done = true;
+    if (txQueue.length === 0) {
+      colData[i].done = true;   /* nothing to show — wait for next confirmation */
       return;
     }
-    colData[i].hash    = hash;
-    colData[i].account = account;
-    colData[i].fresh   = fresh;
+    const tx = txQueue.shift();
+    _queuedHashes.delete(tx.hash); /* allow re-queuing if the same hash appears again */
+    colData[i].hash    = tx.hash;
+    colData[i].account = tx.account;
+    colData[i].fresh   = tx.fresh;
     colData[i].speed   = 0.35 + Math.random() * 0.75;   /* 0.35–1.1 chars/frame */
     colData[i].done    = false;
     drops[i] = -Math.floor(Math.random() * 20);
   }
 
-  /* Wake every dormant column that can be filled (real TX or recycled) */
+  /* Wake every dormant column that has a queued TX waiting */
   function _tryWakeCol() {
     let idx;
     /* eslint-disable-next-line no-cond-assign */
-    while ((idx = colData.findIndex(cd => cd.done)) !== -1
-           && (txQueue.length > 0 || _hashPool.length > 0)) {
+    while ((idx = colData.findIndex(cd => cd.done)) !== -1 && txQueue.length > 0) {
       assignCol(idx);
     }
   }
@@ -2147,7 +2152,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
     evtSrc.onopen = () => {
       wsConnected = true;
-      onStatus?.({ connected: true, txCount, poolSize: _hashPool.length });
+      onStatus?.({ connected: true, txCount, poolSize: txQueue.length });
     };
 
     evtSrc.onmessage = evt => {
@@ -2156,19 +2161,15 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
         const msg = JSON.parse(evt.data);
         if (msg.type === 'status') {
           wsConnected = !!msg.connected;
-          onStatus?.({ connected: wsConnected, txCount, poolSize: _hashPool.length });
+          onStatus?.({ connected: wsConnected, txCount, poolSize: txQueue.length });
           return;
         }
         if (msg.type === 'tx' && msg.hash) {
           txCount++;
-          /* Every hash is a REAL confirmed Nano block */
-          txQueue.push({ hash: msg.hash, account: msg.account || null, fresh: true });
-          if (txQueue.length > 2000) txQueue.shift();
-          /* Also add to the recycling pool */
-          _hashPool.push(msg.hash);
-          if (_hashPool.length > _POOL_MAX) _hashPool.shift();
-          onStatus?.({ connected: true, txCount, poolSize: _hashPool.length });
-          /* Wake ALL dormant columns — fills the whole canvas at once */
+          /* Each hash is a REAL unique confirmed Nano block — enqueue once */
+          _enqueue(msg.hash, msg.account, true /* fresh = brand-new */);
+          onStatus?.({ connected: true, txCount, poolSize: txQueue.length });
+          /* Wake dormant columns with the new TX */
           _tryWakeCol();
         }
       } catch {}
@@ -2176,16 +2177,16 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
     evtSrc.onerror = () => {
       wsConnected = false;
-      onStatus?.({ connected: false, txCount, poolSize: _hashPool.length });
+      onStatus?.({ connected: false, txCount, poolSize: txQueue.length });
       /* EventSource retries automatically — nothing extra needed */
     };
   }
   connectSSE();
 
-  /* ── HTTP fallback — polls /api/nano-hashes every 10 s ─────────────────
-     Guards against SSE delivery gaps (proxy buffering, brief disconnects,
-     empty replay buffer on fresh server start).  Only runs if the local
-     hash pool has fewer than 5 entries so we don't waste requests.       */
+  /* ── HTTP fallback — seeds the queue with recent real TX hashes ────────
+     Fires immediately on open and every 10 s when the queue runs dry.
+     Hashes are marked fresh=false (recent history, not brand-new) so they
+     get a green head — visually distinct from live confirmations.         */
   let _fallbackTimer = null;
   async function _fetchHashes() {
     try {
@@ -2196,25 +2197,21 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       let added = 0;
       for (const h of hashes) {
         if (typeof h !== 'string') continue;
-        if (!_hashPool.includes(h)) {
-          _hashPool.push(h);
-          if (_hashPool.length > _POOL_MAX) _hashPool.shift();
-          added++;
-        }
+        _enqueue(h, null, false /* recent history — not brand-new */);
+        added++;
       }
-      /* Always wake columns — pool may already have items from a previous fetch */
       wsConnected = true;
-      onStatus?.({ connected: true, txCount, poolSize: _hashPool.length });
+      onStatus?.({ connected: true, txCount, poolSize: txQueue.length });
       _tryWakeCol();
-      console.log(`[matrix] HTTP fallback: added ${added} hashes, pool=${_hashPool.length}`);
+      console.log(`[matrix] HTTP seed: queued ${added} hashes, queue=${txQueue.length}`);
     } catch (err) {
       console.warn('[matrix] _fetchHashes failed:', err);
     }
   }
-  /* Immediate fetch so new clients get rain even before SSE replay arrives */
+  /* Immediate seed so rain starts before first live SSE TX arrives */
   _fetchHashes();
   _fallbackTimer = setInterval(() => {
-    if (_hashPool.length < 5) _fetchHashes();
+    if (txQueue.length < 5) _fetchHashes();
   }, 10000);
 
   /* ── Hover / click (app-window mode only) ── */
@@ -2294,12 +2291,12 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       : `${spin} Connecting to blocklattice.io…`;
     ctx.fillText(line1, w / 2, h / 2 - 10);
 
-    /* Pool / TX count line */
-    if (txCount > 0 || _hashPool.length > 0) {
+    /* Queue / TX count line */
+    if (txCount > 0 || txQueue.length > 0) {
       ctx.fillStyle = '#007722';
       ctx.font = '11px "Courier New",monospace';
       ctx.fillText(
-        `${txCount} TX received · ${_hashPool.length} hashes in pool`,
+        `${txCount} TX received · ${txQueue.length} queued`,
         w / 2, h / 2 + 10,
       );
     }
@@ -2362,8 +2359,8 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       }
     }
 
-    /* Self-heal: if pool has hashes but all columns went dormant, wake them now */
-    if (colData && _hashPool.length > 0 && !colData.some(cd => !cd.done)) {
+    /* Self-heal: if queue has TX but all columns went dormant, wake them now */
+    if (colData && txQueue.length > 0 && !colData.some(cd => !cd.done)) {
       _tryWakeCol();
     }
 
@@ -2395,7 +2392,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     resize() { resize(); },
     isConnected: () => wsConnected,
     getTxCount:  () => txCount,
-    getPoolSize: () => _hashPool.length,
+    getPoolSize: () => txQueue.length,
     reconnect() { connectSSE(); _fetchHashes(); },
     _cleanupResize: null,
   };
