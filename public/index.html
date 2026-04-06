@@ -2103,53 +2103,49 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     if (i !== -1) assignCol(i);
   }
 
-  /* ── WebSocket — live Nano confirmations (round-robin across public nodes) ── */
-  const WS_NODES = [
-    'wss://node.somenano.com/websocket',
-    'wss://nanoslo.0x.no/websocket',
-    'wss://ws.mynano.ninja',
-  ];
-  let wsNodeIdx = 0, ws = null, wsRetry = null;
+  /* ── SSE relay — live Nano confirmations via server-side proxy ────────────
+     The server holds the WebSocket connection to Nano nodes and relays events
+     here via SSE. This eliminates all browser-side origin/CORS/mTLS issues
+     that would block direct wss:// connections from inside the Replit iframe.
+     EventSource reconnects automatically — no manual retry logic needed.     */
+  let evtSrc = null;
 
-  function connectWS() {
-    const url = WS_NODES[wsNodeIdx % WS_NODES.length];
-    try {
-      ws = new WebSocket(url);
-      ws.onopen = () => {
-        wsConnected = true;
-        /* Subscribe to all confirmed (active_quorum) blocks */
-        ws.send(JSON.stringify({
-          action: 'subscribe', topic: 'confirmation',
-          options: { confirmation_type: 'active_quorum' },
-        }));
-        onStatus?.({ connected: true, txCount });
-      };
-      ws.onmessage = evt => {
-        try {
-          const msg = JSON.parse(evt.data);
-          if (msg.topic === 'confirmation' && msg.message?.hash) {
-            txCount++;
-            /* Store the REAL confirmed TX hash (uppercase hex, 64 chars) */
-            txQueue.push({
-              hash:    msg.message.hash.toUpperCase(),
-              account: msg.message.account || null,
-            });
-            if (txQueue.length > 2000) txQueue.shift();
-            onStatus?.({ connected: true, txCount });
-            /* Immediately wake a dormant column if one is available */
-            _tryWakeCol();
-          }
-        } catch {}
-      };
-      ws.onerror = () => { wsConnected = false; };
-      ws.onclose = () => {
-        wsConnected = false;
-        onStatus?.({ connected: false, txCount });
-        if (running) { wsNodeIdx++; wsRetry = setTimeout(connectWS, 4000); }
-      };
-    } catch { if (running) { wsNodeIdx++; wsRetry = setTimeout(connectWS, 4000); } }
+  function connectSSE() {
+    if (evtSrc) { try { evtSrc.close(); } catch {} }
+    evtSrc = new EventSource('/api/nano-stream');
+
+    evtSrc.onopen = () => {
+      wsConnected = true;
+      onStatus?.({ connected: true, txCount });
+    };
+
+    evtSrc.onmessage = evt => {
+      if (!evt.data || evt.data.startsWith(':')) return; /* SSE keep-alive ping */
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.type === 'status') {
+          wsConnected = !!msg.connected;
+          onStatus?.({ connected: wsConnected, txCount });
+          return;
+        }
+        if (msg.type === 'tx' && msg.hash) {
+          txCount++;
+          /* Every hash pushed here is a REAL confirmed Nano block */
+          txQueue.push({ hash: msg.hash, account: msg.account || null });
+          if (txQueue.length > 2000) txQueue.shift();
+          onStatus?.({ connected: true, txCount });
+          _tryWakeCol();
+        }
+      } catch {}
+    };
+
+    evtSrc.onerror = () => {
+      wsConnected = false;
+      onStatus?.({ connected: false, txCount });
+      /* EventSource retries automatically — nothing extra needed */
+    };
   }
-  connectWS();
+  connectSSE();
 
   /* ── Hover / click (app-window mode only) ── */
   let hoveredCol = -1;
@@ -2200,6 +2196,28 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     canvas.addEventListener('mousemove',  onMove);
     canvas.addEventListener('mouseleave', onLeave);
     canvas.addEventListener('click',      onClick);
+  }
+
+  /* ── Canvas status overlay (shown while waiting for first real TX) ── */
+  function _drawStatus() {
+    const anyActive = colData && colData.some(cd => !cd.done && cd.hash);
+    if (anyActive) return; /* rain is running — no overlay needed */
+    const w = canvas.width, h = canvas.height;
+    ctx.save();
+    ctx.textAlign = 'center';
+    if (!wsConnected) {
+      ctx.fillStyle = '#0a0';
+      ctx.font = 'bold 12px "Courier New",monospace';
+      ctx.fillText('⬤ Connecting to Nano network…', w / 2, h / 2);
+    } else {
+      ctx.fillStyle = '#00ff41';
+      ctx.font = 'bold 12px "Courier New",monospace';
+      ctx.fillText('⬤ LIVE — waiting for next confirmed block…', w / 2, h / 2 - 10);
+      ctx.fillStyle = '#0a0';
+      ctx.font = '10px "Courier New",monospace';
+      ctx.fillText(`${txCount} blocks received so far`, w / 2, h / 2 + 10);
+    }
+    ctx.restore();
   }
 
   /* ── Draw loop ── */
@@ -2257,6 +2275,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       }
     }
 
+    /* Show status overlay whenever all columns are dormant */
+    _drawStatus();
+
     frame = requestAnimationFrame(draw);
   }
 
@@ -2269,8 +2290,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     stop() {
       running = false;
       cancelAnimationFrame(frame);
-      clearTimeout(wsRetry);
-      ws?.close();
+      try { evtSrc?.close(); } catch {}
       if (!wallpaperMode) {
         canvas.removeEventListener('mousemove',  onMove);
         canvas.removeEventListener('mouseleave', onLeave);

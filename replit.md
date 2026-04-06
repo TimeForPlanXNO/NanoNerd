@@ -39,15 +39,36 @@ Starts the server on port 5000.
 
 ## Live XNO Matrix
 - `_startMatrixRain(canvas, opts)` — shared engine used by both the app window and the wallpaper
-- Connects to public Nano WebSocket nodes (round-robin: `node.somenano.com/websocket` → `nanoslo.0x.no/websocket` → `ws.mynano.ninja`) with auto-reconnect
-- **Only real confirmed TX hashes drop** — no `simHash()` fallback; columns start DORMANT and wake when a real TX arrives via WebSocket
+- **Only real confirmed TX hashes drop** — no simHash fallback; columns start DORMANT and wake when a real TX arrives
 - `_tryWakeCol()` finds next dormant column and assigns the next queued TX (FIFO)
-- When a column finishes scrolling its 64-char hash, it marks `done=true` and calls `_tryWakeCol()` again
 - CW=13px / CH=15px so each hex character (0-9, A-F) is clearly legible as it falls
 - Hover tooltip shows full TX hash + truncated account; click opens `https://nanolooker.com/block/{hash}`
-- Wallpaper mode: `_applyMatrixWallpaper()` inserts `<canvas id="wp-matrix-canvas">` as desktop background (no pointer events)
+- Status overlay shows "⬤ LIVE — waiting for next confirmed block…" when canvas is dark
+- Wallpaper mode: `_applyMatrixWallpaper()` inserts `<canvas id="wp-matrix-canvas">` as desktop background
 - `_stopMatrixWallpaper()` cleans up canvas + rAF + resize listener
-- `_applyWallpaper()` calls `_stopMatrixWallpaper()` before applying any image/video wallpaper
+
+## SSE Nano Relay (server.js)
+Three-layer architecture ensuring real confirmed block hashes always reach browsers:
+
+### Layer 1 — WebSocket (Primary): `wss://node.somenano.com/websocket`
+- Subscribes to `confirmation_type: all`
+- Server-side keepalive ping every 10 seconds
+
+### Layer 2 — WebSocket (Secondary): `wss://rainstorm.city/websocket`
+- Fetches online representatives via `nanoslo.0x.no/proxy` → `representatives_online`
+- Subscribes to those 50 accounts with `options.accounts` filter (ACK confirmed)
+- Server-side keepalive ping every 10 seconds
+
+### Layer 3 — Frontier Polling Fallback
+- Every 15 seconds, polls `account_info` for batches of 20 online representative accounts
+- When `confirmed_frontier` changes for any account, broadcasts that hash as a TX event
+- Activates when WS has been silent for >30 seconds
+- **This layer is what currently delivers real hashes** (network TPS ~0.03-0.1)
+
+### Replay Buffer
+- `_replayBuffer[]` holds last 10 confirmed hashes (FIFO)
+- New SSE clients receive replay buffer immediately on connect → matrix starts raining at once
+- Deduplication via `_seenHashes` Set (trimmed at 10k entries)
 
 ## Nano Hub Navigation
 - `hubNav(page)` global function toggles `.nh-visible` on `.nhub-view` divs

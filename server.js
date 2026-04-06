@@ -401,4 +401,218 @@ app.post("/api/translate-messages", async (req, res) => {
   }
 });
 
+/* ══════════════════════════════════════════════════════════════
+   NANO LIVE TX RELAY
+   Two WebSocket connections + a frontier-polling fallback ensure
+   real confirmed-block hashes always reach browsers via SSE.
+   • Primary:   wss://node.somenano.com  (all confirmations)
+   • Secondary: wss://rainstorm.city     (account-filtered, online reps)
+   • Fallback:  nanoslo.0x.no/proxy account_info polling when WS quiet
+══════════════════════════════════════════════════════════════ */
+const _sseClients    = new Set();
+let   _nanoWsAlive   = false;
+let   _lastTxTime    = 0;         /* epoch ms of last relayed TX */
+let   _totalRelayed  = 0;
+const _seenHashes    = new Set(); /* deduplication across all sources */
+const _replayBuffer  = [];        /* last 10 hashes for new SSE clients */
+const REPLAY_MAX     = 10;
+
+function _broadcastTx(tx) {
+  const payload = `data: ${JSON.stringify(tx)}\n\n`;
+  for (const res of _sseClients) {
+    try { res.write(payload); } catch { _sseClients.delete(res); }
+  }
+}
+
+function _relayHash(hash, account) {
+  const h = hash.toUpperCase();
+  if (_seenHashes.has(h)) return;
+  _seenHashes.add(h);
+  /* Trim to prevent unbounded growth */
+  if (_seenHashes.size > 10000) {
+    const iter = _seenHashes.values();
+    for (let i = 0; i < 2000; i++) _seenHashes.delete(iter.next().value);
+  }
+  _lastTxTime = Date.now();
+  _nanoWsAlive = true;
+  _totalRelayed++;
+  if (_totalRelayed <= 5 || _totalRelayed % 50 === 0) {
+    console.log(`[nano-relay] TX #${_totalRelayed}: ${h.slice(0, 16)}… clients=${_sseClients.size}`);
+  }
+  /* Replay buffer — new clients get the last N hashes immediately */
+  const entry = { type: 'tx', hash: h, account: account || null };
+  _replayBuffer.push(entry);
+  if (_replayBuffer.length > REPLAY_MAX) _replayBuffer.shift();
+  _broadcastTx(entry);
+}
+
+/* ── Helper: make a WS connection with keepalive pings ── */
+function _makeWs(url, onOpen, onConfirmation) {
+  let ws, pingTimer, retryTimer;
+  function connect() {
+    clearTimeout(retryTimer);
+    clearInterval(pingTimer);
+    console.log(`[nano-relay] Connecting → ${url}`);
+    try {
+      ws = new WebSocket(url);
+      ws.addEventListener('open', () => {
+        console.log(`[nano-relay] Connected ✓ ${url}`);
+        onOpen(ws);
+        /* Server-side keepalive — prevents silent dead connections */
+        pingTimer = setInterval(() => {
+          try { ws.send(JSON.stringify({ action: 'ping' })); } catch {}
+        }, 10000);
+      });
+      ws.addEventListener('message', evt => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.topic === 'confirmation' && msg.message?.hash) {
+            onConfirmation(msg.message);
+          }
+        } catch {}
+      });
+      ws.addEventListener('error', err => {
+        console.log(`[nano-relay] WS error ${url}:`, err?.message || 'unknown');
+      });
+      ws.addEventListener('close', () => {
+        clearInterval(pingTimer);
+        console.log(`[nano-relay] Closed ${url} — retry in 8 s`);
+        retryTimer = setTimeout(connect, 8000);
+      });
+    } catch (e) {
+      console.log(`[nano-relay] Create failed ${url}:`, e.message);
+      retryTimer = setTimeout(connect, 10000);
+    }
+  }
+  connect();
+}
+
+/* ── Primary: node.somenano.com — subscribe to ALL confirmations ── */
+_makeWs(
+  'wss://node.somenano.com/websocket',
+  ws => {
+    ws.send(JSON.stringify({
+      action: 'subscribe', topic: 'confirmation',
+      options: { confirmation_type: 'all' },
+    }));
+    _nanoWsAlive = true;
+    _broadcastTx({ type: 'status', connected: true, node: 'somenano' });
+  },
+  msg => _relayHash(msg.hash, msg.account),
+);
+
+/* ── Secondary: rainstorm.city — account-filtered for online reps ── */
+let _rainAccounts = [];
+let _rainWsRef    = null;
+
+function _connectRainWs() {
+  if (_rainAccounts.length === 0) return;
+  _makeWs(
+    'wss://rainstorm.city/websocket',
+    ws => {
+      _rainWsRef = ws;
+      ws.send(JSON.stringify({
+        action: 'subscribe', topic: 'confirmation',
+        options: { accounts: _rainAccounts.slice(0, 50), confirmation_type: 'all' },
+      }));
+      console.log(`[nano-relay] rainstorm watching ${Math.min(_rainAccounts.length, 50)} accounts`);
+    },
+    msg => _relayHash(msg.hash, msg.account),
+  );
+}
+
+/* ── Fetch currently-online representatives every 5 minutes ── */
+let _pollFrontiers = {};   /* account → last known confirmed_frontier */
+
+async function _updateOnlineReps() {
+  try {
+    /* nanoslo proxy returns representatives as an array (not weight-keyed object) */
+    const data = await postJson('nanoslo.0x.no', '/proxy', { action: 'representatives_online' });
+    const reps  = Array.isArray(data.representatives)
+      ? data.representatives
+      : Object.keys(data.representatives || {});
+    if (reps.length === 0) return;
+    _rainAccounts = reps;
+    /* Initialise frontier tracking for new accounts */
+    for (const a of reps) { if (_pollFrontiers[a] === undefined) _pollFrontiers[a] = null; }
+    console.log(`[nano-relay] Online reps refreshed: ${reps.length} — sample: ${reps[0]?.slice(0,20)}…`);
+  } catch (e) {
+    console.log('[nano-relay] representatives_online failed:', e.message);
+  }
+}
+
+/* ── Frontier-polling fallback ── */
+/* When WS has been silent for 90 s, poll account_info for online reps      */
+/* and broadcast any newly-confirmed frontier hashes (real block hashes).    */
+let _pollIdx = 0;
+async function _frontierPollTick() {
+  if (Date.now() - _lastTxTime < 30000) return; /* WS active — skip */
+  if (_rainAccounts.length === 0) return;
+
+  /* Poll up to 20 accounts per tick in a round-robin (covers all 77 reps ~every 60 s) */
+  const batch = [];
+  const batchSize = Math.min(20, _rainAccounts.length);
+  for (let i = 0; i < batchSize; i++) {
+    batch.push(_rainAccounts[_pollIdx % _rainAccounts.length]);
+    _pollIdx++;
+  }
+
+  for (const account of batch) {
+    try {
+      const info = await postJson('nanoslo.0x.no', '/proxy', {
+        action:            'account_info',
+        account,
+        include_confirmed: 'true',
+      });
+      const frontier = info.confirmed_frontier;
+      if (!frontier || /^0+$/.test(frontier)) continue;
+      if (_pollFrontiers[account] !== null && _pollFrontiers[account] !== frontier) {
+        /* Account received a new confirmed block — relay its frontier hash */
+        _relayHash(frontier, account);
+        console.log(`[nano-relay] Poll new frontier: ${frontier.slice(0, 16)}… → ${account.slice(0, 20)}`);
+      }
+      _pollFrontiers[account] = frontier;
+    } catch {}
+  }
+}
+
+/* Bootstrap: fetch reps → connect rainstorm → start poll loop */
+(async () => {
+  await _updateOnlineReps();
+  _connectRainWs();
+  setInterval(_updateOnlineReps, 5 * 60 * 1000);    /* refresh reps every 5 min  */
+  setInterval(_frontierPollTick, 15 * 1000);         /* frontier check every 15 s */
+})();
+
+/* SSE endpoint — browsers subscribe here to receive live TX events */
+app.get('/api/nano-stream', (req, res) => {
+  res.setHeader('Content-Type',  'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection',    'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');   /* disable nginx buffering if any */
+  res.flushHeaders();
+
+  /* Send immediate status so the browser knows the connection is live */
+  res.write(`data: ${JSON.stringify({ type: 'status', connected: _nanoWsAlive })}\n\n`);
+
+  /* Replay the last N confirmed hashes so the matrix starts immediately */
+  for (const entry of _replayBuffer) {
+    try { res.write(`data: ${JSON.stringify(entry)}\n\n`); } catch {}
+  }
+
+  _sseClients.add(res);
+  console.log(`[nano-relay] SSE client connected (total: ${_sseClients.size}, replay=${_replayBuffer.length})`);
+
+  /* Keep-alive ping every 20 s to prevent proxy timeouts */
+  const ping = setInterval(() => {
+    try { res.write(': ping\n\n'); } catch { clearInterval(ping); }
+  }, 20000);
+
+  req.on('close', () => {
+    clearInterval(ping);
+    _sseClients.delete(res);
+    console.log(`[nano-relay] SSE client disconnected (total: ${_sseClients.size})`);
+  });
+});
+
 app.listen(PORT, "0.0.0.0", () => console.log(`Nano Chat server running on port ${PORT}`));
