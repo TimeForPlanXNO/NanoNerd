@@ -1554,6 +1554,7 @@
   <div class="taskbar">
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span> start</button>
     <div class="taskbar-apps" id="tb-apps"></div>
+    <button class="wifi-btn" id="refresh-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">🔄</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
     <button class="tb-clock" id="clock" onclick="toggleStatsPopup()">00:00</button>
   </div>
@@ -3979,6 +3980,24 @@ function showWelcome() {
 }
 
 function removeWelcome() { const el=getEl('welcome'); if(el) el.remove(); }
+
+function resetAll() {
+  /* ── 1. Reset NanoNerd chat ── */
+  conversationHistory = [];
+  isStreaming  = false;
+  autoScroll   = true;
+  const chat    = getEl('chat');
+  const sendEl  = getEl('sendBtn');
+  const inputEl = getEl('userInput');
+  if (chat)    { chat.innerHTML = ''; showWelcome(); }
+  if (sendEl)  { sendEl.disabled = false; }
+  if (inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
+
+  /* ── 2. Reset all icon positions to defaults ── */
+  localStorage.removeItem(_ICON_POS_KEY);
+  localStorage.removeItem(_ICON_POS_P_KEY);
+  _applyIconLayout();
+}
 
 function addMsg(role, text, noScroll) {
   const chat = getEl('chat');
