@@ -4348,14 +4348,9 @@ function _saveIconPos(s)  { localStorage.setItem(_ICON_POS_KEY,   JSON.stringify
 function _loadIconPosP()  { try { return JSON.parse(localStorage.getItem(_ICON_POS_P_KEY)) || {}; } catch { return {}; } }
 function _saveIconPosP(s) { localStorage.setItem(_ICON_POS_P_KEY, JSON.stringify(s)); }
 
-/* ── Layout detection ── */
-const _MOBILE_UA_RE = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i;
-function _isMobileDevice() {
-  return _MOBILE_UA_RE.test(navigator.userAgent) ||
-         (('ontouchstart' in window) && window.matchMedia('(pointer: coarse)').matches);
-}
+/* ── Layout detection (purely dimension-based — no UA sniffing) ── */
 function _isMobilePortrait() {
-  return _isMobileDevice() && window.innerHeight > window.innerWidth;
+  return window.innerWidth < 768 && window.innerHeight > window.innerWidth;
 }
 
 /* ── Icon layout (called on init and every orientation/resize change) ── */
@@ -4374,6 +4369,9 @@ function _applyIconLayout() {
   const rowStartX = Math.max(M, Math.round((dw - rowW) / 2));    /* centred, min 6 px */
   let col = 0; /* column counter for bottom-row icons */
 
+  /* Validate a saved position fits fully within current screen */
+  const _validPos = (p) => p && p.x >= 0 && p.y >= 0 && p.x + IW <= dw && p.y + IH <= dh;
+
   document.querySelectorAll('.desk-icon').forEach(el => {
     const id  = el.dataset.iconId;
     const def = _ICON_DEFAULTS[id] || { x: M, y: M };
@@ -4382,8 +4380,8 @@ function _applyIconLayout() {
         /* Recycle Bin: always anchored upper-right */
         el.style.left = Math.max(0, dw - IW - M) + 'px';
         el.style.top  = M + 'px';
-      } else if (saved[id]) {
-        /* Respect any position the user dragged this icon to */
+      } else if (_validPos(saved[id])) {
+        /* Restore a previously dragged portrait position only if still on-screen */
         el.style.left = saved[id].x + 'px';
         el.style.top  = saved[id].y + 'px';
       } else if (id === 'nanonerd') {
