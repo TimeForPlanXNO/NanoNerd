@@ -726,6 +726,84 @@
     #sendBtn:disabled { opacity: .4; cursor: not-allowed; }
     #sendBtn svg { width: 13px; height: 13px; }
 
+    /* ── Chat Toolbar (history + new chat) ── */
+    .chat-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 2px 5px; background: var(--np);
+      border-bottom: 1px solid var(--nb); flex-shrink: 0; gap: 4px; min-height: 27px;
+    }
+    .ct-btn {
+      background: none; border: 1px solid transparent; border-radius: 5px;
+      color: var(--nm); cursor: pointer; padding: 2px 8px; height: 21px;
+      display: flex; align-items: center; gap: 4px;
+      font-family: "Tahoma", sans-serif; font-size: 11px;
+      transition: background .12s, border-color .12s, color .12s;
+    }
+    .ct-btn:hover  { background: var(--nd); border-color: var(--nb); color: var(--nt); }
+    .ct-btn.active { background: var(--nd); border-color: var(--na); color: var(--na); }
+    .ct-icon { font-size: 12px; line-height: 1; }
+
+    /* ── History Slide Panel ── */
+    .hist-panel {
+      position: absolute; inset: 0; z-index: 20;
+      background: var(--np);
+      display: flex; flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform .22s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .hist-panel.open { transform: translateX(0); pointer-events: all; }
+    .hist-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px 8px; border-bottom: 1px solid var(--nb); flex-shrink: 0;
+    }
+    .hist-head-title { color: var(--na); font-size: 12px; font-weight: bold; }
+    .hist-close {
+      background: none; border: none; color: var(--nm); font-size: 14px;
+      cursor: pointer; padding: 2px 4px; border-radius: 4px; line-height: 1;
+      transition: color .12s;
+    }
+    .hist-close:hover { color: var(--nt); }
+    .hist-new-btn {
+      margin: 8px 10px 4px; padding: 7px 12px; flex-shrink: 0;
+      background: rgba(0,201,255,.08); border: 1px solid rgba(0,201,255,.2);
+      border-radius: 7px; color: var(--na); font-size: 11px;
+      cursor: pointer; text-align: left; width: calc(100% - 20px);
+      font-family: "Tahoma", sans-serif; transition: background .15s;
+    }
+    .hist-new-btn:hover { background: rgba(0,201,255,.18); }
+    .hist-list {
+      flex: 1; overflow-y: auto; padding: 4px 8px 8px;
+    }
+    .hist-list::-webkit-scrollbar { width: 3px; }
+    .hist-list::-webkit-scrollbar-thumb { background: var(--nb); border-radius: 2px; }
+    .hist-empty {
+      color: var(--nm); font-size: 11px; text-align: center;
+      padding: 28px 16px; line-height: 1.6;
+    }
+    .hist-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 6px 8px 10px; border-radius: 7px; margin-bottom: 3px;
+      cursor: pointer; border: 1px solid transparent;
+      transition: background .12s, border-color .12s;
+    }
+    .hist-item:hover  { background: var(--nd); border-color: var(--nb); }
+    .hist-item.active { background: rgba(0,201,255,.08); border-color: rgba(0,201,255,.3); }
+    .hist-item-body   { flex: 1; min-width: 0; }
+    .hist-item-title  {
+      color: var(--nt); font-size: 11px; font-weight: bold; line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .hist-item-meta   { color: var(--nm); font-size: 10px; margin-top: 2px; }
+    .hist-del {
+      background: none; border: none; color: var(--nm);
+      cursor: pointer; font-size: 12px; padding: 4px 5px;
+      border-radius: 4px; flex-shrink: 0;
+      opacity: 0; transition: opacity .15s, color .15s;
+    }
+    .hist-item:hover .hist-del { opacity: 1; }
+    .hist-del:hover { color: #ff5555; }
+
     /* ═══════════════════════════
        TASKBAR
     ═══════════════════════════ */
@@ -1975,6 +2053,8 @@ function setLanguage(lang) {
   const lbl = document.getElementById('lang-btn-label');
   if (lbl) lbl.textContent = _langCode(lang);
   /* Reset conversation and show a new welcome */
+  _histSave();           /* persist the current session before clearing */
+  _histSessionId = null;
   conversationHistory = [];
   const chat = getEl('chat');
   if (chat) { chat.innerHTML = ''; showWelcome(); }
@@ -3587,6 +3667,22 @@ const wm = {
     const wrap = document.createElement('div');
     wrap.className = 'chat-wrap';
     wrap.innerHTML = `
+      <div class="hist-panel" id="hist-panel">
+        <div class="hist-head">
+          <span class="hist-head-title">💬 Chat History</span>
+          <button class="hist-close" onclick="_histToggle()">✕</button>
+        </div>
+        <button class="hist-new-btn" onclick="_histNewChat()">✏️ &nbsp;New Chat</button>
+        <div class="hist-list" id="hist-list"></div>
+      </div>
+      <div class="chat-toolbar">
+        <button class="ct-btn" id="hist-btn" onclick="_histToggle()" title="Chat history">
+          <span class="ct-icon">📋</span> History
+        </button>
+        <button class="ct-btn" onclick="_histNewChat()" title="New chat">
+          <span class="ct-icon">✏️</span> New Chat
+        </button>
+      </div>
       <div class="chat-msgs" id="chat"></div>
       <button id="scroll-arrow" onclick="clickScrollArrow()" title="Scroll to bottom">⬇️</button>
       <div class="chat-input">
@@ -4098,6 +4194,8 @@ function removeWelcome() { const el=getEl('welcome'); if(el) el.remove(); }
 
 function resetAll() {
   /* ── 1. Reset NanoNerd chat ── */
+  _histSave();           /* persist any in-progress session */
+  _histSessionId = null; /* start fresh — next message creates a new session */
   conversationHistory = [];
   isStreaming  = false;
   autoScroll   = true;
@@ -4199,6 +4297,7 @@ async function sendMsg(text) {
       }
     }
     conversationHistory.push({role:'assistant',content:fullResponse});
+    _histSave();   /* auto-save session after every complete exchange */
   } catch(err) {
     removeTyping(); addMsg('assistant','Something went wrong. Please try again.');
   } finally {
@@ -4777,6 +4876,153 @@ function _onLayoutChange() {
 }
 window.addEventListener('orientationchange', _onLayoutChange);
 window.addEventListener('resize',            _onLayoutChange);
+
+/* ══════════════════════════════════════════
+   CHAT HISTORY
+══════════════════════════════════════════ */
+
+const _HIST_KEY = 'xp-chat-history';
+const _HIST_MAX = 50;
+let _histSessionId  = null;
+let _histPanelOpen  = false;
+
+/* ── Storage helpers ── */
+function _histGet() {
+  try { return JSON.parse(localStorage.getItem(_HIST_KEY) || '[]'); } catch { return []; }
+}
+function _histSet(s) { localStorage.setItem(_HIST_KEY, JSON.stringify(s)); }
+
+/* ── Auto-save the current conversation ── */
+function _histSave() {
+  if (!conversationHistory.length) return;
+  const sessions = _histGet();
+  const now = Date.now();
+  if (_histSessionId) {
+    const idx = sessions.findIndex(s => s.id === _histSessionId);
+    if (idx >= 0) {
+      sessions[idx].messages = [...conversationHistory];
+      sessions[idx].ts = now;
+      _histSet(sessions);
+      return;
+    }
+  }
+  /* New session — title = first user message (max 60 chars) */
+  _histSessionId = Math.random().toString(36).slice(2, 10);
+  const firstUser = conversationHistory.find(m => m.role === 'user');
+  const title = (firstUser?.content || 'New chat').slice(0, 60);
+  sessions.unshift({ id: _histSessionId, title, ts: now, messages: [...conversationHistory] });
+  if (sessions.length > _HIST_MAX) sessions.length = _HIST_MAX;
+  _histSet(sessions);
+}
+
+/* ── Load a saved session ── */
+function _histLoad(id) {
+  _histSave();    /* persist current session first */
+  const session = _histGet().find(s => s.id === id);
+  if (!session) return;
+  _histSessionId      = id;
+  conversationHistory = [...session.messages];
+  isStreaming = false; autoScroll = true;
+  const chat = getEl('chat');
+  if (chat) {
+    chat.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    conversationHistory.forEach(m => {
+      const msg = document.createElement('div');
+      msg.className = `msg ${m.role}`;
+      const av  = document.createElement('div'); av.className = 'av';
+      av.textContent = m.role === 'user' ? 'You' : '🧠';
+      const bbl = document.createElement('div'); bbl.className = 'bbl';
+      bbl.innerHTML = fmt(m.content);
+      msg.appendChild(av); msg.appendChild(bbl);
+      frag.appendChild(msg);
+    });
+    chat.appendChild(frag);
+    chat.scrollTop = chat.scrollHeight;
+  }
+  const sendEl = getEl('sendBtn');
+  if (sendEl) sendEl.disabled = false;
+  const inputEl = getEl('userInput');
+  if (inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
+  updateScrollArrow();
+  if (_histPanelOpen) _histToggle();   /* close panel after loading */
+}
+
+/* ── Delete a session ── */
+function _histDelete(e, id) {
+  e.stopPropagation();
+  _histSet(_histGet().filter(s => s.id !== id));
+  if (_histSessionId === id) {
+    _histSessionId = null;
+    conversationHistory = [];
+    const chat = getEl('chat');
+    if (chat) { chat.innerHTML = ''; showWelcome(); }
+  }
+  _histRender();
+}
+
+/* ── Start a brand-new chat (saves current first) ── */
+function _histNewChat() {
+  _histSave();
+  _histSessionId = null;
+  conversationHistory = [];
+  isStreaming = false; autoScroll = true;
+  const chat = getEl('chat');
+  if (chat) { chat.innerHTML = ''; showWelcome(); }
+  const sendEl = getEl('sendBtn');
+  if (sendEl) sendEl.disabled = false;
+  const inputEl = getEl('userInput');
+  if (inputEl) { inputEl.value = ''; inputEl.style.height = 'auto'; }
+  if (_histPanelOpen) _histToggle();
+}
+
+/* ── Toggle history panel open / closed ── */
+function _histToggle() {
+  _histPanelOpen = !_histPanelOpen;
+  const panel = getEl('hist-panel');
+  const btn   = getEl('hist-btn');
+  if (!panel) return;
+  panel.classList.toggle('open', _histPanelOpen);
+  if (btn) btn.classList.toggle('active', _histPanelOpen);
+  if (_histPanelOpen) _histRender();
+}
+
+/* ── Friendly date label ── */
+function _histFmtDate(ts) {
+  const d   = new Date(ts);
+  const now = new Date();
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  if (now - d < 172800000) return 'Yesterday';
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+/* ── HTML-escape helper ── */
+function _hEsc(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Render the session list ── */
+function _histRender() {
+  const list = getEl('hist-list');
+  if (!list) return;
+  const sessions = _histGet();
+  if (!sessions.length) {
+    list.innerHTML = '<div class="hist-empty">No saved chats yet.<br>Start chatting and your history will appear here.</div>';
+    return;
+  }
+  list.innerHTML = sessions.map(s => {
+    const title = _hEsc(s.title.length > 55 ? s.title.slice(0, 55) + '…' : s.title);
+    const msgs  = Math.ceil(s.messages.length / 2);
+    const cls   = s.id === _histSessionId ? ' active' : '';
+    return `<div class="hist-item${cls}" onclick="_histLoad('${s.id}')">
+      <div class="hist-item-body">
+        <div class="hist-item-title">${title}</div>
+        <div class="hist-item-meta">${_histFmtDate(s.ts)} · ${msgs} message${msgs !== 1 ? 's' : ''}</div>
+      </div>
+      <button class="hist-del" onclick="_histDelete(event,'${s.id}')" title="Delete chat">🗑</button>
+    </div>`;
+  }).join('');
+}
 
 /* ══════════════════════════════════════════
    THEME COLOR PICKER
