@@ -642,9 +642,10 @@ app.get('/api/nano-stream', (req, res) => {
   /* Send immediate status so the browser knows the connection is live */
   res.write(`data: ${JSON.stringify({ type: 'status', connected: _nanoWsAlive })}\n\n`);
 
-  /* Replay the last N confirmed hashes so the matrix starts immediately */
+  /* Replay the last N confirmed hashes — marked replay:true so the client
+     can distinguish historical entries from live post-load confirmations  */
   for (const entry of _replayBuffer) {
-    try { res.write(`data: ${JSON.stringify(entry)}\n\n`); } catch {}
+    try { res.write(`data: ${JSON.stringify({ ...entry, replay: true })}\n\n`); } catch {}
   }
 
   _sseClients.add(res);

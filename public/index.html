@@ -2069,36 +2069,28 @@ function _applyMatrixWallpaper() {
  */
 function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   const ctx = canvas.getContext('2d');
-  /* Column width is wide enough to display one hex character clearly */
-  const CW  = 13;   /* column width px  */
-  const CH  = 15;   /* row height px    */
+  const CW    = 13;    /* column width px   */
+  const CH    = 15;    /* row height px     */
+  const BLOCK = 16;    /* columns per TX slot — each confirmed TX occupies exactly
+                          BLOCK adjacent columns, all dropping the same hash in
+                          parallel with slight stagger for visual depth           */
 
-  let cols, drops, colData;
-  let running      = true;
-  let wsConnected  = false;
-  let txCount      = 0;
+  /* ── Layout ── */
+  let cols, numBlocks;
+  let drops, colSpeeds, colDone;   /* per-column arrays                 */
+  let blockData;                    /* per-block state (one TX per block) */
 
-  /* ── Live TX queue ────────────────────────────────────────────────────────
-     New confirmed Nano TX arrive here via SSE (fresh=true) or HTTP seed
-     (fresh=false).  Each hash enters ONCE and is dequeued ONCE.           */
-  let txQueue         = [];
-  const _queuedHashes = new Set();   /* prevents same hash entering queue twice  */
+  /* ── State ── */
+  let running       = true;
+  let wsConnected   = false;
+  let txCount       = 0;            /* LIVE-only TX count (replay skipped) */
+  let txQueue       = [];           /* FIFO of live confirmed TX hashes    */
+  const _queuedHashes = new Set();
 
-  /* ── Completed-hash recycling buffer ─────────────────────────────────────
-     After a column finishes displaying a hash, that hash is added here.
-     When txQueue is empty, assignCol picks from this list — but ONLY if
-     the hash is not currently visible in any other column (uniqueness at
-     any moment is always guaranteed).  This keeps rain continuous between
-     live confirmations without ever showing the same hash in two columns
-     at the same time.                                                       */
-  let _recentHashes   = [];
-  const _RECENT_MAX   = 120;
-
-  /* Timestamp of the last frame that had at least one active column.
-     Initialized to now so the overlay doesn't flash on immediate load.    */
+  /* Delay overlay until genuinely no TX for >3 s */
   let _lastActiveTime = Date.now();
 
-  /* ── Canvas sizing ── */
+  /* ── Canvas + block layout ── */
   function resize() {
     const w = canvas.offsetWidth  || canvas.width  || 400;
     const h = canvas.offsetHeight || canvas.height || 300;
@@ -2106,100 +2098,64 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       canvas.width  = w;
       canvas.height = h;
     }
-    const nc = Math.max(1, Math.floor(w / CW));
-    if (nc !== cols) {
-      cols    = nc;
-      drops   = new Array(cols).fill(0);
-      /* All columns start DORMANT — they wait for a real TX hash */
-      colData = Array.from({ length: cols }, () => ({
-        hash: null, account: null, speed: 0, done: true, fresh: false,
+    const nc = Math.max(BLOCK, Math.floor(w / CW));
+    const nb = Math.max(1, Math.floor(nc / BLOCK));
+    if (nc !== cols || nb !== numBlocks) {
+      cols      = nc;
+      numBlocks = nb;
+      drops     = new Array(cols).fill(0);
+      colSpeeds = new Array(cols).fill(0.5);
+      colDone   = new Array(cols).fill(true);
+      /* Each block waits dormant for a live TX hash */
+      blockData = Array.from({ length: numBlocks }, () => ({
+        hash: null, account: null, done: true, colsDone: 0,
       }));
     }
   }
 
-  /* ── Enqueue a real confirmed TX (deduped) ── */
-  function _enqueue(hash, account, fresh) {
+  /* ── Enqueue a live confirmed TX (deduped) ── */
+  function _enqueue(hash, account) {
     if (_queuedHashes.has(hash)) return;
     _queuedHashes.add(hash);
-    txQueue.push({ hash, account: account || null, fresh: !!fresh });
-    if (txQueue.length > 2000) {
+    txQueue.push({ hash, account: account || null });
+    if (txQueue.length > 500) {
       const dropped = txQueue.shift();
       _queuedHashes.delete(dropped.hash);
     }
   }
 
-  /* ── Record a completed hash so it can recycle (one-at-a-time guarantee) ── */
-  function _markFinished(i) {
-    const h = colData[i].hash;
-    if (!h) return;
-    if (!_recentHashes.includes(h)) {
-      _recentHashes.push(h);
-      if (_recentHashes.length > _RECENT_MAX) _recentHashes.shift();
+  /* ── Assign the next live TX to block b ────────────────────────────────────
+     All BLOCK columns in the block are initialised simultaneously.
+     Within the block each column gets a random speed and a spread-out start
+     position so they finish at different times (no wave-reset).             */
+  function assignBlock(b) {
+    if (txQueue.length === 0) { blockData[b].done = true; return; }
+    const tx = txQueue.shift();
+    _queuedHashes.delete(tx.hash);
+
+    blockData[b].hash     = tx.hash;
+    blockData[b].account  = tx.account;
+    blockData[b].done     = false;
+    blockData[b].colsDone = 0;
+
+    const rows     = Math.ceil(canvas.height / CH) + 2;
+    const hashLen  = tx.hash.length;
+    const numCols  = Math.min(BLOCK, cols - b * BLOCK);
+    for (let j = 0; j < numCols; j++) {
+      const col       = b * BLOCK + j;
+      colSpeeds[col]  = 0.35 + Math.random() * 0.75;
+      /* Spread start positions across the full travel range so columns
+         finish at completely different times — creates seamless flow      */
+      drops[col]      = Math.floor(Math.random() * (rows + hashLen)) - hashLen;
+      colDone[col]    = false;
     }
   }
 
-  /* ── Assign the next TX to column i ────────────────────────────────────────
-     Priority 1: live txQueue (brand-new confirmed TX, white head)
-     Priority 2: _recentHashes recycle — ONLY if that hash is not currently
-                 visible in any other column (uniqueness at any moment)         */
-  function assignCol(i) {
-    let hash, account, fresh;
-
-    if (txQueue.length > 0) {
-      /* Dequeue a new real TX — shown exactly once as a live drop */
-      const tx = txQueue.shift();
-      _queuedHashes.delete(tx.hash);
-      hash    = tx.hash;
-      account = tx.account;
-      fresh   = tx.fresh;
-    } else if (_recentHashes.length > 0) {
-      /* Recycle: find a hash NOT currently visible in any active column */
-      const active = new Set(
-        colData.filter((cd, idx) => idx !== i && !cd.done && cd.hash).map(cd => cd.hash)
-      );
-      const pool = _recentHashes.filter(h => !active.has(h));
-      if (pool.length === 0) { colData[i].done = true; return; }
-      hash    = pool[Math.floor(Math.random() * pool.length)];
-      account = null;
-      fresh   = false;   /* dimmer green head — visually distinct from live TX */
-    } else {
-      colData[i].done = true;   /* truly empty — column waits */
-      return;
-    }
-
-    colData[i].hash    = hash;
-    colData[i].account = account;
-    colData[i].fresh   = fresh;
-    colData[i].speed   = 0.35 + Math.random() * 0.75;
-    colData[i].done    = false;
-    /* Stagger start positions so columns finish at very different times.
-       Range: head already mid-screen (positive) down to fully-above-screen.
-       This prevents the wave-reset pattern where all columns stop together. */
-    const rows = canvas.height > 0 ? Math.ceil(canvas.height / CH) + 2 : 30;
-    drops[i] = Math.floor(Math.random() * (rows + hash.length)) - hash.length;
-  }
-
-  /* Wake dormant columns — one per queued TX for fresh ones,
-     then fill remaining with recycled hashes to keep rain flowing */
-  function _tryWakeCol() {
-    if (!colData) return;
-    /* First pass: give each live TX its own column */
-    while (txQueue.length > 0) {
-      const idx = colData.findIndex(cd => cd.done);
-      if (idx === -1) break;
-      assignCol(idx);
-    }
-    /* Second pass: if rain would otherwise stop, top up with recycled hashes */
-    if (_recentHashes.length > 0) {
-      const target = Math.min(Math.ceil(cols * 0.4), _recentHashes.length);
-      let active   = colData.filter(cd => !cd.done).length;
-      while (active < target) {
-        const idx = colData.findIndex(cd => cd.done);
-        if (idx === -1) break;
-        assignCol(idx);
-        if (colData[idx].done) break;   /* recycler ran out of available hashes */
-        active++;
-      }
+  /* Assign queued TX to every empty block slot */
+  function _tryWakeBlock() {
+    if (!blockData) return;
+    for (let b = 0; b < numBlocks && txQueue.length > 0; b++) {
+      if (blockData[b].done) assignBlock(b);
     }
   }
 
@@ -2216,70 +2172,46 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
     evtSrc.onopen = () => {
       wsConnected = true;
-      onStatus?.({ connected: true, txCount, poolSize: txQueue.length });
+      onStatus?.({ connected: true, txCount });
     };
 
     evtSrc.onmessage = evt => {
-      if (!evt.data || evt.data.startsWith(':')) return; /* SSE keep-alive ping */
+      if (!evt.data || evt.data.startsWith(':')) return;
       try {
         const msg = JSON.parse(evt.data);
         if (msg.type === 'status') {
           wsConnected = !!msg.connected;
-          onStatus?.({ connected: wsConnected, txCount, poolSize: txQueue.length });
+          onStatus?.({ connected: wsConnected, txCount });
           return;
         }
         if (msg.type === 'tx' && msg.hash) {
+          /* Skip SSE replay entries — only count TX confirmed after app load */
+          if (msg.replay) return;
           txCount++;
-          /* Each hash is a REAL unique confirmed Nano block — enqueue once */
-          _enqueue(msg.hash, msg.account, true /* fresh = brand-new */);
-          onStatus?.({ connected: true, txCount, poolSize: txQueue.length });
-          /* Wake dormant columns with the new TX */
-          _tryWakeCol();
+          _enqueue(msg.hash, msg.account);
+          onStatus?.({ connected: true, txCount });
+          _tryWakeBlock();
         }
       } catch {}
     };
 
     evtSrc.onerror = () => {
       wsConnected = false;
-      onStatus?.({ connected: false, txCount, poolSize: txQueue.length });
-      /* EventSource retries automatically — nothing extra needed */
+      onStatus?.({ connected: false, txCount });
     };
   }
   connectSSE();
 
-  /* ── HTTP fallback — seeds the queue with recent real TX hashes ────────
-     Fires immediately on open and every 10 s when the queue runs dry.
-     Hashes are marked fresh=false (recent history, not brand-new) so they
-     get a green head — visually distinct from live confirmations.         */
-  let _fallbackTimer = null;
-  async function _fetchHashes() {
-    try {
-      const r = await fetch('/api/nano-hashes');
-      if (!r.ok) return;
-      const hashes = await r.json();
-      if (!Array.isArray(hashes) || hashes.length === 0) return;
-      let added = 0;
-      for (const h of hashes) {
-        if (typeof h !== 'string') continue;
-        _enqueue(h, null, false /* recent history — not brand-new */);
-        added++;
-      }
-      wsConnected = true;
-      onStatus?.({ connected: true, txCount, poolSize: txQueue.length });
-      _tryWakeCol();
-      console.log(`[matrix] HTTP seed: queued ${added} hashes, queue=${txQueue.length}`);
-    } catch (err) {
-      console.warn('[matrix] _fetchHashes failed:', err);
-    }
-  }
-  /* Immediate seed so rain starts before first live SSE TX arrives */
-  _fetchHashes();
-  _fallbackTimer = setInterval(() => {
-    if (txQueue.length < 5) _fetchHashes();
-  }, 10000);
+  /* No HTTP seeding — the matrix shows ONLY live TX confirmed after load */
 
-  /* ── Hover / click (app-window mode only) ── */
+  /* ── Hover / click — uses blockData since each block owns one TX ── */
   let hoveredCol = -1;
+  function _getBlock(colIdx) {
+    if (!blockData || colIdx < 0 || colIdx >= cols) return null;
+    const b = Math.floor(colIdx / BLOCK);
+    if (b >= numBlocks) return null;
+    return blockData[b];
+  }
   function getTooltip() {
     let t = document.getElementById('matrix-tooltip');
     if (!t) {
@@ -2292,15 +2224,14 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   }
   function onMove(e) {
     const rect = canvas.getBoundingClientRect();
-    hoveredCol   = Math.floor((e.clientX - rect.left) / CW);
-    const cd     = colData[Math.min(hoveredCol, cols - 1)];
-    const tip    = getTooltip();
-    if (cd?.hash && !cd.done) {
-      /* Show the full TX hash and a working link to the block explorer */
+    hoveredCol = Math.floor((e.clientX - rect.left) / CW);
+    const bd   = _getBlock(hoveredCol);
+    const tip  = getTooltip();
+    if (bd?.hash && !bd.done) {
       tip.innerHTML =
         `<span style="color:#0f0;font-weight:bold;font-size:10px">TX HASH</span><br>`
-        + `<span style="font-family:'Courier New',monospace;font-size:9px;word-break:break-all">${cd.hash}</span>`
-        + (cd.account ? `<br><span style="color:#0a0;font-size:9px">ACC: ${cd.account.slice(0,16)}…</span>` : '')
+        + `<span style="font-family:'Courier New',monospace;font-size:9px;word-break:break-all">${bd.hash}</span>`
+        + (bd.account ? `<br><span style="color:#0a0;font-size:9px">ACC: ${bd.account.slice(0,16)}…</span>` : '')
         + `<br><span style="color:#0f0;font-size:9px">↗ Click to view on blocklattice.io</span>`;
       tip.style.cssText += `;display:block;`
         + `left:${Math.min(e.clientX + 14, window.innerWidth - 340)}px;`
@@ -2317,10 +2248,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   function onClick(e) {
     const rect = canvas.getBoundingClientRect();
     const ci   = Math.min(Math.floor((e.clientX - rect.left) / CW), cols - 1);
-    const cd   = colData[ci];
-    /* Open the confirmed block on blocklattice.io */
-    if (cd?.hash && !cd.done) {
-      window.open(`https://blocklattice.io/block/${cd.hash}`, '_blank');
+    const bd   = _getBlock(ci);
+    if (bd?.hash && !bd.done) {
+      window.open(`https://blocklattice.io/block/${bd.hash}`, '_blank');
     }
   }
   if (!wallpaperMode) {
@@ -2329,42 +2259,31 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     canvas.addEventListener('click',      onClick);
   }
 
-  /* ── Canvas loading animation (shown only while waiting for first hash) ── */
+  /* ── Waiting overlay (shown only when all blocks are dormant for >3 s) ── */
   const _SPIN = ['◐','◓','◑','◒'];
 
   function _drawStatus() {
-    const anyActive = colData && colData.some(cd => !cd.done && cd.hash);
-    if (anyActive) return; /* rain is running — no overlay needed */
-
-    const w   = canvas.width, h = canvas.height;
-    const now = Date.now();
-    const spin = _SPIN[Math.floor(now / 200) % 4];
+    const w    = canvas.width;
+    const h    = canvas.height;
+    const spin = _SPIN[Math.floor(Date.now() / 200) % 4];
 
     ctx.save();
     ctx.textAlign = 'center';
-
-    /* Dim background so text is legible */
     ctx.fillStyle = 'rgba(0,0,0,0.55)';
     ctx.fillRect(0, 0, w, h);
 
-    /* Spinner + status line */
     ctx.fillStyle = '#00cc44';
     ctx.font = 'bold 13px "Courier New",monospace';
-    const line1 = wsConnected
-      ? `${spin} Waiting for next confirmed Nano block…`
-      : `${spin} Connecting to blocklattice.io…`;
-    ctx.fillText(line1, w / 2, h / 2 - 10);
-
-    /* Queue / TX count line */
-    if (txCount > 0 || txQueue.length > 0) {
+    ctx.fillText(
+      wsConnected ? `${spin} Waiting for next confirmed Nano block…`
+                  : `${spin} Connecting to blocklattice.io…`,
+      w / 2, h / 2 - 10,
+    );
+    if (txCount > 0) {
       ctx.fillStyle = '#007722';
       ctx.font = '11px "Courier New",monospace';
-      ctx.fillText(
-        `${txCount} TX received · ${txQueue.length} queued`,
-        w / 2, h / 2 + 10,
-      );
+      ctx.fillText(`${txCount} live TX confirmed so far`, w / 2, h / 2 + 10);
     }
-
     ctx.restore();
   }
 
@@ -2376,7 +2295,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     const dt   = Math.min((ts - lastTs) / 16.67, 3);
     lastTs = ts;
 
-    /* Fade overlay — gives the iconic trailing-green-fade effect */
+    /* Black fade — creates the iconic trailing-green-fade effect */
     ctx.fillStyle = 'rgba(0,0,0,0.06)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -2384,22 +2303,33 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     const rows = Math.ceil(canvas.height / CH) + 2;
 
     let anyActive = false;
-    for (let i = 0; i < cols; i++) {
-      const cd = colData[i];
-      /* Dormant columns: skip — their last characters fade out naturally */
-      if (cd.done || !cd.hash) continue;
-      anyActive = true;
 
-      const { hash, speed } = cd;
-      const isHov = !wallpaperMode && i === hoveredCol;
-      drops[i] += speed * dt;
+    /* Iterate every column; resolve its block to get the shared TX hash */
+    for (let i = 0; i < cols; i++) {
+      if (colDone[i]) continue;            /* this column already finished */
+
+      const b  = Math.floor(i / BLOCK);
+      if (b >= numBlocks) continue;
+      const bd = blockData[b];
+      if (bd.done || !bd.hash) continue;   /* block not active yet          */
+
+      anyActive = true;
+      const hash  = bd.hash;
+      const isHov = !wallpaperMode && Math.floor(hoveredCol / BLOCK) === b;
+
+      drops[i] += colSpeeds[i] * dt;
       const head = Math.floor(drops[i]);
 
-      /* Column finished — record hash for recycling, then immediately reassign */
+      /* Column finished — count it; when all in block done, assign next TX */
       if (head - hash.length > rows) {
-        _markFinished(i);
-        assignCol(i);
-        if (!colData[i].done) anyActive = true;
+        colDone[i] = true;
+        bd.colsDone++;
+        const numCols = Math.min(BLOCK, cols - b * BLOCK);
+        if (bd.colsDone >= numCols) {
+          /* Entire block done → immediately pull next TX from queue */
+          assignBlock(b);
+          if (!blockData[b].done) anyActive = true;
+        }
         continue;
       }
       if (head < 0) continue;
@@ -2413,33 +2343,25 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
         const isHead = (j === hash.length - 1);
         if (isHead) {
-          /* Fresh real TX → white head; recycled → soft green head */
-          ctx.fillStyle = isHov ? '#ffffff'
-                        : cd.fresh ? '#ffffff' : '#88ff88';
+          /* Live TX → bright white head */
+          ctx.fillStyle = isHov ? '#ffffff' : '#ffffff';
         } else {
-          /* Body: gradient from dim (top) to vivid (near head) */
+          /* Body: dark-to-vivid green gradient top-to-bottom */
           const ratio = j / (hash.length - 1);
-          const g     = Math.floor(20 + ratio * (cd.fresh ? 215 : 175));
+          const g     = Math.floor(20 + ratio * 215);
           ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
         }
-        /* Each character drawn IS a hex digit from the real confirmed TX hash */
         ctx.fillText(hash[j], x, y + CH - 2);
       }
     }
 
-    /* Track last time any column was active, for overlay delay */
     if (anyActive) _lastActiveTime = Date.now();
 
-    /* Self-heal: if rain could run but all columns are dormant, wake them */
-    if (colData && !anyActive && (txQueue.length > 0 || _recentHashes.length > 0)) {
-      _tryWakeCol();
-    }
+    /* Self-heal: if queue has TX but all blocks dormant, assign them now */
+    if (blockData && !anyActive && txQueue.length > 0) _tryWakeBlock();
 
-    /* Show status overlay only after >3 s of genuinely empty canvas
-       (prevents the "flashing refresh" between TX bursts)              */
-    if (!anyActive && Date.now() - _lastActiveTime > 3000) {
-      _drawStatus();
-    }
+    /* Overlay: only after 3 s with genuinely nothing on screen */
+    if (!anyActive && Date.now() - _lastActiveTime > 3000) _drawStatus();
 
     frame = requestAnimationFrame(draw);
   }
@@ -2453,7 +2375,6 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     stop() {
       running = false;
       cancelAnimationFrame(frame);
-      clearInterval(_fallbackTimer);
       try { evtSrc?.close(); } catch {}
       if (!wallpaperMode) {
         canvas.removeEventListener('mousemove',  onMove);
@@ -2467,7 +2388,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     isConnected: () => wsConnected,
     getTxCount:  () => txCount,
     getPoolSize: () => txQueue.length,
-    reconnect() { connectSSE(); _fetchHashes(); },
+    reconnect()  { connectSSE(); },
     _cleanupResize: null,
   };
 }
@@ -4269,10 +4190,10 @@ const wm = {
       canvas.height = wrap.offsetHeight || 300;
       controller = _startMatrixRain(canvas, {
         wallpaperMode: false,
-        onStatus({ connected, txCount, poolSize = 0 }) {
+        onStatus({ connected, txCount }) {
           const dot   = connected ? '🟢' : '🟡';
           const label = connected ? 'LIVE' : 'Reconnecting…';
-          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} TX · pool:${poolSize}`;
+          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} live TX`;
         },
       });
       ro = new ResizeObserver(() => {
@@ -4287,7 +4208,7 @@ const wm = {
       if (!controller) return;
       const dot   = controller.isConnected() ? '🟢' : '🟡';
       const label = controller.isConnected() ? 'LIVE' : 'Reconnecting…';
-      statusEl.textContent = `${dot} ${label} · ${controller.getTxCount().toLocaleString()} TX · pool:${controller.getPoolSize()}`;
+      statusEl.textContent = `${dot} ${label} · ${controller.getTxCount().toLocaleString()} live TX`;
     }, 2000);
     /* Expose cleanup so close() can stop WebSocket + rAF */
     shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); clearInterval(_statusTick); };
