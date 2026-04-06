@@ -950,6 +950,17 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
       display: flex; align-items: center; gap: 4px;
     }
+    /* mv title-bar button group */
+    .mv-btns { display: flex; gap: 2px; flex-shrink: 0; }
+    .mv-min {
+      background: linear-gradient(180deg,#4a9be0 0%,#2070c0 100%);
+      border: 1px solid #1050a0; border-radius: 3px;
+      color: #fff; font-size: 13px; font-weight: bold;
+      width: 16px; height: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; line-height: 1; padding-bottom: 2px;
+    }
+    .mv-min:hover { filter: brightness(1.25); }
     .mv-close {
       background: #c0392b; border: 1px solid #922b21; border-radius: 3px;
       color: #fff; font-size: 10px; width: 16px; height: 16px;
@@ -4183,13 +4194,16 @@ function openMediaViewer(idx) {
     top:${60 + (_mvZ % 10) * 18}px;
   `;
 
-  const ext = file.name.split('.').pop().toUpperCase();
   const icon = file.type === 'image' ? '🖼️' : '▶️';
+  const label = file.name.length > 20 ? file.name.slice(0, 18) + '…' : file.name;
 
   win.innerHTML = `
     <div class="mv-titlebar">
       <div class="mv-title">${icon} ${file.name}</div>
-      <button class="mv-close" title="Close">✕</button>
+      <div class="mv-btns">
+        <button class="mv-min"   title="Minimize">&#8211;</button>
+        <button class="mv-close" title="Close">✕</button>
+      </div>
     </div>
     <div class="mv-body">
       ${file.type === 'image'
@@ -4199,11 +4213,39 @@ function openMediaViewer(idx) {
     </div>
   `;
 
-  /* Close button */
+  /* ── Taskbar button ── */
+  const tbApps = document.getElementById('tb-apps');
+  const tbBtn  = document.createElement('button');
+  tbBtn.className = 'tb-btn active';
+  tbBtn.innerHTML = `<span>${icon}</span> <span>${label}</span>`;
+  let _minimized = false;
+
+  const _mvShow = () => {
+    win.style.display = 'flex';
+    tbBtn.classList.add('active');
+    tbBtn.classList.remove('minimized');
+    _mvZ++; win.style.zIndex = _mvZ;
+    _minimized = false;
+  };
+  const _mvHide = () => {
+    win.style.display = 'none';
+    tbBtn.classList.remove('active');
+    tbBtn.classList.add('minimized');
+    _minimized = true;
+  };
+
+  tbBtn.onclick = () => { _minimized ? _mvShow() : _mvHide(); };
+  tbApps.appendChild(tbBtn);
+
+  /* ── Minimize button ── */
+  win.querySelector('.mv-min').onclick = () => _mvHide();
+
+  /* ── Close button ── */
   win.querySelector('.mv-close').onclick = () => {
     const v = win.querySelector('video');
     if (v) { v.pause(); v.src = ''; }
     _mvCleanup();
+    tbBtn.remove();
     win.remove();
   };
 
@@ -4222,8 +4264,8 @@ function openMediaViewer(idx) {
   };
   const onDragUp = () => { dragging = false; };
 
-  titlebar.addEventListener('mousedown',  e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); onDragDown(e.clientX, e.clientY); } });
-  titlebar.addEventListener('touchstart', e => { if (!e.target.closest('.mv-close')) { e.preventDefault(); const t = e.touches[0]; onDragDown(t.clientX, t.clientY); } }, {passive:false});
+  titlebar.addEventListener('mousedown',  e => { if (!e.target.closest('.mv-btns')) { e.preventDefault(); onDragDown(e.clientX, e.clientY); } });
+  titlebar.addEventListener('touchstart', e => { if (!e.target.closest('.mv-btns')) { e.preventDefault(); const t = e.touches[0]; onDragDown(t.clientX, t.clientY); } }, {passive:false});
 
   /* ── Resize ── */
   const MV_MIN_W = 200, MV_MIN_H = 140;
