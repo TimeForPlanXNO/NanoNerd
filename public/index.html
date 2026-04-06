@@ -1486,6 +1486,12 @@
       .lang-search { padding: 8px 10px; font-size: 13px; }
     }
 
+    /* ── Portrait: icon layer always above windows (shadow can't hide icons) ── */
+    @media (max-width: 1023px) and (orientation: portrait) {
+      .icon-col { z-index: 600; } /* above taskbar(500) is intentional — icons on portrait sit
+                                     outside the taskbar area, pointer-events:none passes clicks through */
+    }
+
     /* ── Mobile portrait taskbar: hide "start" label, shrink buttons ── */
     @media (max-width: 767px) and (orientation: portrait) {
       .start-text          { display: none; }
@@ -4440,12 +4446,15 @@ function _applyIconLayout() {
 /* ── Safe-area constants for mobile portrait icon rows ── */
 const _M_ICON_H  = 76; /* icon bounding height (38px img + label + padding) */
 const _M_MARGIN  = 6;  /* edge margin                                        */
-/* Recycle Bin label text ends at ≈76 px from screen top
-   (6px top margin + 5px padding + 38px image + 3px gap + 24px two-line label).
-   Windows start exactly there: icon-col (z-index 490) renders above them so
-   the icon is never visually covered even if the window frame extends under it. */
-const _M_SAFE_T  = _M_ICON_H + _M_MARGIN - 6; /* 76 px — label-flush        */
-const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;      /* 82 px — above bottom icons */
+/* Portrait window safe areas.
+   _M_SAFE_T: how far the window starts from the top — leaves room for the
+              top-row icons (height 76 px + 6 px margin = 82 px) plus 6 px air.
+   _M_SAFE_B: how far above the bottom the window ends — leaves room for the
+              bottom-row icons (height 76 px + 6 px margin = 82 px) plus 8 px air.
+   The icon-col CSS raises to z-index 600 in portrait so the window shadow
+   never visually covers the icons even at the exact boundary. */
+const _M_SAFE_T  = _M_ICON_H + _M_MARGIN + 6; /* 88 px — 6 px air above top icons  */
+const _M_SAFE_B  = _M_ICON_H + _M_MARGIN + 8; /* 90 px — 8 px air below window      */
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
@@ -4519,11 +4528,11 @@ function _applyWindowsLayout() {
 function _initIconDrag() {
   const desktop = document.querySelector('.desktop');
 
-  /* Set initial positions via layout engine.
-     Run twice: immediately (best-effort) and after the next paint so the flex
-     container has its final offsetHeight before computing the bottom-row y. */
+  /* Run the layout immediately (best-effort) and again after 80 ms.
+     The second call fires after browsers finish their initial flex/grid
+     measurement pass, guaranteeing dh > 0 and the bottom-row y is correct. */
   _applyIconLayout();
-  requestAnimationFrame(_applyIconLayout);
+  setTimeout(_applyIconLayout, 80);
 
   /* Collect icon metadata for drag handlers */
   const _iconMeta = [];
