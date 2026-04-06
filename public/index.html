@@ -4368,22 +4368,31 @@ function _applyIconLayout() {
   const saved  = mobile ? _loadIconPosP() : _loadIconPos();
   const IW = 72, IH = 76, M = 6, G = 8; /* icon w/h, margin, gap */
 
-  let col = 0; /* column counter for mobile bottom strip (default layout) */
+  /* Bottom row: nano-org, nano-gpt, nano-hub, media-folder (4 icons) centred */
+  const BOTTOM_N  = 4;
+  const rowW      = BOTTOM_N * IW + (BOTTOM_N - 1) * G;          /* 312 px */
+  const rowStartX = Math.max(M, Math.round((dw - rowW) / 2));    /* centred, min 6 px */
+  let col = 0; /* column counter for bottom-row icons */
+
   document.querySelectorAll('.desk-icon').forEach(el => {
     const id  = el.dataset.iconId;
     const def = _ICON_DEFAULTS[id] || { x: M, y: M };
     if (mobile) {
       if (id === 'recycle-bin') {
-        /* Recycle Bin always anchored upper-right in portrait */
+        /* Recycle Bin: always anchored upper-right */
         el.style.left = Math.max(0, dw - IW - M) + 'px';
         el.style.top  = M + 'px';
       } else if (saved[id]) {
-        /* Restore previously dragged portrait position */
+        /* Respect any position the user dragged this icon to */
         el.style.left = saved[id].x + 'px';
         el.style.top  = saved[id].y + 'px';
+      } else if (id === 'nanonerd') {
+        /* NanoNerd: top-left (top row, companion to Recycle Bin) */
+        el.style.left = M + 'px';
+        el.style.top  = M + 'px';
       } else {
-        /* Default: bottom row */
-        el.style.left = (M + col * (IW + G)) + 'px';
+        /* Bottom row (centred): nano-org, nano-gpt, nano-hub, media-folder */
+        el.style.left = (rowStartX + col * (IW + G)) + 'px';
         el.style.top  = Math.max(0, dh - IH - M) + 'px';
         col++;
       }
