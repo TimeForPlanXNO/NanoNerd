@@ -1029,6 +1029,41 @@
       position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; z-index: 0; pointer-events: none; display: block;
     }
+    #wp-matrix-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none; display: block;
+    }
+
+    /* ── MATRIX VISUALISER APP ── */
+    .matrix-shell {
+      background: #000; display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden;
+      font-family: 'Courier New', monospace;
+    }
+    .matrix-toolbar {
+      background: #000d00; border-bottom: 1px solid #004000;
+      padding: 3px 8px; display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .matrix-status-text {
+      color: #00cc00; font-size: 10px; flex: 1; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; font-family: 'Courier New', monospace;
+    }
+    .matrix-canvas-wrap { flex: 1; position: relative; overflow: hidden; background: #000; }
+    .matrix-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair;
+    }
+    .matrix-wp-btn {
+      background: #001800; border: 1px solid #005500; border-radius: 2px;
+      color: #00bb00; font-size: 10px; font-family: 'Courier New', monospace;
+      padding: 0 7px; cursor: pointer; white-space: nowrap; height: 18px;
+      display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+    }
+    .matrix-wp-btn:hover { background: #003300; color: #00ff00; border-color: #008800; }
+    .matrix-tooltip {
+      position: fixed; background: rgba(0,8,0,.97); border: 1px solid #00cc00;
+      color: #00ff00; font-size: 10px; font-family: 'Courier New', monospace;
+      padding: 5px 8px; border-radius: 2px; z-index: 999999; pointer-events: none;
+      max-width: 310px; word-break: break-all; line-height: 1.6;
+    }
 
     /* XP yellow folder icon (used on desktop + titlebar) */
     .xp-folder-icon { display:inline-flex; align-items:flex-end; line-height:1; }
@@ -1697,6 +1732,10 @@
         </div>
         <span class="label">Nano videos<br>and memes</span>
       </div>
+      <div class="desk-icon" data-icon-id="matrix-viz" data-app="matrix_viz">
+        <img class="di-img" src="/matrix.gif" alt="Live XNO Matrix" style="border-radius:3px;"/>
+        <span class="label">Live XNO<br>Matrix</span>
+      </div>
       <div class="desk-icon" data-icon-id="recycle-bin" data-app="recycle_bin">
         <img class="di-img" src="/bitcoin.png" alt="Recycle Bin" />
         <span class="label">Recycle Bin</span>
@@ -1882,6 +1921,12 @@ const APPS = {
     tbIconHtml: '<span class="xp-folder-icon"><svg width="14" height="12" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></span>',
     type: 'folder',
   },
+  matrix_viz: {
+    id: 'matrix_viz', title: 'Live XNO Matrix',
+    iconHtml: '<img src="/matrix.gif" style="width:14px;height:14px;border-radius:2px;object-fit:cover;">',
+    tbIconHtml: '<img src="/matrix.gif" style="width:14px;height:14px;border-radius:2px;object-fit:cover;">',
+    type: 'matrix',
+  },
   recycle_bin: {
     id: 'recycle_bin', title: 'Recycle Bin',
     iconHtml: '<img src="/bitcoin.png" style="width:14px;height:14px;border-radius:50%;object-fit:cover;">',
@@ -1927,6 +1972,8 @@ function _applyWallpaper(src, type = 'image') {
   /* Remove existing video wallpaper if any */
   const existingVid = document.getElementById('wp-video-bg');
   if (existingVid) existingVid.remove();
+  /* Remove existing matrix wallpaper if any */
+  _stopMatrixWallpaper();
   if (type === 'video') {
     /* Clear static background so video shows through */
     shell.style.backgroundImage = 'none';
@@ -1951,6 +1998,240 @@ function _applyWallpaper(src, type = 'image') {
   document.querySelectorAll('.wp-thumb').forEach(el => {
     el.classList.toggle('active', el.dataset.src === src);
   });
+}
+
+/* ══════════════════════════════════════════
+   LIVE XNO MATRIX RAIN — shared engine
+══════════════════════════════════════════ */
+let _matrixWpController = null;  /* active wallpaper instance, if any */
+
+function _stopMatrixWallpaper() {
+  const el = document.getElementById('wp-matrix-canvas');
+  if (el) el.remove();
+  if (_matrixWpController) {
+    _matrixWpController.stop();
+    _matrixWpController._cleanupResize?.();
+    _matrixWpController = null;
+  }
+}
+
+function _applyMatrixWallpaper() {
+  const desktop = document.querySelector('.desktop');
+  const shell   = document.getElementById('app-shell');
+  /* Clear any other wallpaper type */
+  const vid = document.getElementById('wp-video-bg');
+  if (vid) vid.remove();
+  _stopMatrixWallpaper();
+  shell.style.backgroundImage = 'none';
+  _currentWallpaper     = '_matrix_';
+  _currentWallpaperType = 'matrix';
+  localStorage.setItem('xp-wallpaper',      '_matrix_');
+  localStorage.setItem('xp-wallpaper-type', 'matrix');
+  /* Create wallpaper canvas */
+  const canvas = document.createElement('canvas');
+  canvas.id = 'wp-matrix-canvas';
+  canvas.width  = desktop.offsetWidth  || window.innerWidth;
+  canvas.height = desktop.offsetHeight || window.innerHeight;
+  desktop.insertBefore(canvas, desktop.firstChild);
+  _matrixWpController = _startMatrixRain(canvas, { wallpaperMode: true });
+  /* Keep canvas sized to desktop */
+  function onResize() {
+    canvas.width  = desktop.offsetWidth;
+    canvas.height = desktop.offsetHeight;
+    _matrixWpController?.resize();
+  }
+  window.addEventListener('resize', onResize);
+  _matrixWpController._cleanupResize = () => window.removeEventListener('resize', onResize);
+  showCopyToast('🟩 Matrix wallpaper active');
+}
+
+/**
+ * _startMatrixRain(canvas, opts)
+ * Runs a Nano-tx digital rain on the given canvas.
+ * opts.wallpaperMode  — if true, disables click/hover interactions
+ * opts.onStatus({connected, txCount}) — called on WebSocket state change
+ * Returns { stop(), resize(), isConnected(), getTxCount() }
+ */
+function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
+  const ctx  = canvas.getContext('2d');
+  const CW   = 10;  /* column width px  */
+  const CH   = 14;  /* row height px    */
+  const HEX  = '0123456789ABCDEF';
+
+  let cols, drops, colData;
+  let running = true;
+  let wsConnected = false;
+  let txCount = 0;
+  let txQueue = [];
+
+  function resize() {
+    const w = canvas.offsetWidth  || canvas.width  || 400;
+    const h = canvas.offsetHeight || canvas.height || 300;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+    const nc = Math.max(1, Math.floor(w / CW));
+    if (nc !== cols) {
+      cols    = nc;
+      drops   = Array.from({ length: cols }, () => -Math.floor(Math.random() * 40));
+      colData = Array.from({ length: cols }, () => ({
+        hash:    null, account: null,
+        speed: 0.25 + Math.random() * 0.85,
+      }));
+    }
+  }
+
+  /* ── WebSocket (round-robin across public Nano nodes) ── */
+  const WS_NODES = [
+    'wss://node.somenano.com/websocket',
+    'wss://nanoslo.0x.no/websocket',
+    'wss://ws.mynano.ninja',
+  ];
+  let wsNodeIdx = 0, ws = null, wsRetry = null;
+  function connectWS() {
+    const url = WS_NODES[wsNodeIdx % WS_NODES.length];
+    try {
+      ws = new WebSocket(url);
+      ws.onopen = () => {
+        wsConnected = true;
+        ws.send(JSON.stringify({ action: 'subscribe', topic: 'confirmation',
+          options: { confirmation_type: 'active_quorum' } }));
+        onStatus?.({ connected: true, txCount });
+      };
+      ws.onmessage = evt => {
+        try {
+          const msg = JSON.parse(evt.data);
+          if (msg.topic === 'confirmation' && msg.message?.hash) {
+            txCount++;
+            txQueue.push({ hash: msg.message.hash.toUpperCase(), account: msg.message.account || null });
+            if (txQueue.length > 2000) txQueue.shift();
+            onStatus?.({ connected: true, txCount });
+          }
+        } catch {}
+      };
+      ws.onerror = () => { wsConnected = false; };
+      ws.onclose = () => {
+        wsConnected = false;
+        onStatus?.({ connected: false, txCount });
+        if (running) {
+          wsNodeIdx++;          /* rotate to next node on failure */
+          wsRetry = setTimeout(connectWS, 4000);
+        }
+      };
+    } catch { if (running) { wsNodeIdx++; wsRetry = setTimeout(connectWS, 4000); } }
+  }
+  connectWS();
+
+  function simHash() {
+    return { hash: Array.from({ length: 64 }, () => HEX[Math.random() * 16 | 0]).join(''), account: null };
+  }
+  function assignCol(i) {
+    const tx = txQueue.length > 0 ? txQueue.shift() : simHash();
+    colData[i].hash    = tx.hash;
+    colData[i].account = tx.account;
+    colData[i].speed   = 0.2 + Math.random() * 0.9;
+    drops[i] = -Math.floor(Math.random() * 30);
+  }
+
+  /* ── Hover / click ── */
+  let hoveredCol = -1;
+  function getTooltip() {
+    let t = document.getElementById('matrix-tooltip');
+    if (!t) { t = document.createElement('div'); t.id = 'matrix-tooltip'; t.className = 'matrix-tooltip'; document.body.appendChild(t); }
+    return t;
+  }
+  function onMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    hoveredCol = Math.floor((e.clientX - rect.left) / CW);
+    const col  = colData[Math.min(hoveredCol, cols - 1)];
+    const tip  = getTooltip();
+    if (col?.hash) {
+      tip.innerHTML = `<span style="color:#0f0;font-weight:bold">TX&nbsp;</span>${col.hash}`
+        + (col.account ? `<br><span style="color:#0f0;font-weight:bold">ACC</span> ${col.account}` : '')
+        + `<br><span style="color:#0a0;font-size:9px">Click to open on nanexplorer.com</span>`;
+      tip.style.cssText += `;display:block;left:${Math.min(e.clientX + 12, window.innerWidth - 320)}px;top:${Math.max(e.clientY - 70, 4)}px`;
+    }
+  }
+  function onLeave() { hoveredCol = -1; const t = document.getElementById('matrix-tooltip'); if (t) t.style.display = 'none'; }
+  function onClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const ci   = Math.min(Math.floor((e.clientX - rect.left) / CW), cols - 1);
+    if (colData[ci]?.hash) window.open(`https://nanexplorer.com/nano/block/${colData[ci].hash}`, '_blank');
+  }
+  if (!wallpaperMode) {
+    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mouseleave', onLeave);
+    canvas.addEventListener('click', onClick);
+  }
+
+  /* ── Draw loop ── */
+  let frame;
+  let lastTs = 0;
+  function draw(ts) {
+    if (!running) return;
+    const dt = Math.min((ts - lastTs) / 16.67, 3);
+    lastTs = ts;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = `bold ${CH - 1}px 'Courier New',monospace`;
+    const rows = Math.ceil(canvas.height / CH) + 2;
+
+    for (let i = 0; i < cols; i++) {
+      if (!colData[i]?.hash) assignCol(i);
+      const { hash, speed } = colData[i];
+      const isHov = !wallpaperMode && i === hoveredCol;
+      drops[i] += speed * dt;
+      const head = Math.floor(drops[i]);
+      /* Reset when the full hash has scrolled off */
+      if (head - hash.length > rows) { assignCol(i); continue; }
+      if (head < 0) continue;
+
+      const x = i * CW;
+      for (let j = 0; j < hash.length; j++) {
+        const row = head - hash.length + j + 1;
+        if (row < 0 || row >= rows) continue;
+        const y = row * CH;
+        if (y > canvas.height) continue;
+        const isHead = j === hash.length - 1;
+        if (isHead) {
+          ctx.fillStyle = isHov ? '#ffffff' : '#b8ffb8';
+        } else {
+          const ratio = j / (hash.length - 1);
+          const g     = Math.floor(22 + ratio * 168);
+          ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
+        }
+        ctx.fillText(hash[j], x, y + CH - 2);
+      }
+    }
+    frame = requestAnimationFrame(draw);
+  }
+  resize();
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  frame = requestAnimationFrame(draw);
+
+  return {
+    stop() {
+      running = false;
+      cancelAnimationFrame(frame);
+      clearTimeout(wsRetry);
+      ws?.close();
+      if (!wallpaperMode) {
+        canvas.removeEventListener('mousemove', onMove);
+        canvas.removeEventListener('mouseleave', onLeave);
+        canvas.removeEventListener('click', onClick);
+      }
+      const tip = document.getElementById('matrix-tooltip');
+      if (tip) tip.remove();
+    },
+    resize() { resize(); },
+    isConnected: () => wsConnected,
+    getTxCount:  () => txCount,
+    _cleanupResize: null, /* set externally by wallpaper caller */
+  };
 }
 
 function _buildWpGrid() {
@@ -2239,6 +2520,8 @@ const wm = {
 
   close(id) {
     const { win } = this.els[id];
+    /* Stop matrix rain if this is the matrix app */
+    if (win._matrixStop) { win._matrixStop(); win._matrixStop = null; }
     this._runAnim(win, 'anim-close', () => {
       win.style.display = 'none';
       win.classList.remove('maximized');
@@ -2431,6 +2714,7 @@ const wm = {
     if (app.type === 'chat')            bodyEl = this._buildChat();
     else if (app.type === 'folder')     bodyEl = this._buildFolder();
     else if (app.type === 'recycle_bin') bodyEl = this._buildRecycleBin();
+    else if (app.type === 'matrix')     bodyEl = this._buildMatrix();
     else                                bodyEl = this._buildBrowser(app);
     content.appendChild(bodyEl);
 
@@ -2451,6 +2735,7 @@ const wm = {
 
     win.appendChild(tb);
     win.appendChild(content);
+    if (bodyEl._matrixStop) win._matrixStop = bodyEl._matrixStop;
     area.appendChild(win);
     this.els[id].win = win;
 
@@ -3705,6 +3990,61 @@ const wm = {
     return shell;
   },
 
+  _buildMatrix() {
+    const shell = document.createElement('div');
+    shell.className = 'matrix-shell';
+
+    /* Toolbar */
+    const toolbar = document.createElement('div');
+    toolbar.className = 'matrix-toolbar';
+    const statusEl = document.createElement('span');
+    statusEl.className = 'matrix-status-text';
+    statusEl.textContent = '⬛ Connecting to Nano network…';
+    const wpBtn = document.createElement('button');
+    wpBtn.className = 'matrix-wp-btn';
+    wpBtn.title = 'Set Matrix rain as desktop wallpaper';
+    wpBtn.innerHTML = '🖼️ Wallpaper';
+    wpBtn.onclick = () => _applyMatrixWallpaper();
+    toolbar.appendChild(statusEl);
+    toolbar.appendChild(wpBtn);
+
+    /* Canvas wrapper */
+    const wrap = document.createElement('div');
+    wrap.className = 'matrix-canvas-wrap';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'matrix-canvas';
+    canvas.title = 'Click any column to explore that transaction on nanexplorer.com';
+    wrap.appendChild(canvas);
+
+    shell.appendChild(toolbar);
+    shell.appendChild(wrap);
+
+    /* Start rain after layout so offsetWidth/Height are valid */
+    let controller = null;
+    let ro = null;
+    requestAnimationFrame(() => {
+      canvas.width  = wrap.offsetWidth  || 400;
+      canvas.height = wrap.offsetHeight || 300;
+      controller = _startMatrixRain(canvas, {
+        wallpaperMode: false,
+        onStatus({ connected, txCount }) {
+          const dot = connected ? '🟢' : '🟡';
+          const label = connected ? 'LIVE' : 'Reconnecting…';
+          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} TX seen · Click column to explore`;
+        },
+      });
+      ro = new ResizeObserver(() => {
+        canvas.width  = wrap.offsetWidth;
+        canvas.height = wrap.offsetHeight;
+        controller?.resize();
+      });
+      ro.observe(wrap);
+    });
+    /* Expose cleanup so close() can stop WebSocket + rAF */
+    shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); };
+    return shell;
+  },
+
   _buildFolder() {
     const shell = document.createElement('div');
     shell.className = 'folder-shell';
@@ -4131,7 +4471,7 @@ function toggleStatsPopup() {
   btn.classList.toggle('active', statsOpen);
   if (statsOpen) {
     fetchAndRenderStats();
-    statsTimer = setInterval(fetchAndRenderStats, 5000);
+    statsTimer = setInterval(fetchAndRenderStats, 2000);
   } else {
     clearInterval(statsTimer);
     statsTimer = null;
@@ -4719,6 +5059,7 @@ const _ICON_DEFAULTS = { /* desktop col: x, y  |  anchor:'bottom-right' = dynami
      y: 330 is off-screen on phone landscape (~340 px desktop height) so we
      use a per-mode fallback checked in _applyIconLayout. */
   'media-folder' : { x: 6, y: 330, mobileLandscape: { x: 86, y: 6 } },
+  'matrix-viz'   : { x: 6, y: 410, mobileLandscape: { x: 86, y: 86 } },
   'recycle-bin'  : { anchor: 'bottom-right', margin: 6 },
 };
 
@@ -5324,7 +5665,12 @@ document.addEventListener('click', function(e) {
 (function() {
   const saved     = localStorage.getItem('xp-wallpaper');
   const savedType = localStorage.getItem('xp-wallpaper-type') || 'image';
-  if (saved) _applyWallpaper(saved, savedType);
+  if (savedType === 'matrix') {
+    /* Matrix wallpaper needs the DOM fully laid out first */
+    requestAnimationFrame(() => _applyMatrixWallpaper());
+  } else if (saved) {
+    _applyWallpaper(saved, savedType);
+  }
 })();
 </script>
 </body>

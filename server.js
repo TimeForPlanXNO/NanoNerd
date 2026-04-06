@@ -190,8 +190,8 @@ Object.entries(PROXY_SITES).forEach(([key, site]) => {
 });
 
 /* ── Nano Live Stats (background poller) ── */
-let _nanoStats = { tps: null, cemented: 0, blockCount: 0, priceUsd: 0, change24h: 0, marketCap: 0, volume24h: 0, lastUpdated: 0 };
-let _prevCemented = null, _prevCementedTime = null, _lastPriceUpdate = 0;
+let _nanoStats = { tps: null, cemented: 0, blockCount: 0, priceUsd: 0, change24h: 0, marketCap: 0, volume24h: 0, lastUpdated: 0, lastFinality: null, lastFinalityAt: 0 };
+let _prevCemented = null, _prevCementedTime = null, _lastPriceUpdate = 0, _lastNewBlockTime = 0;
 
 function postJson(hostname, path, body) {
   return new Promise((resolve, reject) => {
@@ -238,9 +238,12 @@ async function updateNanoStats() {
       const dt = (now - _prevCementedTime) / 1000;
       /* Only update TPS and finality when a new block was actually confirmed */
       if (dt > 0 && newBlocks > 0) {
-        _nanoStats.tps           = newBlocks / dt;
-        _nanoStats.lastFinality  = dt / newBlocks;   /* seconds per block */
+        _nanoStats.tps            = newBlocks / dt;
+        _nanoStats.lastFinality   = dt / newBlocks;  /* seconds per block */
         _nanoStats.lastFinalityAt = now;
+        _lastNewBlockTime         = now;
+      } else if (_lastNewBlockTime > 0 && (now - _lastNewBlockTime) > 5000) {
+        _nanoStats.tps = 0;                          /* no new blocks for 5 s → show 0 */
       }
     }
     _prevCemented = cemented;

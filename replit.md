@@ -34,6 +34,17 @@ Starts the server on port 5000.
 | nano.org | Browser panel | Full site replica |
 | NanoGPT | Browser panel | Full site replica with real gem logo |
 | Nano Hub | Browser panel | 12-category ecosystem directory, all data real |
+| Nano Videos & Memes | Folder | Media browser with wallpaper support (image/video) |
+| Live XNO Matrix | Matrix canvas | Real-time digital rain of Nano tx hashes; click to explore on nanexplorer.com; "Wallpaper" button fills the desktop |
+
+## Live XNO Matrix
+- `_startMatrixRain(canvas, opts)` — shared engine used by both the app window and the wallpaper
+- Connects to public Nano WebSocket nodes (round-robin: `node.somenano.com/websocket` → `nanoslo.0x.no/websocket` → `ws.mynano.ninja`) with auto-reconnect
+- Falls back to simulated hex hashes when all nodes are unreachable
+- Hover tooltip shows TX hash + account; click opens `https://nanexplorer.com/nano/block/{hash}`
+- Wallpaper mode: `_applyMatrixWallpaper()` inserts `<canvas id="wp-matrix-canvas">` as desktop background (no pointer events)
+- `_stopMatrixWallpaper()` cleans up canvas + rAF + resize listener
+- `_applyWallpaper()` calls `_stopMatrixWallpaper()` before applying any image/video wallpaper
 
 ## Nano Hub Navigation
 - `hubNav(page)` global function toggles `.nh-visible` on `.nhub-view` divs
