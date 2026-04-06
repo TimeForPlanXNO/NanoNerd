@@ -2222,20 +2222,26 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   const CW  = 13;   /* column width  px */
   const CH  = 15;   /* row height    px */
 
-  /* ── Layout ── */
-  let cols;
-  let drops, colSpeeds, colDone;
+  /* ── Per-column state arrays ────────────────────────────────────────────────
+     Each column is completely independent.  A TX arriving from the blockchain
+     is assigned to exactly ONE idle column.  Multiple columns can be active
+     simultaneously — each showing a DIFFERENT confirmed TX hash.
+     This is the true Matrix rain model with real Nano TX data.              */
+  let cols      = 0;
+  let colHash   = [];   /* string | null  — null = idle                    */
+  let colAcct   = [];   /* account string | null                           */
+  let colDrop   = [];   /* current row position (float, advances each frame)*/
+  let colSpeed  = [];   /* rows per frame (randomised per TX)              */
 
-  /* ── One-TX-at-a-time state ── */
-  let activeTx  = null;   /* { hash, account } | null — only ONE active at a time */
-  let colsDone  = 0;      /* how many columns have fully scrolled off              */
+  /* Round-robin pointer: next column to try when assigning a new TX */
+  let nextCol = 0;
 
   /* ── App state ── */
   let running     = true;
   let wsConnected = false;
   let txCount     = 0;
-  let txQueue     = [];          /* FIFO — max 10 to stay live, not backlogged */
-  const _seen     = new Set();
+  let txQueue     = [];         /* overflow: if every column is busy       */
+  const _seen     = new Set();  /* dedup: skip duplicate hashes            */
   let _wasActive  = false;
 
   /* ── Canvas resize ── */
@@ -2248,47 +2254,63 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     }
     const nc = Math.max(1, Math.floor(w / CW));
     if (nc !== cols) {
-      cols      = nc;
-      drops     = new Array(cols).fill(0);
-      colSpeeds = new Array(cols).fill(0.8);
-      colDone   = new Array(cols).fill(true);
-      if (activeTx) _initCols();   /* re-cascade for new width */
+      /* Grow or shrink column arrays; preserve existing active columns */
+      colHash  = Array.from({ length: nc }, (_, i) => colHash[i]  ?? null);
+      colAcct  = Array.from({ length: nc }, (_, i) => colAcct[i]  ?? null);
+      colDrop  = Array.from({ length: nc }, (_, i) => colDrop[i]  ?? 0);
+      colSpeed = Array.from({ length: nc }, (_, i) => colSpeed[i] ?? 0.6);
+      cols     = nc;
+      nextCol  = Math.min(nextCol, cols - 1);
     }
   }
 
-  /* ── Cascade: column i starts 1.5 rows later than column i-1 ──────────────
-     This creates a left-to-right wave effect.  At 0.8–1.2 chars/frame the
-     full sweep takes ~2–3 seconds — paced to Nano's live confirmation speed. */
-  function _initCols() {
-    colsDone = 0;
-    for (let i = 0; i < cols; i++) {
-      drops[i]     = -Math.round(i * 1.5);
-      colSpeeds[i] = 0.8 + Math.random() * 0.4;   /* 0.8–1.2 chars/frame */
-      colDone[i]   = false;
+  /* ── Assign one TX to one idle column ──────────────────────────────────────
+     Searches round-robin from nextCol.  Returns true if a free slot was found.
+     Called immediately on TX arrival (direct path) and when draining the queue
+     after a column finishes.                                                */
+  function _tryAssign(hash, account) {
+    for (let attempt = 0; attempt < cols; attempt++) {
+      const c = (nextCol + attempt) % cols;
+      if (colHash[c] === null) {
+        colHash[c]  = hash;
+        colAcct[c]  = account || null;
+        colDrop[c]  = -2;                            /* start 2 rows above top */
+        colSpeed[c] = 0.5 + Math.random() * 0.35;   /* 0.50–0.85 rows/frame  */
+        nextCol     = (c + 1) % cols;
+        return true;
+      }
     }
+    return false;   /* all columns busy */
   }
 
-  /* ── Pull next TX from queue, or go idle ── */
-  function _startNextTx() {
-    if (txQueue.length === 0) { activeTx = null; return; }
-    activeTx = txQueue.shift();
-    _seen.delete(activeTx.hash);
-    _initCols();
-  }
-
-  /* ── Enqueue a live TX (deduped; drop oldest if queue fills) ── */
+  /* ── Enqueue or immediately display a confirmed TX ── */
   function _enqueue(hash, account) {
     if (_seen.has(hash)) return;
     _seen.add(hash);
-    txQueue.push({ hash, account: account || null });
-    /* Cap at 10 — discard oldest to keep the display live, not backlogged */
-    if (txQueue.length > 10) {
-      const dropped = txQueue.shift();
-      _seen.delete(dropped.hash);
+    /* Try direct assignment first — only queue if every column is occupied */
+    if (_tryAssign(hash, account)) {
+      _seen.delete(hash);   /* slot taken; free dedup entry */
+    } else {
+      txQueue.push({ hash, account: account || null });
+      /* Keep queue bounded — drop oldest stale entries */
+      if (txQueue.length > 30) {
+        const dropped = txQueue.shift();
+        _seen.delete(dropped.hash);
+      }
     }
   }
 
-  /* ── SSE relay ── */
+  /* ── Drain the overflow queue into any newly-free columns ── */
+  function _drainQueue() {
+    while (txQueue.length > 0) {
+      const tx = txQueue[0];
+      if (!_tryAssign(tx.hash, tx.account)) break;   /* still all busy */
+      txQueue.shift();
+      _seen.delete(tx.hash);
+    }
+  }
+
+  /* ── SSE relay — live Nano confirmations via server-side proxy ── */
   let evtSrc = null;
   function connectSSE() {
     if (evtSrc) { try { evtSrc.close(); } catch {} }
@@ -2309,15 +2331,13 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
           txCount++;
           _enqueue(msg.hash, msg.account);
           onStatus?.({ connected: true, txCount });
-          /* Start immediately if nothing is currently dropping */
-          if (!activeTx) _startNextTx();
         }
       } catch {}
     };
   }
   connectSSE();
 
-  /* ── Hover / click (entire canvas = one active TX) ── */
+  /* ── Hover / click — identified by which column the cursor is over ── */
   let hoveredCol = -1;
   function getTooltip() {
     let t = document.getElementById('matrix-tooltip');
@@ -2333,11 +2353,13 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     const rect = canvas.getBoundingClientRect();
     hoveredCol  = Math.floor((e.clientX - rect.left) / CW);
     const tip   = getTooltip();
-    if (activeTx && hoveredCol >= 0 && hoveredCol < cols && !colDone[hoveredCol]) {
+    const hash  = (hoveredCol >= 0 && hoveredCol < cols) ? colHash[hoveredCol] : null;
+    if (hash) {
+      const acct = colAcct[hoveredCol];
       tip.innerHTML =
         `<span style="color:#0f0;font-weight:bold;font-size:10px">TX HASH</span><br>`
-        + `<span style="font-family:'Courier New',monospace;font-size:9px;word-break:break-all">${activeTx.hash}</span>`
-        + (activeTx.account ? `<br><span style="color:#0a0;font-size:9px">ACC: ${activeTx.account.slice(0,16)}…</span>` : '')
+        + `<span style="font-family:'Courier New',monospace;font-size:9px;word-break:break-all">${hash}</span>`
+        + (acct ? `<br><span style="color:#0a0;font-size:9px">ACC: ${acct.slice(0,16)}…</span>` : '')
         + `<br><span style="color:#0f0;font-size:9px">↗ Click to view on blocklattice.io</span>`;
       tip.style.cssText += `;display:block;`
         + `left:${Math.min(e.clientX + 14, window.innerWidth - 340)}px;`
@@ -2351,8 +2373,12 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     const t = document.getElementById('matrix-tooltip');
     if (t) t.style.display = 'none';
   }
-  function onClick() {
-    if (activeTx) window.open(`https://blocklattice.io/block/${activeTx.hash}`, '_blank');
+  function onClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    const c    = Math.floor((e.clientX - rect.left) / CW);
+    if (c >= 0 && c < cols && colHash[c]) {
+      window.open(`https://blocklattice.io/block/${colHash[c]}`, '_blank');
+    }
   }
   if (!wallpaperMode) {
     canvas.addEventListener('mousemove',  onMove);
@@ -2383,10 +2409,10 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   let frame, lastTs = 0;
   function draw(ts) {
     if (!running) return;
-    const dt   = Math.min((ts - lastTs) / 16.67, 3);
+    const dt  = Math.min((ts - lastTs) / 16.67, 3);
     lastTs = ts;
 
-    /* Trail fade: 6 % active (green smear), 1 % idle (characters linger) */
+    /* Fade: 6 % when any column is active, 1 % when all are idle */
     ctx.fillStyle = _wasActive ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.01)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -2397,53 +2423,48 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
     let anyActive = false;
 
-    if (activeTx) {
-      const hash = activeTx.hash;
-      for (let i = 0; i < cols; i++) {
-        if (colDone[i]) continue;
-        anyActive = true;
+    for (let i = 0; i < cols; i++) {
+      const hash = colHash[i];
+      if (!hash) continue;       /* idle column — skip */
 
-        drops[i] += colSpeeds[i] * dt;
-        const head = Math.floor(drops[i]);
+      anyActive   = true;
+      colDrop[i] += colSpeed[i] * dt;
+      const head  = Math.floor(colDrop[i]);
 
-        /* Column fully scrolled off — count it; start next TX when all done */
-        if (head - hash.length > rows) {
-          colDone[i] = true;
-          colsDone++;
-          if (colsDone >= cols) _startNextTx();   /* ← sequential handoff */
-          continue;
+      /* Column has fully scrolled off the bottom — free it */
+      if (head - hash.length > rows) {
+        colHash[i] = null;
+        colAcct[i] = null;
+        _drainQueue();             /* immediately fill with next queued TX */
+        continue;
+      }
+      if (head < 0) continue;    /* still above top — nothing to draw yet */
+
+      const isHov = !wallpaperMode && (i === hoveredCol);
+      const x     = i * CW;
+
+      for (let j = 0; j < hash.length; j++) {
+        const row = head - hash.length + j + 1;
+        if (row < 0 || row >= rows) continue;
+        const y = row * CH;
+        if (y > canvas.height) continue;
+
+        if (j === hash.length - 1) {
+          /* Leading-edge character — bright white */
+          ctx.fillStyle = '#ffffff';
+        } else {
+          /* Body gradient: very dark at top → vivid green just before head */
+          const ratio = j / (hash.length - 1);
+          const g     = Math.floor(30 + ratio * 210);
+          ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
         }
-        if (head < 0) continue;
-
-        const isHov = !wallpaperMode && (i === hoveredCol);
-        const x     = i * CW;
-
-        for (let j = 0; j < hash.length; j++) {
-          const row = head - hash.length + j + 1;
-          if (row < 0 || row >= rows) continue;
-          const y = row * CH;
-          if (y > canvas.height) continue;
-
-          if (j === hash.length - 1) {
-            /* Leading edge — bright white */
-            ctx.fillStyle = '#ffffff';
-          } else {
-            /* Gradient: dark green at top → vivid green near head */
-            const ratio = j / (hash.length - 1);
-            const g     = Math.floor(30 + ratio * 210);
-            ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
-          }
-          ctx.fillText(hash[j], x + 1, y + CH - 2);
-        }
+        ctx.fillText(hash[j], x + 1, y + CH - 2);
       }
     }
 
     _wasActive = anyActive;
 
-    /* Self-heal: TX waiting but engine somehow went idle */
-    if (!activeTx && txQueue.length > 0) _startNextTx();
-
-    /* Status overlay only before the first live TX ever */
+    /* Status overlay: only while waiting for the very first live TX */
     if (!anyActive && txCount === 0) _drawStatus();
 
     frame = requestAnimationFrame(draw);
