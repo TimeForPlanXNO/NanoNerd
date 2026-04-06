@@ -1005,6 +1005,30 @@
       font-size: 10px; color: #1a1a1a; text-align: center; max-width: 72px;
       word-break: break-word; line-height: 1.25;
     }
+    .folder-item.selected { background: #c1d7f5; border-color: #316ac5; }
+    .folder-item.selected .folder-item-name { color: #fff; background: #316ac5; border-radius: 2px; padding: 0 2px; }
+    .folder-wp-btn {
+      background: linear-gradient(180deg,#ece9d8 0%,#d4d0c8 100%);
+      border: 1px solid #aca899; border-radius: 3px;
+      padding: 1px 8px; font-size: 11px; color: #222; cursor: pointer;
+      white-space: nowrap; display: flex; align-items: center; gap: 4px;
+      font-family: "Tahoma", sans-serif; flex-shrink: 0; height: 22px;
+    }
+    .folder-wp-btn:hover:not(:disabled) { background: linear-gradient(180deg,#f0eddc 0%,#dedad0 100%); }
+    .folder-wp-btn:active:not(:disabled) { background: linear-gradient(180deg,#d0ccc0 0%,#ccc8b8 100%); }
+    .folder-wp-btn:disabled { opacity: 0.45; cursor: default; }
+    .mv-wp-btn {
+      background: linear-gradient(180deg,#4a9be0 0%,#2070c0 100%);
+      border: 1px solid #1050a0; border-radius: 3px; color: #fff;
+      font-size: 10px; padding: 0 6px; height: 16px; cursor: pointer;
+      white-space: nowrap; display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+      font-family: "Tahoma", sans-serif;
+    }
+    .mv-wp-btn:hover { filter: brightness(1.25); }
+    #wp-video-bg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; z-index: 0; pointer-events: none; display: block;
+    }
 
     /* XP yellow folder icon (used on desktop + titlebar) */
     .xp-folder-icon { display:inline-flex; align-items:flex-end; line-height:1; }
@@ -1892,14 +1916,38 @@ const WALLPAPERS = [
   { name: 'Wind',             src: '/wallpapers/Wind.jpg' },
 ];
 
-let _currentWallpaper = localStorage.getItem('xp-wallpaper') || '/wallpapers/Bliss.webp';
+let _currentWallpaper     = localStorage.getItem('xp-wallpaper')      || '/wallpapers/Bliss.webp';
+let _currentWallpaperType = localStorage.getItem('xp-wallpaper-type') || 'image';
+let _mediaFolderSelectedIdx = null;
 let _wpPickerOpen = false;
 
-function _applyWallpaper(src) {
-  document.getElementById('app-shell').style.backgroundImage = `url('${src}')`;
-  _currentWallpaper = src;
-  localStorage.setItem('xp-wallpaper', src);
-  /* Refresh active state in grid */
+function _applyWallpaper(src, type = 'image') {
+  const shell   = document.getElementById('app-shell');
+  const desktop = document.querySelector('.desktop');
+  /* Remove existing video wallpaper if any */
+  const existingVid = document.getElementById('wp-video-bg');
+  if (existingVid) existingVid.remove();
+  if (type === 'video') {
+    /* Clear static background so video shows through */
+    shell.style.backgroundImage = 'none';
+    const vid = document.createElement('video');
+    vid.id          = 'wp-video-bg';
+    vid.src         = src;
+    vid.autoplay    = true;
+    vid.loop        = true;
+    vid.muted       = true;
+    vid.playsInline = true;
+    /* Insert as first child of .desktop so icon-col / win-area paint above it */
+    desktop.insertBefore(vid, desktop.firstChild);
+    vid.play().catch(() => {});
+  } else {
+    shell.style.backgroundImage = `url('${src}')`;
+  }
+  _currentWallpaper     = src;
+  _currentWallpaperType = type;
+  localStorage.setItem('xp-wallpaper',      src);
+  localStorage.setItem('xp-wallpaper-type', type);
+  /* Refresh active state in static wallpaper grid */
   document.querySelectorAll('.wp-thumb').forEach(el => {
     el.classList.toggle('active', el.dataset.src === src);
   });
@@ -1933,6 +1981,15 @@ function toggleWpPicker(e) {
 function closeWpPicker() {
   document.getElementById('wp-dialog').classList.remove('open');
   _wpPickerOpen = false;
+}
+
+function _setSelectedAsWallpaper() {
+  const idx  = _mediaFolderSelectedIdx;
+  if (idx === null) return;
+  const file = MEDIA_FILES[idx];
+  if (!file) return;
+  _applyWallpaper(file.src, file.type);
+  showCopyToast(`🖼️ Wallpaper: ${file.name}`);
 }
 
 /* Close wallpaper picker on outside click */
@@ -3658,6 +3715,7 @@ const wm = {
       <div class="folder-toolbar">
         <span style="font-size:11px;color:#555;white-space:nowrap;">Address:</span>
         <div class="folder-addr"><svg width="14" height="12" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg>Nano videos and memes</div>
+        <button class="folder-wp-btn" id="folder-wp-btn" title="Set selected as desktop wallpaper" disabled onclick="_setSelectedAsWallpaper()">🖼️ Set as Wallpaper</button>
       </div>
       <div class="folder-body">
         <div class="folder-sidebar">
@@ -3697,7 +3755,15 @@ const wm = {
         const item = document.createElement('div');
         item.className = 'folder-item';
         item.title = file.name;
-        item.onclick = () => openMediaViewer(idx);
+        /* Single click → select; double-click → open viewer */
+        item.onclick = () => {
+          grid.querySelectorAll('.folder-item').forEach(el => el.classList.remove('selected'));
+          item.classList.add('selected');
+          _mediaFolderSelectedIdx = idx;
+          const wpBtn = shell.querySelector('#folder-wp-btn');
+          if (wpBtn) { wpBtn.disabled = false; wpBtn.dataset.idx = idx; }
+        };
+        item.ondblclick = () => openMediaViewer(idx);
         const ext = file.name.split('.').pop().toUpperCase();
         if (file.type === 'image') {
           item.innerHTML = `
@@ -4506,6 +4572,7 @@ function openMediaViewer(idx) {
   win.innerHTML = `
     <div class="mv-titlebar">
       <div class="mv-title">${icon} ${file.name}</div>
+      <button class="mv-wp-btn" title="Set as desktop wallpaper">🖼️ Wallpaper</button>
       <div class="mv-btns">
         <button class="mv-min"   title="Minimize">&#8211;</button>
         <button class="mv-close" title="Close">✕</button>
@@ -4543,6 +4610,12 @@ function openMediaViewer(idx) {
   tbBtn.onclick = () => { _minimized ? _mvShow() : _mvHide(); };
   tbApps.appendChild(tbBtn);
 
+  /* ── Set as Wallpaper button ── */
+  win.querySelector('.mv-wp-btn').onclick = () => {
+    _applyWallpaper(file.src, file.type);
+    showCopyToast(`🖼️ Wallpaper: ${file.name}`);
+  };
+
   /* ── Minimize button ── */
   win.querySelector('.mv-min').onclick = () => _mvHide();
 
@@ -4570,8 +4643,9 @@ function openMediaViewer(idx) {
   };
   const onDragUp = () => { dragging = false; };
 
-  titlebar.addEventListener('mousedown',  e => { if (!e.target.closest('.mv-btns')) { e.preventDefault(); onDragDown(e.clientX, e.clientY); } });
-  titlebar.addEventListener('touchstart', e => { if (!e.target.closest('.mv-btns')) { e.preventDefault(); const t = e.touches[0]; onDragDown(t.clientX, t.clientY); } }, {passive:false});
+  const _mvDragGuard = e => e.target.closest('.mv-btns') || e.target.closest('.mv-wp-btn');
+  titlebar.addEventListener('mousedown',  e => { if (!_mvDragGuard(e)) { e.preventDefault(); onDragDown(e.clientX, e.clientY); } });
+  titlebar.addEventListener('touchstart', e => { if (!_mvDragGuard(e)) { e.preventDefault(); const t = e.touches[0]; onDragDown(t.clientX, t.clientY); } }, {passive:false});
 
   /* ── Resize ── */
   const MV_MIN_W = 200, MV_MIN_H = 140;
@@ -5248,11 +5322,9 @@ document.addEventListener('click', function(e) {
 
 /* Apply saved wallpaper on load */
 (function() {
-  const saved = localStorage.getItem('xp-wallpaper');
-  if (saved) {
-    document.getElementById('app-shell').style.backgroundImage = `url('${saved}')`;
-    _currentWallpaper = saved;
-  }
+  const saved     = localStorage.getItem('xp-wallpaper');
+  const savedType = localStorage.getItem('xp-wallpaper-type') || 'image';
+  if (saved) _applyWallpaper(saved, savedType);
 })();
 </script>
 </body>
