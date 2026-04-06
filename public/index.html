@@ -4834,23 +4834,35 @@ function _cpHslToHex(h, s, l) {
   return '#' + [r,g,b].map(v => Math.round(Math.max(0,Math.min(1,v))*255).toString(16).padStart(2,'0')).join('');
 }
 
-/* Build taskbar + title-bar gradients from one base colour */
+/* Build taskbar + title-bar + button gradients from one base colour */
 function _cpGrad(base) {
   const [h,s,l] = _cpHexToHsl(base);
-  const c = dl => _cpHslToHex(h, Math.min(100, s + Math.abs(dl)*.4), Math.max(3, Math.min(96, l+dl)));
+  /* c(dl)       — shift lightness, auto-boost saturation for darker stops */
+  const c  = dl => _cpHslToHex(h, Math.min(100, s + Math.abs(dl)*.4), Math.max(3, Math.min(96, l+dl)));
+  /* cs(ds, dl)  — independent saturation + lightness deltas */
+  const cs = (ds, dl) => _cpHslToHex(h, Math.max(5, Math.min(100, s+ds)), Math.max(3, Math.min(96, l+dl)));
   return {
-    taskbar:  `linear-gradient(180deg,${c(+9)} 0%,${c(+4)} 4%,${c(+1)} 50%,${c(-6)} 51%,${c(-13)} 100%)`,
-    titlebar: `linear-gradient(180deg,${c(+8)} 0%,${c(+11)} 6%,${c(+2)} 45%,${c(-5)} 50%,${c(-9)} 51%,${c(-12)} 55%,${c(-6)} 100%)`,
-    border:   c(+16),
+    taskbar:     `linear-gradient(180deg,${c(+9)} 0%,${c(+4)} 4%,${c(+1)} 50%,${c(-6)} 51%,${c(-13)} 100%)`,
+    titlebar:    `linear-gradient(180deg,${c(+8)} 0%,${c(+11)} 6%,${c(+2)} 45%,${c(-5)} 50%,${c(-9)} 51%,${c(-12)} 55%,${c(-6)} 100%)`,
+    border:      c(+16),
+    /* min/max window buttons — noticeably lighter than the title bar */
+    minmax:      `linear-gradient(180deg,${cs(-14,+14)} 0%,${cs(-10,+3)} 100%)`,
+    /* taskbar app buttons */
+    tbbtn:       `linear-gradient(180deg,${cs(-7,-6)} 0%,${cs(-8,+1)} 100%)`,
+    tbbtnActv:   `linear-gradient(180deg,${cs(+1,-14)} 0%,${cs(+1,-7)} 100%)`,
+    tbbtnBorder: cs(-2,-20),
   };
 }
 
-/* Apply a colour to taskbar + all window title bars */
+/* Apply a colour to taskbar + title bars + all themed buttons */
 function applyThemeColor(hex, isReset) {
   const g = _cpGrad(hex);
   document.getElementById('theme-style').textContent = [
     `.taskbar { background: ${g.taskbar} !important; border-top-color: ${g.border} !important; }`,
     `.xp-titlebar { background: ${g.titlebar} !important; }`,
+    `.xp-btn.min, .xp-btn.max { background: ${g.minmax} !important; }`,
+    `.tb-btn { background: ${g.tbbtn} !important; border-color: ${g.tbbtnBorder} !important; }`,
+    `.tb-btn.active { background: ${g.tbbtnActv} !important; }`,
   ].join('\n');
   document.getElementById('cp-input').value = hex;
   document.querySelectorAll('.cp-swatch').forEach(sw =>
