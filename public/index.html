@@ -1550,7 +1550,7 @@
     /* ── Mobile portrait taskbar: hide "start" label, shrink buttons ── */
     @media (max-width: 767px) and (orientation: portrait) {
       .start-text          { display: none; }
-      .start-btn           { padding: 0 6px; min-width: 0; }
+      .start-btn           { padding: 0 13px; min-width: 0; }
       .tb-btn              { max-width: 72px; padding: 0 3px; font-size: 9px; }
       .tb-btn span         { font-size: 11px; }
       .tb-clock            { padding: 0 4px; font-size: 9px; }
@@ -2086,6 +2086,13 @@ const wm = {
         win.style.top    = r.t + 'px';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
+      } else if (_isMobileLandscape()) {
+        win.style.width  = (ar2.width - _M_LAND_L) + 'px';
+        win.style.height = ar2.height + 'px';
+        win.style.left   = _M_LAND_L + 'px';
+        win.style.top    = '0';
+        win.style.right  = 'auto';
+        win.style.bottom = 'auto';
       } else {
         const w2 = Math.round(ar2.width * 0.67);
         win.style.width  = w2 + 'px';
@@ -2253,8 +2260,16 @@ const wm = {
       win.style.top    = r.t + 'px';   /* below wallpaper btn + recycle bin */
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
+    } else if (_isMobileLandscape()) {
+      /* Mobile landscape: leave left gap so icon column stays visible */
+      win.style.width  = (ar.width - _M_LAND_L) + 'px';
+      win.style.height = ar.height + 'px';
+      win.style.left   = _M_LAND_L + 'px';
+      win.style.top    = '0';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / landscape: 67% width, full height, horizontally centered */
+      /* Desktop / large tablet: 67% width, full height, horizontally centered */
       const w = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
       win.style.height = ar.height + 'px';
@@ -4561,6 +4576,7 @@ const _M_MARGIN  = 6;  /* edge margin                                        */
    _M_SAFE_B: 2 px air gap above the bottom icon row. */
 const _M_SAFE_T  = 66;                         /* 66 px — ~3% extra height from the top  */
 const _M_SAFE_B  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — 2 px air below bottom icon row */
+const _M_LAND_L  = 84;                         /* 84 px — icon-column safe gap in landscape */
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
@@ -4617,6 +4633,13 @@ function _applyWindowsLayout() {
       win.style.height = r.h + 'px';
       win.style.left   = r.l + 'px';
       win.style.top    = r.t + 'px';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
+    } else if (_isMobileLandscape()) {
+      win.style.width  = (ar.width - _M_LAND_L) + 'px';
+      win.style.height = ar.height + 'px';
+      win.style.left   = _M_LAND_L + 'px';
+      win.style.top    = '0';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
