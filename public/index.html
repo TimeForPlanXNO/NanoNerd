@@ -2055,17 +2055,18 @@ function _applyMatrixWallpaper() {
  * Returns { stop(), resize(), isConnected(), getTxCount() }
  */
 function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
-  const ctx  = canvas.getContext('2d');
-  const CW   = 10;  /* column width px  */
-  const CH   = 14;  /* row height px    */
-  const HEX  = '0123456789ABCDEF';
+  const ctx = canvas.getContext('2d');
+  /* Column width is wide enough to display one hex character clearly */
+  const CW  = 13;   /* column width px  */
+  const CH  = 15;   /* row height px    */
 
   let cols, drops, colData;
-  let running = true;
-  let wsConnected = false;
-  let txCount = 0;
-  let txQueue = [];
+  let running      = true;
+  let wsConnected  = false;
+  let txCount      = 0;
+  let txQueue      = [];   /* only real confirmed TX objects {hash, account} */
 
+  /* ── Canvas sizing ── */
   function resize() {
     const w = canvas.offsetWidth  || canvas.width  || 400;
     const h = canvas.offsetHeight || canvas.height || 300;
@@ -2076,29 +2077,51 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     const nc = Math.max(1, Math.floor(w / CW));
     if (nc !== cols) {
       cols    = nc;
-      drops   = Array.from({ length: cols }, () => -Math.floor(Math.random() * 40));
+      drops   = new Array(cols).fill(0);
+      /* All columns start DORMANT — they wait for a real TX hash */
       colData = Array.from({ length: cols }, () => ({
-        hash:    null, account: null,
-        speed: 0.25 + Math.random() * 0.85,
+        hash: null, account: null, speed: 0, done: true,
       }));
     }
   }
 
-  /* ── WebSocket (round-robin across public Nano nodes) ── */
+  /* ── Assign a real queued TX to column i ── */
+  function assignCol(i) {
+    if (txQueue.length === 0) { colData[i].done = true; return; }
+    const tx         = txQueue.shift();
+    colData[i].hash    = tx.hash;    /* 64-char uppercase hex — the literal TX hash */
+    colData[i].account = tx.account;
+    colData[i].speed   = 0.25 + Math.random() * 0.85;
+    colData[i].done    = false;
+    drops[i] = -Math.floor(Math.random() * 30);
+  }
+
+  /* Wake the next dormant column with the next queued TX (FIFO) */
+  function _tryWakeCol() {
+    if (txQueue.length === 0) return;
+    const i = colData.findIndex(cd => cd.done);
+    if (i !== -1) assignCol(i);
+  }
+
+  /* ── WebSocket — live Nano confirmations (round-robin across public nodes) ── */
   const WS_NODES = [
     'wss://node.somenano.com/websocket',
     'wss://nanoslo.0x.no/websocket',
     'wss://ws.mynano.ninja',
   ];
   let wsNodeIdx = 0, ws = null, wsRetry = null;
+
   function connectWS() {
     const url = WS_NODES[wsNodeIdx % WS_NODES.length];
     try {
       ws = new WebSocket(url);
       ws.onopen = () => {
         wsConnected = true;
-        ws.send(JSON.stringify({ action: 'subscribe', topic: 'confirmation',
-          options: { confirmation_type: 'active_quorum' } }));
+        /* Subscribe to all confirmed (active_quorum) blocks */
+        ws.send(JSON.stringify({
+          action: 'subscribe', topic: 'confirmation',
+          options: { confirmation_type: 'active_quorum' },
+        }));
         onStatus?.({ connected: true, txCount });
       };
       ws.onmessage = evt => {
@@ -2106,9 +2129,15 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
           const msg = JSON.parse(evt.data);
           if (msg.topic === 'confirmation' && msg.message?.hash) {
             txCount++;
-            txQueue.push({ hash: msg.message.hash.toUpperCase(), account: msg.message.account || null });
+            /* Store the REAL confirmed TX hash (uppercase hex, 64 chars) */
+            txQueue.push({
+              hash:    msg.message.hash.toUpperCase(),
+              account: msg.message.account || null,
+            });
             if (txQueue.length > 2000) txQueue.shift();
             onStatus?.({ connected: true, txCount });
+            /* Immediately wake a dormant column if one is available */
+            _tryWakeCol();
           }
         } catch {}
       };
@@ -2116,79 +2145,94 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       ws.onclose = () => {
         wsConnected = false;
         onStatus?.({ connected: false, txCount });
-        if (running) {
-          wsNodeIdx++;          /* rotate to next node on failure */
-          wsRetry = setTimeout(connectWS, 4000);
-        }
+        if (running) { wsNodeIdx++; wsRetry = setTimeout(connectWS, 4000); }
       };
     } catch { if (running) { wsNodeIdx++; wsRetry = setTimeout(connectWS, 4000); } }
   }
   connectWS();
 
-  function simHash() {
-    return { hash: Array.from({ length: 64 }, () => HEX[Math.random() * 16 | 0]).join(''), account: null };
-  }
-  function assignCol(i) {
-    const tx = txQueue.length > 0 ? txQueue.shift() : simHash();
-    colData[i].hash    = tx.hash;
-    colData[i].account = tx.account;
-    colData[i].speed   = 0.2 + Math.random() * 0.9;
-    drops[i] = -Math.floor(Math.random() * 30);
-  }
-
-  /* ── Hover / click ── */
+  /* ── Hover / click (app-window mode only) ── */
   let hoveredCol = -1;
   function getTooltip() {
     let t = document.getElementById('matrix-tooltip');
-    if (!t) { t = document.createElement('div'); t.id = 'matrix-tooltip'; t.className = 'matrix-tooltip'; document.body.appendChild(t); }
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'matrix-tooltip';
+      t.className = 'matrix-tooltip';
+      document.body.appendChild(t);
+    }
     return t;
   }
   function onMove(e) {
     const rect = canvas.getBoundingClientRect();
-    hoveredCol = Math.floor((e.clientX - rect.left) / CW);
-    const col  = colData[Math.min(hoveredCol, cols - 1)];
-    const tip  = getTooltip();
-    if (col?.hash) {
-      tip.innerHTML = `<span style="color:#0f0;font-weight:bold">TX&nbsp;</span>${col.hash}`
-        + (col.account ? `<br><span style="color:#0f0;font-weight:bold">ACC</span> ${col.account}` : '')
-        + `<br><span style="color:#0a0;font-size:9px">Click to open on nanexplorer.com</span>`;
-      tip.style.cssText += `;display:block;left:${Math.min(e.clientX + 12, window.innerWidth - 320)}px;top:${Math.max(e.clientY - 70, 4)}px`;
+    hoveredCol   = Math.floor((e.clientX - rect.left) / CW);
+    const cd     = colData[Math.min(hoveredCol, cols - 1)];
+    const tip    = getTooltip();
+    if (cd?.hash && !cd.done) {
+      /* Show the full TX hash and a working link to the block explorer */
+      tip.innerHTML =
+        `<span style="color:#0f0;font-weight:bold;font-size:10px">TX HASH</span><br>`
+        + `<span style="font-family:'Courier New',monospace;font-size:9px;word-break:break-all">${cd.hash}</span>`
+        + (cd.account ? `<br><span style="color:#0a0;font-size:9px">ACC: ${cd.account.slice(0,16)}…</span>` : '')
+        + `<br><span style="color:#0f0;font-size:9px">↗ Click to view on nanolooker.com</span>`;
+      tip.style.cssText += `;display:block;`
+        + `left:${Math.min(e.clientX + 14, window.innerWidth - 340)}px;`
+        + `top:${Math.max(e.clientY - 80, 4)}px`;
+    } else {
+      tip.style.display = 'none';
     }
   }
-  function onLeave() { hoveredCol = -1; const t = document.getElementById('matrix-tooltip'); if (t) t.style.display = 'none'; }
+  function onLeave() {
+    hoveredCol = -1;
+    const t = document.getElementById('matrix-tooltip');
+    if (t) t.style.display = 'none';
+  }
   function onClick(e) {
     const rect = canvas.getBoundingClientRect();
     const ci   = Math.min(Math.floor((e.clientX - rect.left) / CW), cols - 1);
-    if (colData[ci]?.hash) window.open(`https://nanexplorer.com/nano/block/${colData[ci].hash}`, '_blank');
+    const cd   = colData[ci];
+    /* Open the block on nanolooker.com — the canonical Nano block explorer */
+    if (cd?.hash && !cd.done) {
+      window.open(`https://nanolooker.com/block/${cd.hash}`, '_blank');
+    }
   }
   if (!wallpaperMode) {
-    canvas.addEventListener('mousemove', onMove);
+    canvas.addEventListener('mousemove',  onMove);
     canvas.addEventListener('mouseleave', onLeave);
-    canvas.addEventListener('click', onClick);
+    canvas.addEventListener('click',      onClick);
   }
 
   /* ── Draw loop ── */
-  let frame;
-  let lastTs = 0;
+  let frame, lastTs = 0;
+
   function draw(ts) {
     if (!running) return;
-    const dt = Math.min((ts - lastTs) / 16.67, 3);
+    const dt   = Math.min((ts - lastTs) / 16.67, 3);
     lastTs = ts;
 
-    ctx.fillStyle = 'rgba(0,0,0,0.055)';
+    /* Fade overlay — gives the iconic trailing-green-fade effect */
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = `bold ${CH - 1}px 'Courier New',monospace`;
     const rows = Math.ceil(canvas.height / CH) + 2;
 
     for (let i = 0; i < cols; i++) {
-      if (!colData[i]?.hash) assignCol(i);
-      const { hash, speed } = colData[i];
+      const cd = colData[i];
+      /* Dormant columns: skip — their last characters fade out naturally */
+      if (cd.done || !cd.hash) continue;
+
+      const { hash, speed } = cd;
       const isHov = !wallpaperMode && i === hoveredCol;
       drops[i] += speed * dt;
       const head = Math.floor(drops[i]);
-      /* Reset when the full hash has scrolled off */
-      if (head - hash.length > rows) { assignCol(i); continue; }
+
+      /* Column finished — mark dormant; try to wake it with the next queued TX */
+      if (head - hash.length > rows) {
+        cd.done = true;
+        _tryWakeCol();   /* may immediately reuse this column if queue has items */
+        continue;
+      }
       if (head < 0) continue;
 
       const x = i * CW;
@@ -2197,19 +2241,25 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
         if (row < 0 || row >= rows) continue;
         const y = row * CH;
         if (y > canvas.height) continue;
-        const isHead = j === hash.length - 1;
+
+        const isHead = (j === hash.length - 1);
         if (isHead) {
-          ctx.fillStyle = isHov ? '#ffffff' : '#b8ffb8';
+          /* Bright leading character — bright white/green "head" of the drop */
+          ctx.fillStyle = isHov ? '#ffffff' : '#ccffcc';
         } else {
+          /* Body: gradient from dim green (top) to vivid green (near head) */
           const ratio = j / (hash.length - 1);
-          const g     = Math.floor(22 + ratio * 168);
+          const g     = Math.floor(30 + ratio * 185);
           ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
         }
+        /* Each character drawn IS a hex digit from the real confirmed TX hash */
         ctx.fillText(hash[j], x, y + CH - 2);
       }
     }
+
     frame = requestAnimationFrame(draw);
   }
+
   resize();
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -2222,9 +2272,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       clearTimeout(wsRetry);
       ws?.close();
       if (!wallpaperMode) {
-        canvas.removeEventListener('mousemove', onMove);
+        canvas.removeEventListener('mousemove',  onMove);
         canvas.removeEventListener('mouseleave', onLeave);
-        canvas.removeEventListener('click', onClick);
+        canvas.removeEventListener('click',      onClick);
       }
       const tip = document.getElementById('matrix-tooltip');
       if (tip) tip.remove();
@@ -2232,7 +2282,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     resize() { resize(); },
     isConnected: () => wsConnected,
     getTxCount:  () => txCount,
-    _cleanupResize: null, /* set externally by wallpaper caller */
+    _cleanupResize: null,
   };
 }
 
