@@ -3507,22 +3507,8 @@ const drag = {
   move(cx, cy) {
     if (!this.active) return;
     const { win } = wm.els[this.id];
-    const areaRect  = document.getElementById('win-area').getBoundingClientRect();
-    const shellRect = document.getElementById('app-shell').getBoundingClientRect();
-
-    let newLeft = this.startLeft + (cx - this.startCX);
-    let newTop  = this.startTop  + (cy - this.startCY);
-
-    /* Clamp: keep title bar reachable within app-shell */
-    const minLeft = shellRect.left - areaRect.left;              /* left edge of shell */
-    const maxLeft = shellRect.right - areaRect.left - 50;        /* 50 px grip from right */
-    const maxTop  = areaRect.height - 26;                        /* title bar stays visible */
-
-    newLeft = Math.max(minLeft, Math.min(maxLeft, newLeft));
-    newTop  = Math.max(0,       Math.min(maxTop,  newTop));
-
-    win.style.left = newLeft + 'px';
-    win.style.top  = newTop  + 'px';
+    win.style.left = (this.startLeft + (cx - this.startCX)) + 'px';
+    win.style.top  = (this.startTop  + (cy - this.startCY)) + 'px';
   },
 
   end() {
