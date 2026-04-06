@@ -2087,8 +2087,8 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
   let txQueue       = [];           /* FIFO of live confirmed TX hashes    */
   const _queuedHashes = new Set();
 
-  /* Delay overlay until genuinely no TX for >3 s */
-  let _lastActiveTime = Date.now();
+  /* Track whether previous frame had any active column (for fade rate) */
+  let _wasActive = false;
 
   /* ── Canvas + block layout ── */
   function resize() {
@@ -2138,24 +2138,27 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     blockData[b].done     = false;
     blockData[b].colsDone = 0;
 
-    const rows     = Math.ceil(canvas.height / CH) + 2;
-    const hashLen  = tx.hash.length;
-    const numCols  = Math.min(BLOCK, cols - b * BLOCK);
+    const numCols = Math.min(BLOCK, cols - b * BLOCK);
     for (let j = 0; j < numCols; j++) {
-      const col       = b * BLOCK + j;
-      colSpeeds[col]  = 0.35 + Math.random() * 0.75;
-      /* Spread start positions across the full travel range so columns
-         finish at completely different times — creates seamless flow      */
-      drops[col]      = Math.floor(Math.random() * (rows + hashLen)) - hashLen;
-      colDone[col]    = false;
+      const col      = b * BLOCK + j;
+      /* Slightly varied speeds but all start from the top of the canvas.
+         Cascade: each column lags 2 rows behind the previous so the block
+         "unfolds" left-to-right rather than appearing all at once.         */
+      colSpeeds[col] = 0.4 + Math.random() * 0.4;   /* 0.4–0.8 chars/frame */
+      drops[col]     = -j * 2;                        /* 0, -2, -4, … -30   */
+      colDone[col]   = false;
     }
   }
 
-  /* Assign queued TX to every empty block slot */
+  /* Wake exactly ONE dormant block per call so TX appear sequentially, not
+     all at once.  Each onmessage call invokes this once per confirmed TX.  */
   function _tryWakeBlock() {
     if (!blockData) return;
-    for (let b = 0; b < numBlocks && txQueue.length > 0; b++) {
-      if (blockData[b].done) assignBlock(b);
+    for (let b = 0; b < numBlocks; b++) {
+      if (blockData[b].done && txQueue.length > 0) {
+        assignBlock(b);
+        break;   /* one block at a time — next TX fills the next block      */
+      }
     }
   }
 
@@ -2275,15 +2278,10 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     ctx.fillStyle = '#00cc44';
     ctx.font = 'bold 13px "Courier New",monospace';
     ctx.fillText(
-      wsConnected ? `${spin} Waiting for next confirmed Nano block…`
+      wsConnected ? `${spin} Waiting for first confirmed Nano block…`
                   : `${spin} Connecting to blocklattice.io…`,
-      w / 2, h / 2 - 10,
+      w / 2, h / 2,
     );
-    if (txCount > 0) {
-      ctx.fillStyle = '#007722';
-      ctx.font = '11px "Courier New",monospace';
-      ctx.fillText(`${txCount} live TX confirmed so far`, w / 2, h / 2 + 10);
-    }
     ctx.restore();
   }
 
@@ -2292,26 +2290,30 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
   function draw(ts) {
     if (!running) return;
-    const dt   = Math.min((ts - lastTs) / 16.67, 3);
+    const dt = Math.min((ts - lastTs) / 16.67, 3);
     lastTs = ts;
 
-    /* Black fade — creates the iconic trailing-green-fade effect */
-    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    /* Fade rate: 6 % when rain is active (Matrix trail), 1 % when idle so
+       the last characters linger on-screen rather than snapping to black.  */
+    ctx.fillStyle = _wasActive ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.01)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    /* Force consistent text alignment — prevents symbol/overlap artefacts */
+    ctx.textAlign    = 'left';
+    ctx.textBaseline = 'alphabetic';
     ctx.font = `bold ${CH - 1}px 'Courier New',monospace`;
     const rows = Math.ceil(canvas.height / CH) + 2;
 
     let anyActive = false;
 
-    /* Iterate every column; resolve its block to get the shared TX hash */
+    /* Iterate every column; look up its block's shared TX hash */
     for (let i = 0; i < cols; i++) {
-      if (colDone[i]) continue;            /* this column already finished */
+      if (colDone[i]) continue;
 
       const b  = Math.floor(i / BLOCK);
       if (b >= numBlocks) continue;
       const bd = blockData[b];
-      if (bd.done || !bd.hash) continue;   /* block not active yet          */
+      if (bd.done || !bd.hash) continue;
 
       anyActive = true;
       const hash  = bd.hash;
@@ -2320,13 +2322,12 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       drops[i] += colSpeeds[i] * dt;
       const head = Math.floor(drops[i]);
 
-      /* Column finished — count it; when all in block done, assign next TX */
+      /* Column scrolled off — tally; when all 16 done, pull next TX */
       if (head - hash.length > rows) {
         colDone[i] = true;
         bd.colsDone++;
         const numCols = Math.min(BLOCK, cols - b * BLOCK);
         if (bd.colsDone >= numCols) {
-          /* Entire block done → immediately pull next TX from queue */
           assignBlock(b);
           if (!blockData[b].done) anyActive = true;
         }
@@ -2341,27 +2342,29 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
         const y = row * CH;
         if (y > canvas.height) continue;
 
-        const isHead = (j === hash.length - 1);
-        if (isHead) {
-          /* Live TX → bright white head */
-          ctx.fillStyle = isHov ? '#ffffff' : '#ffffff';
+        if (j === hash.length - 1) {
+          /* Leading head character — always bright white */
+          ctx.fillStyle = '#ffffff';
         } else {
-          /* Body: dark-to-vivid green gradient top-to-bottom */
+          /* Body: dark green (top) → vivid green (just below head) */
           const ratio = j / (hash.length - 1);
-          const g     = Math.floor(20 + ratio * 215);
+          const g = Math.floor(30 + ratio * 210);
           ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
         }
-        ctx.fillText(hash[j], x, y + CH - 2);
+        /* Draw exactly one hex character from the real confirmed TX hash */
+        ctx.fillText(hash[j], x + 1, y + CH - 2);
       }
     }
 
-    if (anyActive) _lastActiveTime = Date.now();
+    _wasActive = anyActive;
 
-    /* Self-heal: if queue has TX but all blocks dormant, assign them now */
-    if (blockData && !anyActive && txQueue.length > 0) _tryWakeBlock();
+    /* Self-heal: queue has TX but all blocks are dormant */
+    if (!anyActive && txQueue.length > 0) _tryWakeBlock();
 
-    /* Overlay: only after 3 s with genuinely nothing on screen */
-    if (!anyActive && Date.now() - _lastActiveTime > 3000) _drawStatus();
+    /* Overlay: ONLY while waiting for the very first live TX.
+       Once any TX has been received, the screen goes dark between blocks —
+       no "loading" flash between confirmations.                            */
+    if (!anyActive && txCount === 0) _drawStatus();
 
     frame = requestAnimationFrame(draw);
   }
