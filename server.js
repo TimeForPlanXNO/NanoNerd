@@ -496,7 +496,21 @@ function _makeWs(url, onOpen, onConfirmation) {
   connect();
 }
 
-/* ── Primary: node.somenano.com — subscribe to ALL confirmations ── */
+/* ── Primary: blocklattice.io — all confirmations (proven, fast feed) ── */
+_makeWs(
+  'wss://www.blocklattice.io/ws',
+  ws => {
+    ws.send(JSON.stringify({
+      action: 'subscribe', topic: 'confirmation',
+      options: { confirmation_type: 'all' },
+    }));
+    _nanoWsAlive = true;
+    _broadcastTx({ type: 'status', connected: true, node: 'blocklattice' });
+  },
+  msg => _relayHash(msg.hash, msg.account),
+);
+
+/* ── Secondary: node.somenano.com — redundant all-confirmations feed ── */
 _makeWs(
   'wss://node.somenano.com/websocket',
   ws => {
@@ -505,7 +519,6 @@ _makeWs(
       options: { confirmation_type: 'all' },
     }));
     _nanoWsAlive = true;
-    _broadcastTx({ type: 'status', connected: true, node: 'somenano' });
   },
   msg => _relayHash(msg.hash, msg.account),
 );
@@ -550,25 +563,25 @@ async function _updateOnlineReps() {
   }
 }
 
-/* ── Pre-fill replay buffer on server start using account_history ── */
-/* Ensures new clients always get hashes immediately, even after restart.    */
+/* ── Pre-fill replay buffer using blocklattice.io/api/large-transactions ── */
+/* Returns up to 2000+ recent confirmed TX hashes — no auth, no rate limit.  */
 async function _prefillReplayBuffer() {
-  if (_rainAccounts.length === 0) return;
-  const accounts = _rainAccounts.slice(0, 5);
   let added = 0;
-  for (const account of accounts) {
-    if (_replayBuffer.length >= REPLAY_MAX) break;
-    try {
-      const data = await postJson('nanoslo.0x.no', '/proxy', {
-        action: 'account_history', account, count: '5',
-      });
-      for (const block of (data.history || [])) {
-        if (block.hash) { _relayHash(block.hash, account); added++; }
-        if (_replayBuffer.length >= REPLAY_MAX) break;
-      }
-    } catch {}
+  try {
+    const res = await fetch('https://blocklattice.io/api/large-transactions');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const txs = await res.json();
+    if (!Array.isArray(txs)) throw new Error('unexpected response');
+    for (const tx of txs) {
+      if (!tx.hash || typeof tx.hash !== 'string') continue;
+      _relayHash(tx.hash, tx.account || null);
+      added++;
+      if (_replayBuffer.length >= REPLAY_MAX) break;
+    }
+  } catch (e) {
+    console.log('[nano-relay] prefill via large-transactions failed:', e.message);
   }
-  console.log(`[nano-relay] Prefilled replay buffer: ${added} hashes`);
+  console.log(`[nano-relay] Prefilled replay buffer: ${added} hashes from blocklattice.io`);
 }
 
 /* ── Frontier-polling fallback ── */
@@ -606,10 +619,13 @@ async function _frontierPollTick() {
   }
 }
 
-/* Bootstrap: fetch reps → pre-fill buffer → connect rainstorm → start polls */
+/* Bootstrap: prefill + reps in parallel → connect rainstorm → start polls */
 (async () => {
-  await _updateOnlineReps();
-  await _prefillReplayBuffer();              /* pre-load recent hashes immediately */
+  /* Prefill from blocklattice.io doesn't need reps — run both in parallel  */
+  const [, ] = await Promise.all([
+    _prefillReplayBuffer(),
+    _updateOnlineReps(),
+  ]);
   _connectRainWs();
   setInterval(_updateOnlineReps, 5 * 60 * 1000);    /* refresh reps every 5 min  */
   setInterval(_frontierPollTick, 15 * 1000);         /* frontier check every 15 s */

@@ -2240,7 +2240,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
         `<span style="color:#0f0;font-weight:bold;font-size:10px">TX HASH</span><br>`
         + `<span style="font-family:'Courier New',monospace;font-size:9px;word-break:break-all">${cd.hash}</span>`
         + (cd.account ? `<br><span style="color:#0a0;font-size:9px">ACC: ${cd.account.slice(0,16)}…</span>` : '')
-        + `<br><span style="color:#0f0;font-size:9px">↗ Click to view on nanolooker.com</span>`;
+        + `<br><span style="color:#0f0;font-size:9px">↗ Click to view on blocklattice.io</span>`;
       tip.style.cssText += `;display:block;`
         + `left:${Math.min(e.clientX + 14, window.innerWidth - 340)}px;`
         + `top:${Math.max(e.clientY - 80, 4)}px`;
@@ -2257,9 +2257,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     const rect = canvas.getBoundingClientRect();
     const ci   = Math.min(Math.floor((e.clientX - rect.left) / CW), cols - 1);
     const cd   = colData[ci];
-    /* Open the block on nanolooker.com — the canonical Nano block explorer */
+    /* Open the confirmed block on blocklattice.io */
     if (cd?.hash && !cd.done) {
-      window.open(`https://nanolooker.com/block/${cd.hash}`, '_blank');
+      window.open(`https://blocklattice.io/block/${cd.hash}`, '_blank');
     }
   }
   if (!wallpaperMode) {
@@ -2270,63 +2270,39 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
   /* ── Canvas loading animation (shown only while waiting for first hash) ── */
   const _SPIN = ['◐','◓','◑','◒'];
-  const _LOAD_CHARS = '0123456789ABCDEF';
-  /* Pre-generate a dense row of random hex chars for the "scan" bar */
-  const _scanRow = Array.from({ length: 96 }, () =>
-    _LOAD_CHARS[Math.floor(Math.random() * 16)]).join('');
 
   function _drawStatus() {
     const anyActive = colData && colData.some(cd => !cd.done && cd.hash);
     if (anyActive) return; /* rain is running — no overlay needed */
 
-    const w = canvas.width, h = canvas.height;
+    const w   = canvas.width, h = canvas.height;
     const now = Date.now();
-    const spin = _SPIN[Math.floor(now / 180) % 4];
+    const spin = _SPIN[Math.floor(now / 200) % 4];
 
     ctx.save();
     ctx.textAlign = 'center';
 
-    /* ── Animated scan bar — scrolling hex strip ── */
-    const barW   = Math.min(w * 0.85, 340);
-    const barH   = 18;
-    const barX   = (w - barW) / 2;
-    const barY   = h / 2 - 48;
-    const shift  = Math.floor(now / 60) % _scanRow.length;   /* scroll speed */
-    const rowTxt = (_scanRow + _scanRow).slice(shift, shift + 48);
-    ctx.fillStyle = 'rgba(0,30,0,0.7)';
-    ctx.fillRect(barX, barY, barW, barH);
-    ctx.fillStyle = '#005500';
-    ctx.font = '11px "Courier New",monospace';
-    ctx.fillText(rowTxt, w / 2, barY + 13);
+    /* Dim background so text is legible */
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, w, h);
 
-    /* Scan-line highlight that sweeps left→right */
-    const scanX = barX + ((now % 2000) / 2000) * barW;
-    const grad  = ctx.createLinearGradient(scanX - 20, 0, scanX + 20, 0);
-    grad.addColorStop(0,   'rgba(0,255,65,0)');
-    grad.addColorStop(0.5, 'rgba(0,255,65,0.45)');
-    grad.addColorStop(1,   'rgba(0,255,65,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(barX, barY, barW, barH);
-
-    /* ── Spinner + main message ── */
-    ctx.fillStyle = '#00dd44';
+    /* Spinner + status line */
+    ctx.fillStyle = '#00cc44';
     ctx.font = 'bold 13px "Courier New",monospace';
-    const msg = wsConnected
-      ? `${spin} Syncing Nano stream…`
-      : `${spin} Connecting to Nano network…`;
-    ctx.fillText(msg, w / 2, h / 2 - 12);
+    const line1 = wsConnected
+      ? `${spin} Waiting for next confirmed Nano block…`
+      : `${spin} Connecting to blocklattice.io…`;
+    ctx.fillText(line1, w / 2, h / 2 - 10);
 
-    /* ── Animated dot-progress line ── */
-    const dots = '█'.repeat((Math.floor(now / 350) % 8) + 1)
-               + '░'.repeat(8 - (Math.floor(now / 350) % 8) - 1);
-    ctx.fillStyle = '#004400';
-    ctx.font = '12px "Courier New",monospace';
-    ctx.fillText(dots, w / 2, h / 2 + 8);
-
-    /* ── Subtle sub-label ── */
-    ctx.fillStyle = '#003300';
-    ctx.font = '9px "Courier New",monospace';
-    ctx.fillText('Real confirmed Nano blocks will appear here', w / 2, h / 2 + 26);
+    /* Pool / TX count line */
+    if (txCount > 0 || _hashPool.length > 0) {
+      ctx.fillStyle = '#007722';
+      ctx.font = '11px "Courier New",monospace';
+      ctx.fillText(
+        `${txCount} TX received · ${_hashPool.length} hashes in pool`,
+        w / 2, h / 2 + 10,
+      );
+    }
 
     ctx.restore();
   }
