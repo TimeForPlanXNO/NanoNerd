@@ -2597,10 +2597,10 @@ function closeSettingsDlg() {
 function _buildColorWpGrid() {
   const grid = document.getElementById('color-wp-grid');
   if (!grid || grid.children.length > 0) return;
-  const savedCss = localStorage.getItem('xp-wallpaper-gradient') || '';
+  const savedCss = localStorage.getItem('xp-nn-bg') || '';
   _COLOR_WALLPAPERS.forEach(wp => {
     const el = document.createElement('div');
-    el.className = 'color-wp-swatch' + (_currentWallpaperType === 'gradient' && savedCss === wp.css ? ' active' : '');
+    el.className = 'color-wp-swatch' + (savedCss === wp.css ? ' active' : '');
     el.dataset.css = wp.css;
     el.innerHTML = `<div class="color-wp-preview" style="background:${wp.css}"></div><div class="color-wp-label">${wp.name}</div>`;
     el.onclick = () => _applyColorWallpaper(wp.css, wp.name);
@@ -2608,23 +2608,20 @@ function _buildColorWpGrid() {
   });
 }
 
-/* Apply one of the 10 AI-designed gradient wallpapers */
+/* Apply one of the 10 AI-designed gradients to the NanoNerd chat background only */
 function _applyColorWallpaper(css, name) {
-  const shell = document.getElementById('app-shell');
-  const vid = document.getElementById('wp-video-bg');
-  if (vid) vid.remove();
-  _stopMatrixWallpaper();
-  shell.style.backgroundImage = css;
-  _currentWallpaper     = '_gradient_';
-  _currentWallpaperType = 'gradient';
-  localStorage.setItem('xp-wallpaper',          '_gradient_');
-  localStorage.setItem('xp-wallpaper-type',     'gradient');
-  localStorage.setItem('xp-wallpaper-gradient', css);
+  /* Target the NanoNerd window content area — not the desktop */
+  const nnWin = wm.els['nanonerd']?.win;
+  const content = nnWin ? nnWin.querySelector('.xp-content') : null;
+  if (content) content.style.background = css;
+  /* Persist for next session */
+  localStorage.setItem('xp-nn-bg',      css);
+  localStorage.setItem('xp-nn-bg-name', name);
+  /* Update active swatch */
   document.querySelectorAll('.color-wp-swatch').forEach(el =>
     el.classList.toggle('active', el.dataset.css === css));
-  document.querySelectorAll('.wp-thumb').forEach(el => el.classList.remove('active'));
   closeSettingsDlg();
-  showCopyToast(`🎨 ${name} applied`);
+  showCopyToast(`🎨 ${name} applied to chat`);
 }
 
 /* Highlight the active voice button */
@@ -2641,44 +2638,92 @@ function setTtsVoice(gender) {
 }
 
 /* ── Text-to-speech engine ──────────────────────────────────────────────────
-   Called by the 🔈 button beside each assistant message.
-   Clicking while speaking cancels playback (toggle behaviour).               */
+   Priority order: Google neural voices (smoothest) → known-good system voices
+   → any voice with a gender hint → first available voice.
+   Clicking the button while speaking stops playback (toggle).                */
+
+/* Priority lists — high-quality voices first per gender */
+const _TTS_FEMALE_PRIORITY = [
+  'Google UK English Female',
+  'Google US English',
+  'Samantha',        /* macOS */
+  'Karen',           /* macOS */
+  'Victoria',        /* macOS */
+  'Moira',           /* macOS */
+  'Fiona',           /* macOS */
+  'Tessa',           /* macOS */
+  'Microsoft Zira',  /* Windows */
+  'Zira',
+];
+const _TTS_MALE_PRIORITY = [
+  'Google UK English Male',
+  'Google UK English',
+  'Alex',            /* macOS */
+  'Daniel',          /* macOS */
+  'Fred',            /* macOS */
+  'Microsoft David', /* Windows */
+  'David',
+  'Microsoft Mark',  /* Windows */
+  'Mark',
+];
+
+function _pickBestVoice(gender) {
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const list = gender === 'female' ? _TTS_FEMALE_PRIORITY : _TTS_MALE_PRIORITY;
+  /* 1 — exact name match */
+  for (const name of list) {
+    const v = voices.find(v => v.name === name);
+    if (v) return v;
+  }
+  /* 2 — name contains the first word of each entry (e.g. "Samantha (Enhanced)") */
+  for (const name of list) {
+    const keyword = name.split(' ')[0];
+    const v = voices.find(v => v.name.includes(keyword));
+    if (v) return v;
+  }
+  /* 3 — any Google voice as a catch-all neural fallback */
+  const google = voices.find(v => v.name.startsWith('Google'));
+  if (google) return google;
+  /* 4 — first available voice */
+  return voices[0];
+}
+
 function _speakText(rawHtml, btn) {
   if (!window.speechSynthesis) return;
-  /* Toggle off if already speaking this button */
+
+  /* Toggle: if already speaking, cancel and clear */
+  const wasThisBtn = _ttsSpeakingBtn === btn;
   if (_ttsSpeakingBtn) {
     _ttsSpeakingBtn.classList.remove('speaking');
     _ttsSpeakingBtn = null;
     window.speechSynthesis.cancel();
-    if (btn === _ttsSpeakingBtn) return;
   }
-  /* Strip HTML tags and decode entities */
+  if (wasThisBtn) return;   /* clicked same button again — just stop */
+
+  /* Strip HTML tags, decode entities, collapse whitespace */
   const clean = rawHtml
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ').trim();
   if (!clean) return;
 
-  const utt = new SpeechSynthesisUtterance(clean);
-  utt.rate  = 1.0;
+  const utt    = new SpeechSynthesisUtterance(clean);
+  utt.rate     = 0.92;   /* slightly slower → clearer, more natural */
+  utt.volume   = 1.0;
+  utt.pitch    = _ttsVoice === 'female' ? 1.05 : 0.95;   /* subtle, not robotic */
 
-  function _pickVoice() {
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices.length) return;
-    const femPat = /female|zira|victoria|samantha|fiona|karen|moira|veena|tessa|alva|amelie|anna|carmit|ioana|joana|kanya|lekha|luciana|mariska|monica|nora|paulina|sara|satu|yuna|zosia/i;
-    const malPat = /male|daniel|alex|rishi|diego|henrik|jorge|luca|thomas|markus|nikos|sergi|tarik|tomas/i;
-    const pat = _ttsVoice === 'female' ? femPat : malPat;
-    const match = voices.find(v => pat.test(v.name));
-    utt.voice = match || voices[0];
-    utt.pitch = _ttsVoice === 'female' ? 1.2 : 0.8;
+  function applyVoice() {
+    const v = _pickBestVoice(_ttsVoice);
+    if (v) utt.voice = v;
   }
-  _pickVoice();
-  /* Chrome lazy-loads voices — retry once voices are ready */
+  applyVoice();
+
+  /* Chrome populates voices asynchronously — wait and retry if list is empty */
   if (!utt.voice) {
-    const prev = window.speechSynthesis.onvoiceschanged;
     window.speechSynthesis.onvoiceschanged = () => {
-      _pickVoice();
-      window.speechSynthesis.onvoiceschanged = prev;
+      applyVoice();
+      window.speechSynthesis.onvoiceschanged = null;
     };
   }
 
@@ -3141,6 +3186,11 @@ const wm = {
     else if (app.type === 'matrix')     bodyEl = this._buildMatrix();
     else                                bodyEl = this._buildBrowser(app);
     content.appendChild(bodyEl);
+    /* Restore saved NanoNerd chat background on open */
+    if (id === 'nanonerd') {
+      const savedNnBg = localStorage.getItem('xp-nn-bg');
+      if (savedNnBg) content.style.background = savedNnBg;
+    }
 
     /* Resize handles (8 directions) */
     ['n','s','e','w','ne','nw','se','sw'].forEach(dir => {
@@ -5129,6 +5179,7 @@ function addMsg(role, text, noScroll) {
   av.textContent = role==='user' ? 'You' : '🧠';
   const bbl = document.createElement('div'); bbl.className='bbl';
   bbl.innerHTML = fmt(text);
+  bbl.style.maxWidth = '100%';   /* col wrapper already constrains width */
   msg.appendChild(av);
   /* Wrap bubble + TTS btn in a column so the speaker sits below the text */
   const col = document.createElement('div');
@@ -6184,15 +6235,6 @@ document.addEventListener('click', function(e) {
   if (savedType === 'matrix') {
     /* Matrix wallpaper needs the DOM fully laid out first */
     requestAnimationFrame(() => _applyMatrixWallpaper());
-  } else if (savedType === 'gradient') {
-    /* Restore CSS gradient wallpaper */
-    const savedCss = localStorage.getItem('xp-wallpaper-gradient');
-    if (savedCss) {
-      const shell = document.getElementById('app-shell');
-      if (shell) shell.style.backgroundImage = savedCss;
-      _currentWallpaper     = '_gradient_';
-      _currentWallpaperType = 'gradient';
-    }
   } else if (saved) {
     _applyWallpaper(saved, savedType);
   }
