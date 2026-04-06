@@ -1485,6 +1485,16 @@
       .lang-item   { padding: 10px 14px; font-size: 13px; }
       .lang-search { padding: 8px 10px; font-size: 13px; }
     }
+
+    /* ── Mobile portrait taskbar: hide "start" label, shrink buttons ── */
+    @media (max-width: 480px) and (orientation: portrait) {
+      .start-text          { display: none; }
+      .start-btn           { padding: 0 6px; min-width: 0; }
+      .tb-btn              { max-width: 72px; padding: 0 3px; font-size: 9px; }
+      .tb-btn span         { font-size: 11px; }
+      .tb-clock            { padding: 0 4px; font-size: 9px; }
+      .wifi-btn            { padding: 0 4px; }
+    }
   </style>
 </head>
 <body>
@@ -1552,7 +1562,7 @@
 
   <!-- Taskbar -->
   <div class="taskbar">
-    <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span> start</button>
+    <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
     <button class="wifi-btn" id="refresh-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">🔄</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
@@ -4396,17 +4406,17 @@ function _applyIconLayout() {
     const def = _ICON_DEFAULTS[id] || { x: M, y: M };
     if (mobile) {
       if (id === 'recycle-bin') {
-        /* Recycle Bin: always anchored upper-right */
+        /* Recycle Bin: always anchored upper-right — never moved */
         el.style.left = Math.max(0, dw - IW - M) + 'px';
+        el.style.top  = M + 'px';
+      } else if (id === 'nanonerd') {
+        /* NanoNerd: always anchored upper-left — never moved (companion to Recycle Bin) */
+        el.style.left = M + 'px';
         el.style.top  = M + 'px';
       } else if (_validPos(saved[id])) {
         /* Restore a previously dragged portrait position only if still on-screen */
         el.style.left = saved[id].x + 'px';
         el.style.top  = saved[id].y + 'px';
-      } else if (id === 'nanonerd') {
-        /* NanoNerd: top-left (top row, companion to Recycle Bin) */
-        el.style.left = M + 'px';
-        el.style.top  = M + 'px';
       } else {
         /* Bottom row (centred): nano-org, nano-gpt, nano-hub, media-folder */
         el.style.left = (rowStartX + col * (IW + G)) + 'px';
@@ -4438,19 +4448,34 @@ const _M_MARGIN  = 6;  /* edge margin                                        */
 const _M_SAFE_T  = _M_ICON_H + _M_MARGIN - 6; /* 76 px — label-flush        */
 const _M_SAFE_B  = _M_ICON_H + _M_MARGIN;      /* 82 px — above bottom icons */
 
-/* ── Wallpaper button layout (left on mobile portrait, right on desktop) ── */
+/* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
   const btn = document.getElementById('wp-btn');
   const dlg = document.getElementById('wp-dialog');
   if (!btn) return;
   const mobile = _isMobilePortrait();
-  /* Only touch positioning — CSS handles size (height: 26px keeps it consistent) */
-  btn.style.left  = mobile ? '10px' : '';
-  btn.style.right = mobile ? ''      : '10px';
-  if (dlg) {
-    dlg.style.left  = mobile ? '10px' : '';
-    dlg.style.right = mobile ? ''      : '10px';
-    dlg.style.top   = mobile ? '42px'  : ''; /* below button (8px top + 26px height + 8px gap) */
+  if (mobile) {
+    /* Centre horizontally at top of screen */
+    btn.style.left      = '50%';
+    btn.style.right     = '';
+    btn.style.transform = 'translateX(-50%)';
+    if (dlg) {
+      dlg.style.left      = '50%';
+      dlg.style.right     = '';
+      dlg.style.transform = 'translateX(-50%)';
+      dlg.style.top       = '42px';
+    }
+  } else {
+    /* Desktop / landscape: anchor to right edge */
+    btn.style.left      = '';
+    btn.style.right     = '10px';
+    btn.style.transform = '';
+    if (dlg) {
+      dlg.style.left      = '';
+      dlg.style.right     = '10px';
+      dlg.style.transform = '';
+      dlg.style.top       = '';
+    }
   }
 }
 
@@ -4541,8 +4566,8 @@ function _initIconDrag() {
     if (_moved) {
       /* Persist position in whichever orientation the drag happened in */
       if (_isMobilePortrait()) {
-        /* Portrait: save per-icon, but never save recycle-bin (always anchored) */
-        if (_cur.id !== 'recycle-bin') {
+        /* Portrait: save per-icon, but never save anchored icons (recycle-bin top-right, nanonerd top-left) */
+        if (_cur.id !== 'recycle-bin' && _cur.id !== 'nanonerd') {
           const all = _loadIconPosP();
           all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
           _saveIconPosP(all);
