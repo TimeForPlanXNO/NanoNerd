@@ -1681,13 +1681,19 @@
     }
     /* ── Mobile landscape taskbar: tighten spacing + safe-area pad ── */
     @media (max-height: 500px) and (orientation: landscape) {
-      .start-text { display: none; }
-      .start-btn  { padding: 0 12px; min-width: 0; }
-      .tb-btn     { max-width: 80px; padding: 0 4px; font-size: 9px; }
+      .start-text  { display: none; }
+      /* flex-shrink:0 ensures the green button is never squeezed away;
+         padding-left covers the iOS notch / dynamic-island safe area   */
+      .start-btn   { padding: 0 12px; min-width: 0; flex-shrink: 0; }
+      .tb-btn      { max-width: 80px; padding: 0 4px; font-size: 9px; }
       .tb-btn span { font-size: 10px; }
-      .tb-clock   { padding: 0 4px; font-size: 9px; flex-shrink: 0; }
-      .wifi-btn   { padding: 0 3px; flex-shrink: 0; }
-      .taskbar    { padding-right: max(4px, env(safe-area-inset-right)); }
+      .tb-clock    { padding: 0 4px; font-size: 9px; flex-shrink: 0; }
+      .wifi-btn    { padding: 0 3px; flex-shrink: 0; }
+      /* Both sides: respect iOS safe-area insets (notch / dynamic island) */
+      .taskbar     {
+        padding-left:  max(4px, env(safe-area-inset-left));
+        padding-right: max(4px, env(safe-area-inset-right));
+      }
     }
   </style>
   <!-- Dynamic theme colours injected by applyThemeColor() -->
@@ -5139,7 +5145,7 @@ const _M_MARGIN  = 6;  /* edge margin                                        */
 const _M_SAFE_T  = 66;                         /* 66 px — ~3% extra height from the top  */
 const _M_SAFE_B  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — 2 px air below bottom icon row */
 const _M_LAND_L  = 84;                         /* 84 px — icon-column safe gap on the LEFT  */
-const _M_LAND_R  = 84;                         /* 84 px — icon-column safe gap on the RIGHT (keeps recycle-bin visible) */
+const _M_LAND_R  = 90;                         /* 90 px — icon-column safe gap on the RIGHT (keeps recycle-bin visible) */
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
