@@ -1679,6 +1679,16 @@
       .tb-clock            { padding: 0 4px; font-size: 9px; }
       .wifi-btn            { padding: 0 4px; }
     }
+    /* ── Mobile landscape taskbar: tighten spacing + safe-area pad ── */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .start-text { display: none; }
+      .start-btn  { padding: 0 12px; min-width: 0; }
+      .tb-btn     { max-width: 80px; padding: 0 4px; font-size: 9px; }
+      .tb-btn span { font-size: 10px; }
+      .tb-clock   { padding: 0 4px; font-size: 9px; flex-shrink: 0; }
+      .wifi-btn   { padding: 0 3px; flex-shrink: 0; }
+      .taskbar    { padding-right: max(4px, env(safe-area-inset-right)); }
+    }
   </style>
   <!-- Dynamic theme colours injected by applyThemeColor() -->
   <style id="theme-style"></style>
@@ -2552,7 +2562,7 @@ const wm = {
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       } else if (_isMobileLandscape()) {
-        win.style.width  = (ar2.width - _M_LAND_L) + 'px';
+        win.style.width  = (ar2.width - _M_LAND_L - _M_LAND_R) + 'px';
         win.style.height = ar2.height + 'px';
         win.style.left   = _M_LAND_L + 'px';
         win.style.top    = '0';
@@ -2728,8 +2738,9 @@ const wm = {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
-      /* Mobile landscape: leave left gap so icon column stays visible */
-      win.style.width  = (ar.width - _M_LAND_L) + 'px';
+      /* Mobile landscape: leave icon-column gaps on both sides
+         (left = icon column, right = recycle-bin column) */
+      win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
       win.style.height = ar.height + 'px';
       win.style.left   = _M_LAND_L + 'px';
       win.style.top    = '0';
@@ -4071,6 +4082,8 @@ const wm = {
         const item = document.createElement('div');
         item.className = 'folder-item';
         item.title = file.name;
+        item.style.cursor = 'pointer';
+        item.onclick = () => openMediaViewer(idx);
         const ext = file.name.split('.').pop().toUpperCase();
         if (file.type === 'image') {
           item.innerHTML = `
@@ -5125,7 +5138,8 @@ const _M_MARGIN  = 6;  /* edge margin                                        */
    _M_SAFE_B: 2 px air gap above the bottom icon row. */
 const _M_SAFE_T  = 66;                         /* 66 px — ~3% extra height from the top  */
 const _M_SAFE_B  = _M_ICON_H + _M_MARGIN + 2; /* 84 px — 2 px air below bottom icon row */
-const _M_LAND_L  = 84;                         /* 84 px — icon-column safe gap in landscape */
+const _M_LAND_L  = 84;                         /* 84 px — icon-column safe gap on the LEFT  */
+const _M_LAND_R  = 84;                         /* 84 px — icon-column safe gap on the RIGHT (keeps recycle-bin visible) */
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
@@ -5185,7 +5199,7 @@ function _applyWindowsLayout() {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
-      win.style.width  = (ar.width - _M_LAND_L) + 'px';
+      win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
       win.style.height = ar.height + 'px';
       win.style.left   = _M_LAND_L + 'px';
       win.style.top    = '0';
