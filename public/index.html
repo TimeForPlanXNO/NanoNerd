@@ -4374,7 +4374,11 @@ const _ICON_DEFAULTS = { /* desktop col: x, y  |  anchor:'bottom-right' = dynami
   'nano-org'     : { x: 6, y: 86  },
   'nano-gpt'     : { x: 6, y: 166 },
   'nano-hub'     : { x: 6, y: 246 },
-  'media-folder' : { x: 6, y: 330 },
+  /* Desktop default: 5th slot in the left column.
+     Mobile-landscape default: right of NanoNerd (same row, second column).
+     y: 330 is off-screen on phone landscape (~340 px desktop height) so we
+     use a per-mode fallback checked in _applyIconLayout. */
+  'media-folder' : { x: 6, y: 330, mobileLandscape: { x: 86, y: 6 } },
   'recycle-bin'  : { anchor: 'bottom-right', margin: 6 },
 };
 
@@ -4390,6 +4394,14 @@ function _saveIconPosP(s) { localStorage.setItem(_ICON_POS_P_KEY, JSON.stringify
    Landscape mode and desktop browsers (width ≥ 1024) keep the desktop layout. */
 function _isMobilePortrait() {
   return window.innerHeight > window.innerWidth && window.innerWidth < 1024;
+}
+
+/* Mobile landscape = not portrait, but still a narrow device.
+   Phone landscape screens are typically 480–932 px wide and ≤ 500 px tall.
+   We use innerHeight < 600 to separate phone landscape from tablets / desktops
+   that have enough vertical space to show the left-column defaults. */
+function _isMobileLandscape() {
+  return !_isMobilePortrait() && window.innerHeight < 600;
 }
 
 /* ── Icon layout (called on init and every orientation/resize change) ── */
@@ -4429,11 +4441,20 @@ function _applyIconLayout() {
         col++;
       }
     } else {
+      /* Landscape / desktop branch.
+         A saved position is accepted only if it fits fully on the current screen —
+         this rejects stale desktop coordinates that would be off-screen in mobile
+         landscape (e.g. media-folder saved at y=330 on a 341 px-tall phone). */
+      const _onScreen = (p) => p && p.x >= 0 && p.y >= 0 && p.x + IW <= dw && p.y + IH <= dh;
+      const mobileLandscape = _isMobileLandscape();
       let pos;
-      if (saved[id]) {
+      if (_onScreen(saved[id])) {
         pos = saved[id];
       } else if (def.anchor === 'bottom-right') {
         pos = { x: Math.max(0, dw - IW - M), y: Math.max(0, dh - IH - M) };
+      } else if (mobileLandscape && def.mobileLandscape) {
+        /* Mobile-landscape override: e.g. media-folder moves right of NanoNerd */
+        pos = def.mobileLandscape;
       } else {
         pos = def;
       }
