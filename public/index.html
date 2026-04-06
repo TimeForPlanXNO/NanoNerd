@@ -967,11 +967,9 @@
     }
     .folder-item {
       display: flex; flex-direction: column; align-items: center;
-      width: 76px; padding: 5px 4px; border-radius: 2px; cursor: pointer;
+      width: 76px; padding: 5px 4px; border-radius: 2px; cursor: default;
       border: 1px solid transparent; user-select: none; gap: 4px;
     }
-    .folder-item:hover { background: #d5e3f7; border-color: #7da2ce; }
-    .folder-item:active { background: #c1d7f5; }
     .folder-item-thumb {
       width: 60px; height: 52px; object-fit: cover; border-radius: 2px;
       border: 1px solid #bbb; display: block;
@@ -1005,18 +1003,6 @@
       font-size: 10px; color: #1a1a1a; text-align: center; max-width: 72px;
       word-break: break-word; line-height: 1.25;
     }
-    .folder-item.selected { background: #c1d7f5; border-color: #316ac5; }
-    .folder-item.selected .folder-item-name { color: #fff; background: #316ac5; border-radius: 2px; padding: 0 2px; }
-    .folder-wp-btn {
-      background: linear-gradient(180deg,#ece9d8 0%,#d4d0c8 100%);
-      border: 1px solid #aca899; border-radius: 3px;
-      padding: 1px 8px; font-size: 11px; color: #222; cursor: pointer;
-      white-space: nowrap; display: flex; align-items: center; gap: 4px;
-      font-family: "Tahoma", sans-serif; flex-shrink: 0; height: 22px;
-    }
-    .folder-wp-btn:hover:not(:disabled) { background: linear-gradient(180deg,#f0eddc 0%,#dedad0 100%); }
-    .folder-wp-btn:active:not(:disabled) { background: linear-gradient(180deg,#d0ccc0 0%,#ccc8b8 100%); }
-    .folder-wp-btn:disabled { opacity: 0.45; cursor: default; }
     .mv-wp-btn {
       background: linear-gradient(180deg,#4a9be0 0%,#2070c0 100%);
       border: 1px solid #1050a0; border-radius: 3px; color: #fff;
@@ -1963,7 +1949,6 @@ const WALLPAPERS = [
 
 let _currentWallpaper     = localStorage.getItem('xp-wallpaper')      || '/wallpapers/Bliss.webp';
 let _currentWallpaperType = localStorage.getItem('xp-wallpaper-type') || 'image';
-let _mediaFolderSelectedIdx = null;
 let _wpPickerOpen = false;
 
 function _applyWallpaper(src, type = 'image') {
@@ -2264,14 +2249,6 @@ function closeWpPicker() {
   _wpPickerOpen = false;
 }
 
-function _setSelectedAsWallpaper() {
-  const idx  = _mediaFolderSelectedIdx;
-  if (idx === null) return;
-  const file = MEDIA_FILES[idx];
-  if (!file) return;
-  _applyWallpaper(file.src, file.type);
-  showCopyToast(`🖼️ Wallpaper: ${file.name}`);
-}
 
 /* Close wallpaper picker on outside click */
 document.addEventListener('click', e => {
@@ -4055,7 +4032,6 @@ const wm = {
       <div class="folder-toolbar">
         <span style="font-size:11px;color:#555;white-space:nowrap;">Address:</span>
         <div class="folder-addr"><svg width="14" height="12" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:4px;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg>Nano videos and memes</div>
-        <button class="folder-wp-btn" id="folder-wp-btn" title="Set selected as desktop wallpaper" disabled onclick="_setSelectedAsWallpaper()">🖼️ Set as Wallpaper</button>
       </div>
       <div class="folder-body">
         <div class="folder-sidebar">
@@ -4095,15 +4071,6 @@ const wm = {
         const item = document.createElement('div');
         item.className = 'folder-item';
         item.title = file.name;
-        /* Single click → select; double-click → open viewer */
-        item.onclick = () => {
-          grid.querySelectorAll('.folder-item').forEach(el => el.classList.remove('selected'));
-          item.classList.add('selected');
-          _mediaFolderSelectedIdx = idx;
-          const wpBtn = shell.querySelector('#folder-wp-btn');
-          if (wpBtn) { wpBtn.disabled = false; wpBtn.dataset.idx = idx; }
-        };
-        item.ondblclick = () => openMediaViewer(idx);
         const ext = file.name.split('.').pop().toUpperCase();
         if (file.type === 'image') {
           item.innerHTML = `
