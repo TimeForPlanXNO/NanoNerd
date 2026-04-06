@@ -667,6 +667,20 @@
     .bbl p + p { margin-top: 7px; }
     .bbl strong { color: var(--na); }
 
+    /* ── TTS speak button (on assistant bubbles) ── */
+    .tts-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; padding: 2px 5px; border-radius: 4px;
+      opacity: .5; transition: opacity .15s, background .15s;
+      margin-top: 5px; margin-left: -2px;
+      line-height: 1;
+    }
+    .tts-btn:hover  { opacity: 1; background: rgba(0,184,255,.12); }
+    .tts-btn.active { opacity: 1; }
+    @keyframes tts-pulse { 0%{opacity:.5} 100%{opacity:1} }
+    .tts-btn.speaking { opacity:1; animation: tts-pulse .5s infinite alternate; }
+
     .typing { display: flex; gap: 4px; padding: 5px 2px; align-items: center; }
     .typing span { width: 6px; height: 6px; background: var(--na); border-radius: 50%; animation: bounce 1.2s infinite; }
     .typing span:nth-child(2) { animation-delay: .2s; }
@@ -1589,6 +1603,98 @@
     .xp-lang-btn:hover  { filter: brightness(1.25); }
     .xp-lang-btn:active { filter: brightness(.8); }
 
+    /* ── SETTINGS BUTTON (NanoNerd titlebar) ── */
+    .xp-settings-btn {
+      background: linear-gradient(180deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.10) 100%);
+      border: 1px solid rgba(255,255,255,.4); border-radius: 3px;
+      color: #fff; font-size: 14px; line-height: 1;
+      padding: 0 5px; cursor: pointer; height: 18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
+      transition: filter .12s;
+      display: flex; align-items: center; flex-shrink: 0;
+    }
+    .xp-settings-btn:hover  { filter: brightness(1.25); }
+    .xp-settings-btn:active { filter: brightness(.8); }
+
+    /* ── SETTINGS DIALOG ── */
+    .settings-dlg {
+      display: none; position: fixed; inset: 0; z-index: 800;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,.5);
+    }
+    .settings-dlg.open { display: flex; }
+    .settings-dlg-box {
+      width: 360px; max-height: 88vh;
+      background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
+      border: 2px solid #0a36a0; border-top: 3px solid #2259c8;
+      border-radius: 6px 6px 4px 4px;
+      box-shadow: 5px 5px 18px rgba(0,0,0,.6);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .settings-dlg-head {
+      background: linear-gradient(180deg, #2259c8 0%, #0d40b0 100%);
+      padding: 5px 8px 6px; color: #fff; font-size: 11px; font-weight: bold;
+      font-family: "Tahoma", sans-serif;
+      text-shadow: 0 1px 2px rgba(0,0,0,.5); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .settings-dlg-close {
+      background: none; border: none; color: rgba(255,255,255,.8); cursor: pointer;
+      font-size: 13px; padding: 0 4px; line-height: 1;
+    }
+    .settings-dlg-close:hover { color: #fff; }
+    .settings-dlg-body {
+      flex: 1; overflow-y: auto; padding: 14px 12px;
+      font-family: "Tahoma", sans-serif;
+    }
+    .settings-dlg-body::-webkit-scrollbar { width: 8px; }
+    .settings-dlg-body::-webkit-scrollbar-track { background: #d4d0c8; }
+    .settings-dlg-body::-webkit-scrollbar-thumb { background: #8a8676; border-radius: 2px; }
+    .sdlg-section + .sdlg-section { margin-top: 16px; }
+    .sdlg-title {
+      font-size: 11px; font-weight: bold; color: #0d3880; margin: 0 0 9px;
+      padding-bottom: 4px; border-bottom: 1px solid #a0a0a0;
+    }
+    /* Color wallpaper swatches */
+    .color-wp-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px;
+    }
+    .color-wp-swatch {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; padding: 3px; border-radius: 4px;
+      border: 2px solid transparent; transition: border-color .12s, background .12s;
+    }
+    .color-wp-swatch:hover  { border-color: #316ac5; background: rgba(49,106,197,.12); }
+    .color-wp-swatch.active { border-color: #316ac5; background: rgba(49,106,197,.22); }
+    .color-wp-preview {
+      width: 100%; aspect-ratio: 4/3; border-radius: 3px;
+      border: 1px solid rgba(0,0,0,.25);
+    }
+    .color-wp-label {
+      font-size: 8px; color: #333; text-align: center;
+      line-height: 1.2; word-break: break-word;
+    }
+    /* Voice buttons */
+    .voice-row { display: flex; gap: 8px; margin-top: 6px; }
+    .voice-btn {
+      flex: 1; padding: 7px 6px; font-size: 12px; font-family: "Tahoma", sans-serif;
+      background: linear-gradient(180deg, #fff 0%, #d4d0c8 100%);
+      border: 1px solid #7a7672; border-radius: 3px;
+      cursor: pointer; color: #111;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+      transition: filter .1s, border-color .1s;
+    }
+    .voice-btn:hover { filter: brightness(.93); }
+    .voice-btn.active {
+      background: linear-gradient(180deg, #cce0f8 0%, #9ac4f0 100%);
+      border-color: #316ac5; color: #0d3880; font-weight: bold;
+    }
+    .settings-dlg-foot {
+      padding: 7px 12px; border-top: 1px solid #b0aa98; flex-shrink: 0;
+      display: flex; justify-content: flex-end;
+      background: linear-gradient(180deg, #e0ddd0 0%, #cac7b8 100%);
+    }
+
     /* ── LANGUAGE PICKER DROPDOWN ── */
     .lang-picker {
       position: fixed; z-index: 99999;
@@ -1771,6 +1877,34 @@
     </div>
     <div class="wp-dialog-foot">
       <button class="wp-foot-btn" onclick="closeWpPicker()">Close</button>
+    </div>
+  </div>
+
+  <!-- Settings Dialog (wallpapers + voice) -->
+  <div class="settings-dlg" id="settings-dlg">
+    <div class="settings-dlg-box">
+      <div class="settings-dlg-head">
+        <span>⚙️ NanoNerd Settings</span>
+        <button class="settings-dlg-close" onclick="closeSettingsDlg()">✕</button>
+      </div>
+      <div class="settings-dlg-body">
+        <!-- Color Wallpapers -->
+        <div class="sdlg-section">
+          <div class="sdlg-title">🎨 Color Wallpapers</div>
+          <div class="color-wp-grid" id="color-wp-grid"></div>
+        </div>
+        <!-- Voice Settings -->
+        <div class="sdlg-section">
+          <div class="sdlg-title">🔊 Text-to-Speech Voice</div>
+          <div class="voice-row">
+            <button class="voice-btn" data-voice="female" onclick="setTtsVoice('female')">👩 Female</button>
+            <button class="voice-btn" data-voice="male"   onclick="setTtsVoice('male')">👨 Male</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-dlg-foot">
+        <button class="wp-foot-btn" onclick="closeSettingsDlg()">Close</button>
+      </div>
     </div>
   </div>
 
@@ -1977,8 +2111,24 @@ const WALLPAPERS = [
   { name: 'Wind',             src: '/wallpapers/Wind.jpg' },
 ];
 
+/* ── 10 AI-designed gradient wallpapers (Settings ⚙️ panel) ── */
+const _COLOR_WALLPAPERS = [
+  { name: 'Deep Space',   css: 'linear-gradient(135deg,#080818 0%,#12124a 55%,#060620 100%)' },
+  { name: 'Nano Green',   css: 'linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)' },
+  { name: 'Sunset Glow',  css: 'linear-gradient(170deg,#0d0033 0%,#7b1fa2 35%,#e64a19 72%,#ff8f00 100%)' },
+  { name: 'Ocean Abyss',  css: 'linear-gradient(135deg,#000a14 0%,#002040 55%,#003d66 100%)' },
+  { name: 'Forest Night', css: 'linear-gradient(135deg,#010e01 0%,#0a2e0a 55%,#163616 100%)' },
+  { name: 'Midnight',     css: 'linear-gradient(135deg,#000000 0%,#060610 100%)' },
+  { name: 'Rose Ember',   css: 'linear-gradient(135deg,#140608 0%,#3d1015 42%,#7a2030 72%,#b85040 100%)' },
+  { name: 'Arctic Frost', css: 'linear-gradient(135deg,#020d1a 0%,#0a2440 55%,#1a4060 100%)' },
+  { name: 'Lava Flow',    css: 'linear-gradient(170deg,#0c0000 0%,#3d0800 35%,#7a1200 65%,#bb3000 88%,#e05010 100%)' },
+  { name: 'Amethyst',     css: 'linear-gradient(135deg,#0e0018 0%,#2e0050 55%,#5a0090 100%)' },
+];
+
 let _currentWallpaper     = localStorage.getItem('xp-wallpaper')      || '/wallpapers/Bliss.webp';
 let _currentWallpaperType = localStorage.getItem('xp-wallpaper-type') || 'image';
+let _ttsVoice             = localStorage.getItem('xp-tts-voice')      || 'female';
+let _ttsSpeakingBtn       = null;
 let _wpPickerOpen = false;
 
 function _applyWallpaper(src, type = 'image') {
@@ -2426,6 +2576,126 @@ function closeWpPicker() {
   _wpPickerOpen = false;
 }
 
+/* ══════════════════════════════════════════
+   SETTINGS DIALOG — color wallpapers + voice
+══════════════════════════════════════════ */
+let _settingsDlgOpen = false;
+
+function openSettingsDlg() {
+  if (_settingsDlgOpen) { closeSettingsDlg(); return; }
+  _buildColorWpGrid();
+  _updateVoiceBtns();
+  document.getElementById('settings-dlg').classList.add('open');
+  _settingsDlgOpen = true;
+}
+function closeSettingsDlg() {
+  document.getElementById('settings-dlg').classList.remove('open');
+  _settingsDlgOpen = false;
+}
+
+/* Build the 10-swatch color wallpaper grid (lazy, one-time) */
+function _buildColorWpGrid() {
+  const grid = document.getElementById('color-wp-grid');
+  if (!grid || grid.children.length > 0) return;
+  const savedCss = localStorage.getItem('xp-wallpaper-gradient') || '';
+  _COLOR_WALLPAPERS.forEach(wp => {
+    const el = document.createElement('div');
+    el.className = 'color-wp-swatch' + (_currentWallpaperType === 'gradient' && savedCss === wp.css ? ' active' : '');
+    el.dataset.css = wp.css;
+    el.innerHTML = `<div class="color-wp-preview" style="background:${wp.css}"></div><div class="color-wp-label">${wp.name}</div>`;
+    el.onclick = () => _applyColorWallpaper(wp.css, wp.name);
+    grid.appendChild(el);
+  });
+}
+
+/* Apply one of the 10 AI-designed gradient wallpapers */
+function _applyColorWallpaper(css, name) {
+  const shell = document.getElementById('app-shell');
+  const vid = document.getElementById('wp-video-bg');
+  if (vid) vid.remove();
+  _stopMatrixWallpaper();
+  shell.style.backgroundImage = css;
+  _currentWallpaper     = '_gradient_';
+  _currentWallpaperType = 'gradient';
+  localStorage.setItem('xp-wallpaper',          '_gradient_');
+  localStorage.setItem('xp-wallpaper-type',     'gradient');
+  localStorage.setItem('xp-wallpaper-gradient', css);
+  document.querySelectorAll('.color-wp-swatch').forEach(el =>
+    el.classList.toggle('active', el.dataset.css === css));
+  document.querySelectorAll('.wp-thumb').forEach(el => el.classList.remove('active'));
+  closeSettingsDlg();
+  showCopyToast(`🎨 ${name} applied`);
+}
+
+/* Highlight the active voice button */
+function _updateVoiceBtns() {
+  document.querySelectorAll('.voice-btn').forEach(btn =>
+    btn.classList.toggle('active', btn.dataset.voice === _ttsVoice));
+}
+
+/* Change TTS voice preference (called by voice-btn onclick) */
+function setTtsVoice(gender) {
+  _ttsVoice = gender;
+  localStorage.setItem('xp-tts-voice', gender);
+  _updateVoiceBtns();
+}
+
+/* ── Text-to-speech engine ──────────────────────────────────────────────────
+   Called by the 🔈 button beside each assistant message.
+   Clicking while speaking cancels playback (toggle behaviour).               */
+function _speakText(rawHtml, btn) {
+  if (!window.speechSynthesis) return;
+  /* Toggle off if already speaking this button */
+  if (_ttsSpeakingBtn) {
+    _ttsSpeakingBtn.classList.remove('speaking');
+    _ttsSpeakingBtn = null;
+    window.speechSynthesis.cancel();
+    if (btn === _ttsSpeakingBtn) return;
+  }
+  /* Strip HTML tags and decode entities */
+  const clean = rawHtml
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+    .replace(/\s+/g, ' ').trim();
+  if (!clean) return;
+
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.rate  = 1.0;
+
+  function _pickVoice() {
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return;
+    const femPat = /female|zira|victoria|samantha|fiona|karen|moira|veena|tessa|alva|amelie|anna|carmit|ioana|joana|kanya|lekha|luciana|mariska|monica|nora|paulina|sara|satu|yuna|zosia/i;
+    const malPat = /male|daniel|alex|rishi|diego|henrik|jorge|luca|thomas|markus|nikos|sergi|tarik|tomas/i;
+    const pat = _ttsVoice === 'female' ? femPat : malPat;
+    const match = voices.find(v => pat.test(v.name));
+    utt.voice = match || voices[0];
+    utt.pitch = _ttsVoice === 'female' ? 1.2 : 0.8;
+  }
+  _pickVoice();
+  /* Chrome lazy-loads voices — retry once voices are ready */
+  if (!utt.voice) {
+    const prev = window.speechSynthesis.onvoiceschanged;
+    window.speechSynthesis.onvoiceschanged = () => {
+      _pickVoice();
+      window.speechSynthesis.onvoiceschanged = prev;
+    };
+  }
+
+  if (btn) { btn.classList.add('speaking'); _ttsSpeakingBtn = btn; }
+  utt.onend = utt.onerror = () => {
+    if (btn) btn.classList.remove('speaking');
+    if (_ttsSpeakingBtn === btn) _ttsSpeakingBtn = null;
+  };
+  window.speechSynthesis.speak(utt);
+}
+
+/* Close settings dialog on outside click */
+document.addEventListener('click', e => {
+  if (_settingsDlgOpen && !e.target.closest('#settings-dlg') && !e.target.closest('.xp-settings-btn')) {
+    closeSettingsDlg();
+  }
+});
 
 /* Close wallpaper picker on outside click */
 document.addEventListener('click', e => {
@@ -2835,7 +3105,7 @@ const wm = {
     const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
-      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button>` : ''}
+      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button><button class="xp-settings-btn" title="Settings" onclick="openSettingsDlg()">⚙️</button>` : ''}
       <div class="xp-btns">
         <button class="xp-btn min" title="Minimize">&#8211;</button>
         <button class="xp-btn max" title="${maxTitle}"><span class="max-icon"></span></button>
@@ -2848,14 +3118,14 @@ const wm = {
 
     /* Drag — mousedown on title bar (not on control buttons or lang-btn) */
     tb.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn') || e.target.closest('.xp-settings-btn')) return;
       e.preventDefault();
       drag.start(id, e.clientX, e.clientY);
     });
 
     /* Drag — touchstart on title bar (not on buttons or lang-btn) */
     tb.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn') || e.target.closest('.xp-settings-btn')) return;
       e.preventDefault();
       const t = e.touches[0];
       drag.start(id, t.clientX, t.clientY);
@@ -4859,7 +5129,20 @@ function addMsg(role, text, noScroll) {
   av.textContent = role==='user' ? 'You' : '🧠';
   const bbl = document.createElement('div'); bbl.className='bbl';
   bbl.innerHTML = fmt(text);
-  msg.appendChild(av); msg.appendChild(bbl);
+  msg.appendChild(av);
+  /* Wrap bubble + TTS btn in a column so the speaker sits below the text */
+  const col = document.createElement('div');
+  col.style.cssText = 'display:flex;flex-direction:column;align-items:flex-start;flex:1;min-width:0';
+  col.appendChild(bbl);
+  if (role === 'assistant') {
+    const ttsBtn = document.createElement('button');
+    ttsBtn.className = 'tts-btn';
+    ttsBtn.title = 'Read aloud';
+    ttsBtn.textContent = '🔈';
+    ttsBtn.onclick = () => _speakText(bbl.innerHTML, ttsBtn);
+    col.appendChild(ttsBtn);
+  }
+  msg.appendChild(col);
   chat.appendChild(msg);
   if (!noScroll) { chat.scrollTop = chat.scrollHeight; }
   updateScrollArrow();
@@ -5901,6 +6184,15 @@ document.addEventListener('click', function(e) {
   if (savedType === 'matrix') {
     /* Matrix wallpaper needs the DOM fully laid out first */
     requestAnimationFrame(() => _applyMatrixWallpaper());
+  } else if (savedType === 'gradient') {
+    /* Restore CSS gradient wallpaper */
+    const savedCss = localStorage.getItem('xp-wallpaper-gradient');
+    if (savedCss) {
+      const shell = document.getElementById('app-shell');
+      if (shell) shell.style.backgroundImage = savedCss;
+      _currentWallpaper     = '_gradient_';
+      _currentWallpaperType = 'gradient';
+    }
   } else if (saved) {
     _applyWallpaper(saved, savedType);
   }
