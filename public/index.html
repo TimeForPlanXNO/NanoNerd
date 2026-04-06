@@ -739,12 +739,12 @@
     }
 
     .start-btn {
-      height: 26px; padding: 0 9px 0 5px;
+      height: 33px; padding: 0 11px 0 7px;
       background: linear-gradient(180deg,#5aad3a 0%,#3d9020 50%,#2e8010 51%,#227010 100%);
-      border: 1px solid #1a6010; border-radius: 12px;
-      color: #fff; font-size: 12px; font-weight: bold;
+      border: 1px solid #1a6010; border-radius: 15px;
+      color: #fff; font-size: 15px; font-weight: bold;
       font-family: "Tahoma", sans-serif; cursor: pointer;
-      display: flex; align-items: center; gap: 3px;
+      display: flex; align-items: center; gap: 4px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 3px rgba(0,0,0,.4);
       text-shadow: 0 1px 1px rgba(0,0,0,.5); flex-shrink: 0;
       transition: filter .1s;
@@ -763,7 +763,7 @@
       filter: drop-shadow(0 .5px 0 rgba(0,0,0,.95)) drop-shadow(0 1px 1px rgba(0,0,0,.6));
       font-weight: 900; line-height: 1; display: inline-block;
     }
-    .start-xno { font-size: 13px; filter: none; }
+    .start-xno { font-size: 16px; filter: none; }
 
     .taskbar-apps { flex: 1; display: flex; gap: 2px; overflow: hidden; align-items: center; min-width: 0; }
 
@@ -1486,10 +1486,17 @@
       .lang-search { padding: 8px 10px; font-size: 13px; }
     }
 
-    /* ── Portrait: icon layer always above windows (shadow can't hide icons) ── */
+    /* ── Portrait: suppress window drop-shadow so it can't bleed onto icon rows ──
+       Icons live in y-zones the window never paints (top safe area + bottom safe area).
+       The only way they could become invisible is if the window's downward box-shadow
+       (0 6px 24px) visually painted over them at higher z-index.
+       Removing the outward shadow in portrait makes icon zones shadow-free; the
+       1px border ring still gives the window a clear edge. ── */
     @media (max-width: 1023px) and (orientation: portrait) {
-      .icon-col { z-index: 600; } /* above taskbar(500) is intentional — icons on portrait sit
-                                     outside the taskbar area, pointer-events:none passes clicks through */
+      .xp-win {
+        box-shadow: 0 0 0 2px rgba(0,0,0,.75),
+                    inset 0 1px 0 rgba(255,255,255,.08);
+      }
     }
 
     /* ── Mobile portrait taskbar: hide "start" label, shrink buttons ── */
@@ -2027,6 +2034,16 @@ const wm = {
 
   focus(id) {
     this.z++;
+    /* Renormalize all windows back into range 100..N when the counter approaches
+       the taskbar z-index (500).  This preserves their stacking order while keeping
+       every window strictly below the taskbar at all times. */
+    if (this.z >= 490) {
+      const allWins = Object.values(this.els)
+        .map(e => e.win).filter(Boolean);
+      allWins.sort((a, b) => parseInt(a.style.zIndex || 0) - parseInt(b.style.zIndex || 0));
+      allWins.forEach((w, i) => { w.style.zIndex = 100 + i; });
+      this.z = 100 + allWins.length;
+    }
     const { win } = this.els[id];
     win.style.zIndex = this.z;
     this._runAnim(win, 'anim-focus');
