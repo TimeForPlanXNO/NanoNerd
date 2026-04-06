@@ -2689,50 +2689,77 @@ function _pickBestVoice(gender) {
   return voices[0];
 }
 
-function _speakText(rawHtml, btn) {
+/* ── Cancel any active speech (called on reset / close / history switch) ── */
+function _cancelTTS() {
   if (!window.speechSynthesis) return;
-
-  /* Toggle: if already speaking, cancel and clear */
-  const wasThisBtn = _ttsSpeakingBtn === btn;
   if (_ttsSpeakingBtn) {
     _ttsSpeakingBtn.classList.remove('speaking');
     _ttsSpeakingBtn = null;
-    window.speechSynthesis.cancel();
   }
-  if (wasThisBtn) return;   /* clicked same button again — just stop */
+  window.speechSynthesis.cancel();
+}
 
-  /* Strip HTML tags, decode entities, collapse whitespace */
+function _speakText(rawHtml, btn) {
+  if (!window.speechSynthesis) return;
+
+  /* Toggle: stop if this exact button is already speaking */
+  const wasThisBtn = (_ttsSpeakingBtn === btn);
+  _cancelTTS();
+  if (wasThisBtn) return;   /* second tap on same button → just stop */
+
+  /* Strip HTML tags, markdown symbols, decode entities, collapse spaces */
   const clean = rawHtml
     .replace(/<[^>]+>/g, ' ')
+    .replace(/\*\*(.*?)\*\*/g, '$1')   /* **bold** → plain */
+    .replace(/\*(.*?)\*/g,    '$1')    /* *italic* → plain */
+    .replace(/#+\s*/g, '')             /* headings */
     .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/\s+/g, ' ').trim();
   if (!clean) return;
 
-  const utt    = new SpeechSynthesisUtterance(clean);
-  utt.rate     = 0.92;   /* slightly slower → clearer, more natural */
-  utt.volume   = 1.0;
-  utt.pitch    = _ttsVoice === 'female' ? 1.05 : 0.95;   /* subtle, not robotic */
-
-  function applyVoice() {
-    const v = _pickBestVoice(_ttsVoice);
-    if (v) utt.voice = v;
-  }
-  applyVoice();
-
-  /* Chrome populates voices asynchronously — wait and retry if list is empty */
-  if (!utt.voice) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      applyVoice();
-      window.speechSynthesis.onvoiceschanged = null;
-    };
-  }
+  /* ── Sentence-by-sentence delivery ─────────────────────────────────────────
+     Splitting at sentence boundaries:
+     • avoids Chrome's ~15-second utterance cut-off bug
+     • gives the engine natural breath/pause points → sounds far more human     */
+  const sentences = (clean.match(/[^.!?]+(?:[.!?]+\s*|$)/g) || [clean])
+    .map(s => s.trim()).filter(Boolean);
 
   if (btn) { btn.classList.add('speaking'); _ttsSpeakingBtn = btn; }
-  utt.onend = utt.onerror = () => {
-    if (btn) btn.classList.remove('speaking');
-    if (_ttsSpeakingBtn === btn) _ttsSpeakingBtn = null;
-  };
-  window.speechSynthesis.speak(utt);
+
+  let idx = 0;
+  function speakNext() {
+    /* Abort if cancelled externally (reset/close/history switch) */
+    if (_ttsSpeakingBtn !== btn) return;
+    if (idx >= sentences.length) {
+      /* All sentences spoken — clean up */
+      if (btn) btn.classList.remove('speaking');
+      if (_ttsSpeakingBtn === btn) _ttsSpeakingBtn = null;
+      return;
+    }
+    const utt    = new SpeechSynthesisUtterance(sentences[idx++]);
+    utt.rate     = 0.95;    /* slightly below 1.0 → clearer without sounding slow */
+    utt.pitch    = 1.0;     /* neutral — robotic effect comes from non-1.0 pitch;
+                               gender difference is carried by the voice itself    */
+    utt.volume   = 1.0;
+    const v = _pickBestVoice(_ttsVoice);
+    if (v) utt.voice = v;
+    utt.onend   = speakNext;
+    utt.onerror = () => {
+      if (btn) btn.classList.remove('speaking');
+      if (_ttsSpeakingBtn === btn) _ttsSpeakingBtn = null;
+    };
+    window.speechSynthesis.speak(utt);
+  }
+
+  /* Chrome populates voices asynchronously on first call — wait if needed */
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      speakNext();
+    };
+  } else {
+    speakNext();
+  }
 }
 
 /* Close settings dialog on outside click */
@@ -2991,6 +3018,8 @@ const wm = {
     const { win } = this.els[id];
     /* Stop matrix rain if this is the matrix app */
     if (win._matrixStop) { win._matrixStop(); win._matrixStop = null; }
+    /* Stop any active TTS when NanoNerd is closed */
+    if (id === 'nanonerd') _cancelTTS();
     this._runAnim(win, 'anim-close', () => {
       win.style.display = 'none';
       win.classList.remove('maximized');
@@ -3001,6 +3030,8 @@ const wm = {
 
   minimize(id) {
     const { win } = this.els[id];
+    /* Stop any active TTS when NanoNerd is minimized */
+    if (id === 'nanonerd') _cancelTTS();
     this._runAnim(win, 'anim-minimize', () => {
       win.style.display = 'none';
     });
@@ -5152,6 +5183,7 @@ function showWelcome() {
 function removeWelcome() { const el=getEl('welcome'); if(el) el.remove(); }
 
 function resetAll() {
+  _cancelTTS();          /* stop any active voice */
   /* ── 1. Reset NanoNerd chat ── */
   _histSave();           /* persist any in-progress session */
   _histSessionId = null; /* start fresh — next message creates a new session */
@@ -5967,6 +5999,7 @@ function _histSave() {
 
 /* ── Load a saved session ── */
 function _histLoad(id) {
+  _cancelTTS();   /* stop any voice when switching conversations */
   _histSave();    /* persist current session first */
   const session = _histGet().find(s => s.id === id);
   if (!session) return;
@@ -5976,18 +6009,8 @@ function _histLoad(id) {
   const chat = getEl('chat');
   if (chat) {
     chat.innerHTML = '';
-    const frag = document.createDocumentFragment();
-    conversationHistory.forEach(m => {
-      const msg = document.createElement('div');
-      msg.className = `msg ${m.role}`;
-      const av  = document.createElement('div'); av.className = 'av';
-      av.textContent = m.role === 'user' ? 'You' : '🧠';
-      const bbl = document.createElement('div'); bbl.className = 'bbl';
-      bbl.innerHTML = fmt(m.content);
-      msg.appendChild(av); msg.appendChild(bbl);
-      frag.appendChild(msg);
-    });
-    chat.appendChild(frag);
+    /* Use addMsg so every assistant bubble gets a TTS button */
+    conversationHistory.forEach(m => addMsg(m.role, m.content, true));
     chat.scrollTop = chat.scrollHeight;
   }
   const sendEl = getEl('sendBtn');
@@ -6013,6 +6036,7 @@ function _histDelete(e, id) {
 
 /* ── Start a brand-new chat (saves current first) ── */
 function _histNewChat() {
+  _cancelTTS();   /* stop any voice immediately */
   _histSave();
   _histSessionId = null;
   conversationHistory = [];
