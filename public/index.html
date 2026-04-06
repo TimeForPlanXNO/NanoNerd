@@ -129,9 +129,11 @@
 
     .xp-win.maximized {
       top: 0 !important;
-      left: -78px !important;
+      left: 0 !important;
       right: 0 !important;
       bottom: 0 !important;
+      width: auto !important;
+      height: auto !important;
       border-radius: 0;
     }
 
@@ -1975,13 +1977,30 @@ const wm = {
       setTimeout(() => this._runAnim(win, 'anim-maximize'), 230);
     } else {
       win.classList.remove('maximized');
-      // Restore saved drag position if the window was previously dragged
-      const dp = win._dragPos;
+      // Restore saved drag position, or fall back to default layout geometry
+      const dp  = win._dragPos;
+      const ar2 = document.getElementById('win-area').getBoundingClientRect();
       if (dp && dp.left) {
         win.style.left   = dp.left;
         win.style.top    = dp.top;
         win.style.width  = dp.width;
         win.style.height = dp.height;
+        win.style.right  = 'auto';
+        win.style.bottom = 'auto';
+      } else if (_isMobilePortrait()) {
+        const r = _mobilePWinRect(ar2);
+        win.style.width  = r.w + 'px';
+        win.style.height = r.h + 'px';
+        win.style.left   = r.l + 'px';
+        win.style.top    = r.t + 'px';
+        win.style.right  = 'auto';
+        win.style.bottom = 'auto';
+      } else {
+        const w2 = Math.round(ar2.width * 0.67);
+        win.style.width  = w2 + 'px';
+        win.style.height = ar2.height + 'px';
+        win.style.left   = Math.round((ar2.width - w2) / 2) + 'px';
+        win.style.top    = '0';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       }
@@ -4422,12 +4441,17 @@ function _applyWindowsLayout() {
   const ar     = area.getBoundingClientRect();
   const mobile = _isMobilePortrait();
   document.querySelectorAll('.xp-win').forEach(win => {
+    if (win.classList.contains('maximized')) {
+      /* Let the .maximized CSS class own geometry — strip any inline overrides */
+      ['width','height','left','top','right','bottom'].forEach(p => win.style[p] = '');
+      return;
+    }
     if (mobile) {
       const r = _mobilePWinRect(ar);
       win.style.width  = r.w + 'px';
       win.style.height = r.h + 'px';
-      win.style.left   = r.l + 'px';      /* full-width = centered */
-      win.style.top    = r.t + 'px';      /* below top icons       */
+      win.style.left   = r.l + 'px';
+      win.style.top    = r.t + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
