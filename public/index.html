@@ -2147,7 +2147,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
     evtSrc.onopen = () => {
       wsConnected = true;
-      onStatus?.({ connected: true, txCount });
+      onStatus?.({ connected: true, txCount, poolSize: _hashPool.length });
     };
 
     evtSrc.onmessage = evt => {
@@ -2156,7 +2156,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
         const msg = JSON.parse(evt.data);
         if (msg.type === 'status') {
           wsConnected = !!msg.connected;
-          onStatus?.({ connected: wsConnected, txCount });
+          onStatus?.({ connected: wsConnected, txCount, poolSize: _hashPool.length });
           return;
         }
         if (msg.type === 'tx' && msg.hash) {
@@ -2167,7 +2167,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
           /* Also add to the recycling pool */
           _hashPool.push(msg.hash);
           if (_hashPool.length > _POOL_MAX) _hashPool.shift();
-          onStatus?.({ connected: true, txCount });
+          onStatus?.({ connected: true, txCount, poolSize: _hashPool.length });
           /* Wake ALL dormant columns — fills the whole canvas at once */
           _tryWakeCol();
         }
@@ -2176,7 +2176,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
 
     evtSrc.onerror = () => {
       wsConnected = false;
-      onStatus?.({ connected: false, txCount });
+      onStatus?.({ connected: false, txCount, poolSize: _hashPool.length });
       /* EventSource retries automatically — nothing extra needed */
     };
   }
@@ -2202,13 +2202,14 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
           added++;
         }
       }
-      if (added > 0) {
-        wsConnected = true;
-        onStatus?.({ connected: true, txCount });
-        _tryWakeCol();
-        console.log(`[matrix] HTTP fallback: added ${added} hashes, pool=${_hashPool.length}`);
-      }
-    } catch {}
+      /* Always wake columns — pool may already have items from a previous fetch */
+      wsConnected = true;
+      onStatus?.({ connected: true, txCount, poolSize: _hashPool.length });
+      _tryWakeCol();
+      console.log(`[matrix] HTTP fallback: added ${added} hashes, pool=${_hashPool.length}`);
+    } catch (err) {
+      console.warn('[matrix] _fetchHashes failed:', err);
+    }
   }
   /* Immediate fetch so new clients get rain even before SSE replay arrives */
   _fetchHashes();
@@ -2385,6 +2386,11 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
       }
     }
 
+    /* Self-heal: if pool has hashes but all columns went dormant, wake them now */
+    if (colData && _hashPool.length > 0 && !colData.some(cd => !cd.done)) {
+      _tryWakeCol();
+    }
+
     /* Show status overlay whenever all columns are dormant */
     _drawStatus();
 
@@ -2413,6 +2419,8 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus } = {}) {
     resize() { resize(); },
     isConnected: () => wsConnected,
     getTxCount:  () => txCount,
+    getPoolSize: () => _hashPool.length,
+    reconnect() { connectSSE(); _fetchHashes(); },
     _cleanupResize: null,
   };
 }
@@ -4178,12 +4186,21 @@ const wm = {
     const statusEl = document.createElement('span');
     statusEl.className = 'matrix-status-text';
     statusEl.textContent = '◐ Initializing…';
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'matrix-wp-btn';
+    retryBtn.title = 'Force reconnect to Nano network';
+    retryBtn.textContent = '↺ Reconnect';
+    retryBtn.onclick = () => {
+      statusEl.textContent = '◐ Reconnecting…';
+      controller?.reconnect();
+    };
     const wpBtn = document.createElement('button');
     wpBtn.className = 'matrix-wp-btn';
     wpBtn.title = 'Set Matrix rain as desktop wallpaper';
     wpBtn.innerHTML = '🖼️ Wallpaper';
     wpBtn.onclick = () => _applyMatrixWallpaper();
     toolbar.appendChild(statusEl);
+    toolbar.appendChild(retryBtn);
     toolbar.appendChild(wpBtn);
 
     /* Canvas wrapper */
@@ -4205,10 +4222,10 @@ const wm = {
       canvas.height = wrap.offsetHeight || 300;
       controller = _startMatrixRain(canvas, {
         wallpaperMode: false,
-        onStatus({ connected, txCount }) {
-          const dot = connected ? '🟢' : '🟡';
+        onStatus({ connected, txCount, poolSize = 0 }) {
+          const dot   = connected ? '🟢' : '🟡';
           const label = connected ? 'LIVE' : 'Reconnecting…';
-          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} TX seen`;
+          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} TX · pool:${poolSize}`;
         },
       });
       ro = new ResizeObserver(() => {
@@ -4218,8 +4235,15 @@ const wm = {
       });
       ro.observe(wrap);
     });
+    /* Periodic status refresh so toolbar stays current even between TX */
+    const _statusTick = setInterval(() => {
+      if (!controller) return;
+      const dot   = controller.isConnected() ? '🟢' : '🟡';
+      const label = controller.isConnected() ? 'LIVE' : 'Reconnecting…';
+      statusEl.textContent = `${dot} ${label} · ${controller.getTxCount().toLocaleString()} TX · pool:${controller.getPoolSize()}`;
+    }, 2000);
     /* Expose cleanup so close() can stop WebSocket + rAF */
-    shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); };
+    shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); clearInterval(_statusTick); };
     return shell;
   },
 

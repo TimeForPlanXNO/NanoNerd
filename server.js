@@ -10,6 +10,15 @@ const app  = express();
 const PORT = 5000;
 
 app.use(express.json());
+/* Disable caching for HTML so browsers always get the latest JS */
+app.use((req, res, next) => {
+  if (req.path === '/' || req.path.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, "public")));
 
 /* ── OpenAI ── */
