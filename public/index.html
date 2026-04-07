@@ -2485,17 +2485,32 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
       const isHov = !wallpaperMode && (i === hoveredCol);
       const x     = i * CW;
 
+      /* Clear one row ahead of the head — wipes any ghost the fade hasn't
+         erased yet before the head character advances into that cell.          */
+      const clearRow = head + 1;
+      if (clearRow >= 0 && clearRow < rows) {
+        const cy = clearRow * CH;
+        if (cy <= cssH) { ctx.fillStyle = '#000'; ctx.fillRect(x, cy, CW, CH); }
+      }
+
       for (let j = 0; j < hash.length; j++) {
         const row = head - hash.length + j + 1;
         if (row < 0 || row >= rows) continue;
         const y = row * CH;
         if (y > cssH) continue;
 
+        /* Erase the cell first — removes any residual ghost from the previous
+           frame's sub-pixel row position before drawing the fresh character.   */
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x, y, CW, CH);
+
         if (j === hash.length - 1) {
+          /* Bright white leading edge */
           ctx.fillStyle = '#ffffff';
         } else {
+          /* Gradient: dim green at top → bright green near head */
           const ratio = j / (hash.length - 1);
-          const g     = Math.floor(30 + ratio * 210);
+          const g     = Math.floor(40 + ratio * 215);
           ctx.fillStyle = isHov ? `rgb(${g},255,${g})` : `rgb(0,${g},0)`;
         }
         ctx.fillText(hash[j], x + 1, y + CH - 2);
