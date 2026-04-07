@@ -1865,6 +1865,56 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
 
+    /* ── macOS popup overrides (stats + wifi) ── */
+    body.macos .stats-popup,
+    body.macos .wifi-popup {
+      top: 32px; bottom: auto !important; right: 4px !important;
+      background: rgba(30,30,32,.92);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.6);
+      font-family: -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
+      font-size: 12px; color: #e0e0e0;
+      animation: mac-panel-in .15s ease;
+    }
+    @keyframes mac-panel-in {
+      from { opacity: 0; transform: translateY(-6px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    body.macos .stats-popup-head,
+    body.macos .wifi-popup-head {
+      background: transparent;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      color: #f0f0f0; font-size: 13px; font-weight: 600;
+      padding: 11px 14px 9px; letter-spacing: .01em;
+      border-radius: 0;
+    }
+    body.macos .stats-popup-head .sp-icon { font-size: 14px; }
+    body.macos .stats-section   { border-bottom: 1px solid rgba(255,255,255,.06); }
+    body.macos .stats-section:last-child { border-bottom: none; }
+    body.macos .stats-section-title { color: rgba(255,255,255,.35); letter-spacing: .07em; }
+    body.macos .stats-label     { color: rgba(255,255,255,.55); font-size: 11.5px; }
+    body.macos .stats-value     { color: #e8e8e8; }
+    body.macos .stats-value.green { color: #30d158; }
+    body.macos .stats-value.red   { color: #ff453a; }
+    body.macos .stats-value.blue  { color: #0a84ff; }
+    body.macos .stats-footer    { background: rgba(0,0,0,.18); border-top: 1px solid rgba(255,255,255,.06); color: rgba(255,255,255,.3); }
+    body.macos .wifi-popup-head .wp-dot { background: #30d158; }
+    body.macos .wifi-popup-sub  { color: rgba(255,255,255,.3); }
+    body.macos .wifi-popup-list::-webkit-scrollbar-track { background: rgba(255,255,255,.03); }
+    body.macos .wifi-popup-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
+    body.macos .wifi-rep        { border-bottom: 1px solid rgba(255,255,255,.06); }
+    body.macos .wifi-rep:last-child { border-bottom: none; }
+    body.macos .wifi-rep:hover  { background: rgba(255,255,255,.08); }
+    body.macos .wifi-rep-alias  { color: #e8e8e8; }
+    body.macos .wifi-rep-addr   { color: rgba(255,255,255,.38); }
+    body.macos .wifi-rep-meta   { color: rgba(255,255,255,.28); }
+    body.macos .wifi-rep-copy   { color: #0a84ff; }
+    body.macos .wifi-rep.copied { background: rgba(48,209,88,.12); }
+    body.macos .wifi-rep.copied .wifi-rep-copy { color: #30d158; }
+    body.macos .wifi-loading    { color: rgba(255,255,255,.4); }
+
     /* ── macOS Menu Bar ── */
     .macos-menubar {
       display: none;
@@ -2141,7 +2191,7 @@
       <button class="mac-apple-btn" id="mac-apple-btn" onclick="toggleMacDonate()" title="Donate Nano">
         <span class="xno-gold" style="font-size:16px;line-height:1;">Ӿ</span>
       </button>
-      <span class="mac-mb-btn" style="font-weight:700;cursor:default;">NanoNerd</span>
+      <button class="mac-mb-btn" style="font-weight:700;" onclick="wm.open('nanonerd')" title="Open NanoNerd">NanoNerd</button>
     </div>
     <div class="mac-mb-right">
       <button class="mac-mb-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">⟳ Reset</button>
@@ -5612,10 +5662,12 @@ let statsTimer = null;
 
 function toggleStatsPopup() {
   statsOpen = !statsOpen;
-  const popup = document.getElementById('stats-popup');
-  const btn   = document.getElementById('clock');
+  const popup   = document.getElementById('stats-popup');
+  const btn     = document.getElementById('clock');
+  const macBtn  = document.getElementById('mac-clock');
   popup.classList.toggle('open', statsOpen);
   btn.classList.toggle('active', statsOpen);
+  if (macBtn) macBtn.classList.toggle('active', statsOpen);
   if (statsOpen) {
     fetchAndRenderStats();
     /* 1-second refresh while popup is open for crisp real-time Conf/sec */
@@ -5630,6 +5682,8 @@ function closeStatsPopup() {
   statsOpen = false;
   document.getElementById('stats-popup').classList.remove('open');
   document.getElementById('clock').classList.remove('active');
+  const macBtn = document.getElementById('mac-clock');
+  if (macBtn) macBtn.classList.remove('active');
   clearInterval(statsTimer);
   statsTimer = null;
 }
@@ -7007,7 +7061,7 @@ function _makeDockIconWrap(id, app) {
 
   /* Icon content */
   if (id === 'nanonerd') {
-    icon.innerHTML = '<div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:62%;line-height:1;">🧠<span class="xno-gold" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:50%;">Ӿ</span></div>';
+    icon.innerHTML = '<div class="di-nn-inner" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:38px;line-height:1;">🧠<span class="xno-gold di-nn-xno" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:24px;">Ӿ</span></div>';
   } else if (id === 'media_folder') {
     icon.innerHTML = '<div style="width:88%;height:88%;display:flex;align-items:center;justify-content:center;padding:6%;"><svg viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></div>';
   } else if (id === 'matrix_viz') {
@@ -7153,6 +7207,13 @@ function _applyDockIconSize(px) {
     el.style.width  = px + 'px';
     el.style.height = px + 'px';
   });
+  /* Scale NanoNerd emoji proportionally */
+  const nnInner = document.querySelector('.di-nn-inner');
+  if (nnInner) {
+    nnInner.style.fontSize = Math.round(px * 0.73) + 'px';
+    const xno = nnInner.querySelector('.di-nn-xno');
+    if (xno) xno.style.fontSize = Math.round(px * 0.46) + 'px';
+  }
   /* Update slider gradient fill */
   const slider = document.getElementById('dsp-size-slider');
   if (slider) {
