@@ -1864,6 +1864,9 @@
     body.macos .mac-dock-wrap  { display: flex !important; }
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
+    body.macos .icon-col       { display: none !important; }
+    /* wallpaper btn sits below the menu bar in macOS mode */
+    body.macos .wp-btn         { top: 36px; z-index: 601; }
 
     /* ── macOS popup overrides (stats + wifi) ── */
     body.macos .stats-popup,
@@ -1985,7 +1988,7 @@
       display: none;
       position: fixed; top: 0; left: 0; right: 0; height: 28px;
       z-index: 600;
-      background: linear-gradient(180deg, rgba(236,236,236,.96) 0%, rgba(218,218,218,.96) 100%);
+      background: var(--mac-menu-bar, linear-gradient(180deg, rgba(236,236,236,.96) 0%, rgba(218,218,218,.96) 100%));
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       border-bottom: 1px solid rgba(0,0,0,.18);
@@ -1993,6 +1996,7 @@
       padding: 0 6px;
       font-family: -apple-system, "Segoe UI", sans-serif;
       font-size: 13px;
+      transition: background .3s ease;
     }
     .mac-mb-left  { display: flex; align-items: center; gap: 2px; }
     .mac-mb-right { display: flex; align-items: center; gap: 2px; }
@@ -2000,20 +2004,22 @@
       background: none; border: none; cursor: pointer;
       height: 24px; padding: 0 8px; border-radius: 4px;
       display: flex; align-items: center; gap: 4px;
-      font-size: 13px; color: #1a1a1a; font-weight: 500;
+      font-size: 13px; color: var(--mac-menu-text, #1a1a1a); font-weight: 500;
       transition: background .12s; white-space: nowrap;
       font-family: -apple-system, "Segoe UI", sans-serif;
     }
-    .mac-mb-btn:hover  { background: rgba(0,0,0,.1); }
-    .mac-mb-btn.active { background: rgba(0,0,0,.15); }
+    .mac-mb-btn:hover  { background: var(--mac-menu-hover, rgba(0,0,0,.1)); }
+    .mac-mb-btn.active { background: var(--mac-menu-hover, rgba(0,0,0,.15)); }
     .mac-apple-btn {
       background: none; border: none; cursor: pointer;
       height: 24px; width: 32px; border-radius: 4px;
       display: flex; align-items: center; justify-content: center;
       transition: background .12s;
     }
-    .mac-apple-btn:hover  { background: rgba(0,0,0,.1); }
-    .mac-apple-btn.active { background: rgba(0,0,0,.15); }
+    .mac-apple-btn:hover  { background: var(--mac-menu-hover, rgba(0,0,0,.1)); }
+    .mac-apple-btn.active { background: var(--mac-menu-hover, rgba(0,0,0,.15)); }
+    /* clock text inherits menu text colour */
+    #mac-clock { color: var(--mac-menu-text, #1a1a1a); }
 
     /* macOS-style silver donate dropdown */
     .mac-donate-popup {
@@ -2259,7 +2265,7 @@
       <button class="mac-mb-btn" style="font-weight:700;" onclick="wm.open('nanonerd')" title="Open NanoNerd">NanoNerd</button>
     </div>
     <div class="mac-mb-right">
-      <button class="mac-mb-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">⟳ Reset</button>
+      <button class="mac-mb-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
       <button class="mac-mb-btn" id="mac-wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Reps">
         <img src="/wifi-icon.png" style="width:13px;height:13px;filter:grayscale(1);vertical-align:middle;" alt="wifi">
       </button>
@@ -7325,17 +7331,35 @@ function _buildDockMaterials() {
   });
 }
 
-/* Window-bar accent colours keyed to dock materials */
-const _MAT_WIN_BAR = {
-  silver: 'rgba(42,42,48,.96)',
-  gold:   'rgba(110,82,16,.96)',
-  copper: 'rgba(90,48,25,.96)',
-  wood:   'rgba(62,40,18,.96)',
-  stone:  'rgba(58,58,58,.96)',
-  glass:  'rgba(18,55,95,.96)',
-  water:  'rgba(18,65,125,.96)',
-  grass:  'rgba(22,72,28,.96)',
-  sand:   'rgba(110,90,48,.96)',
+/* Per-material colour tables for window bars, menu bar, and text */
+const _MAT_THEME = {
+  silver: { win:  'rgba(42,42,48,.96)',
+            menu: 'linear-gradient(180deg,rgba(236,236,236,.97) 0%,rgba(218,218,218,.97) 100%)',
+            text: '#1a1a1a', hover: 'rgba(0,0,0,.1)' },
+  gold:   { win:  'rgba(110,82,16,.96)',
+            menu: 'linear-gradient(180deg,rgba(255,225,100,.97) 0%,rgba(220,190,55,.97) 100%)',
+            text: '#3a2800', hover: 'rgba(0,0,0,.12)' },
+  copper: { win:  'rgba(90,48,25,.96)',
+            menu: 'linear-gradient(180deg,rgba(210,140,90,.97) 0%,rgba(175,100,58,.97) 100%)',
+            text: '#2e1008', hover: 'rgba(0,0,0,.12)' },
+  wood:   { win:  'rgba(62,40,18,.96)',
+            menu: 'linear-gradient(180deg,rgba(160,110,65,.97) 0%,rgba(120,80,40,.97) 100%)',
+            text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  stone:  { win:  'rgba(58,58,58,.96)',
+            menu: 'linear-gradient(180deg,rgba(170,170,170,.97) 0%,rgba(140,140,140,.97) 100%)',
+            text: '#1a1a1a', hover: 'rgba(0,0,0,.1)' },
+  glass:  { win:  'rgba(18,55,95,.96)',
+            menu: 'linear-gradient(180deg,rgba(200,225,255,.97) 0%,rgba(170,200,240,.97) 100%)',
+            text: '#0a2040', hover: 'rgba(0,0,0,.1)' },
+  water:  { win:  'rgba(18,65,125,.96)',
+            menu: 'linear-gradient(180deg,rgba(50,130,210,.97) 0%,rgba(20,90,175,.97) 100%)',
+            text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  grass:  { win:  'rgba(22,72,28,.96)',
+            menu: 'linear-gradient(180deg,rgba(70,170,85,.97) 0%,rgba(40,130,55,.97) 100%)',
+            text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  sand:   { win:  'rgba(110,90,48,.96)',
+            menu: 'linear-gradient(180deg,rgba(230,210,160,.97) 0%,rgba(200,178,120,.97) 100%)',
+            text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
 };
 
 function _applyDockMaterial(id) {
@@ -7345,10 +7369,20 @@ function _applyDockMaterial(id) {
     DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
     if (id !== 'silver') dock.classList.add('mat-' + id);
   }
-  /* Sync window-bar accent */
-  document.documentElement.style.setProperty(
-    '--mac-win-bar', _MAT_WIN_BAR[id] || _MAT_WIN_BAR.silver
-  );
+  /* Sync window bars + top menu bar */
+  const t = _MAT_THEME[id] || _MAT_THEME.silver;
+  const r = document.documentElement;
+  r.style.setProperty('--mac-win-bar',   t.win);
+  r.style.setProperty('--mac-menu-bar',  t.menu);
+  r.style.setProperty('--mac-menu-text', t.text);
+  r.style.setProperty('--mac-menu-hover', t.hover);
+  /* Tint the wifi icon to match text colour */
+  const wifiImg = document.querySelector('#mac-wifi-btn img');
+  if (wifiImg) {
+    wifiImg.style.filter = t.text === '#fff'
+      ? 'brightness(0) invert(1)'
+      : 'grayscale(1)';
+  }
   _fitDockToScreen();
   document.querySelectorAll('.dsp-mat-swatch').forEach((sw, i) => {
     sw.classList.toggle('active', DOCK_MATERIALS[i] && DOCK_MATERIALS[i].id === id);
