@@ -1833,6 +1833,8 @@
     .cp-swatch:hover { transform: scale(1.28); border-color: rgba(255,255,255,.7); }
     .cp-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.4); }
     .cp-sep { border: none; border-top: 1px solid rgba(255,255,255,.1); margin: 0; }
+    /* XP window-bar material grid (reuses .dsp-mat-swatch thumb/label) */
+    .cp-mat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
     .cp-reset {
       background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
       color: #a0b8e0; border-radius: 8px; padding: 7px;
@@ -2562,6 +2564,9 @@
       <button class="cp-eye" id="cp-eye-btn" onclick="cpPickFromScreen()" title="Pick color from screen">💧 Pick</button>
     </div>
     <div class="cp-presets" id="cp-presets"></div>
+    <hr class="cp-sep">
+    <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">Window Material</div>
+    <div class="cp-mat-grid" id="cp-xp-materials"></div>
     <hr class="cp-sep">
     <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">UI Style</div>
     <div class="cp-ui-style-row">
@@ -6454,7 +6459,7 @@ function openMediaViewer(idx) {
     tbBtn.classList.remove('minimized');
     _mvZ++; win.style.zIndex = _mvZ;
     _minimized = false;
-    if (_macMode && _dockGenie) {
+    if (_dockGenie) {
       _mvRunAnim('anim-genie-restore');
     }
   };
@@ -6462,7 +6467,7 @@ function openMediaViewer(idx) {
     tbBtn.classList.remove('active');
     tbBtn.classList.add('minimized');
     _minimized = true;
-    if (_macMode && _dockGenie) {
+    if (_dockGenie) {
       _mvRunAnim('anim-genie-minimize', () => { win.style.display = 'none'; });
     } else {
       win.style.display = 'none';
@@ -6621,7 +6626,7 @@ function openMediaViewer(idx) {
   let _mvFirstShown = false;
   function _mvFirstShow() {
     win.style.display = 'flex';
-    if (!_mvFirstShown && _macMode && _dockGenie) {
+    if (!_mvFirstShown && _dockGenie) {
       _mvFirstShown = true;
       _mvRunAnim('anim-genie-restore');
     } else {
@@ -7215,6 +7220,8 @@ function _cpGrad(base) {
 /* Apply a colour to taskbar + title bars + all themed buttons */
 function applyThemeColor(hex, isReset) {
   const g = _cpGrad(hex);
+  /* Deselect XP material swatches whenever a free colour is chosen */
+  document.querySelectorAll('#cp-xp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
   document.getElementById('theme-style').textContent = [
     `.taskbar { background: ${g.taskbar} !important; border-top-color: ${g.border} !important; }`,
     `body:not(.macos) .xp-titlebar { background: ${g.titlebar} !important; }`,
@@ -7276,6 +7283,53 @@ document.addEventListener('click', function(e) {
     sw.onclick = () => applyThemeColor(hex);
     container.appendChild(sw);
   });
+})();
+
+/* ── XP Window-Bar Material Picker ── */
+const XP_MAT_HEX = {
+  silver: '#506080',
+  gold:   '#a07800',
+  copper: '#a05020',
+  wood:   '#7a5020',
+  stone:  '#585858',
+  glass:  '#1080c0',
+  water:  '#1464c4',
+  grass:  '#1a8040',
+  sand:   '#aa8e3c',
+};
+let _xpMaterial = null;
+
+function _applyXpMaterial(id) {
+  _xpMaterial = id;
+  applyThemeColor(XP_MAT_HEX[id]);
+  localStorage.setItem('xp-material', id);
+  document.querySelectorAll('#cp-xp-materials .dsp-mat-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.matId === id);
+  });
+}
+
+(function _buildXpMaterials() {
+  const container = document.getElementById('cp-xp-materials');
+  if (!container) return;
+  DOCK_MATERIALS.forEach(({ id, label }) => {
+    const sw = document.createElement('button');
+    sw.className = 'dsp-mat-swatch';
+    sw.title = label;
+    sw.dataset.matId = id;
+    const thumb = document.createElement('div');
+    thumb.className = 'dsp-mat-thumb';
+    thumb.style.cssText = DOCK_MAT_SWATCH_CSS[id] || '';
+    const lbl = document.createElement('div');
+    lbl.className = 'dsp-mat-label';
+    lbl.textContent = label;
+    sw.appendChild(thumb);
+    sw.appendChild(lbl);
+    sw.onclick = () => _applyXpMaterial(id);
+    container.appendChild(sw);
+  });
+  /* Restore saved XP material */
+  const saved = localStorage.getItem('xp-material');
+  if (saved && XP_MAT_HEX[saved]) _applyXpMaterial(saved);
 })();
 
 /* Disable eyedropper button on taskbar colour picker if not supported */
@@ -7446,7 +7500,7 @@ function _updateDockDot(id) {
 
   wm.open = function(id) {
     const prevState = wm.state[id];
-    if (_macMode && _dockGenie && prevState === 'minimized') {
+    if (_dockGenie && prevState === 'minimized') {
       const { win } = wm.els[id];
       win.classList.add('animating');
       win.style.display = 'flex';
@@ -7458,8 +7512,8 @@ function _updateDockDot(id) {
       wm.focus(id);
     } else {
       _origOpen(id);
-      /* Also play genie-restore when opening a closed window in macOS+genie mode */
-      if (_macMode && _dockGenie && prevState === 'closed' && wm.els[id]) {
+      /* Also play genie-restore when opening a closed window */
+      if (_dockGenie && prevState === 'closed' && wm.els[id]) {
         wm._runAnim(wm.els[id].win, 'anim-genie-restore');
       }
     }
@@ -7472,7 +7526,7 @@ function _updateDockDot(id) {
   };
 
   wm.minimize = function(id) {
-    if (_macMode && _dockGenie) {
+    if (_dockGenie) {
       const { win } = wm.els[id];
       if (id === 'nanonerd' && typeof _cancelTTS === 'function') _cancelTTS();
       wm._runAnim(win, 'anim-genie-minimize', () => { win.style.display = 'none'; });
