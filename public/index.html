@@ -2203,17 +2203,42 @@
       transition: transform .2s cubic-bezier(.18,.89,.32,1.28);
     }
     .dsp-pill.on::after { transform: translateX(16px); }
-    .dsp-materials { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+    .dsp-materials { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
     .dsp-mat-swatch {
-      aspect-ratio: 1; border-radius: 8px; cursor: pointer;
+      border-radius: 9px; cursor: pointer;
       border: 2px solid transparent;
-      transition: border-color .12s, transform .12s;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 9px; font-weight: 700; color: rgba(255,255,255,.85);
-      text-shadow: 0 1px 2px rgba(0,0,0,.7);
+      transition: border-color .13s, transform .13s, box-shadow .13s;
+      display: flex; flex-direction: column; align-items: stretch;
+      overflow: hidden; background: none; padding: 0;
     }
-    .dsp-mat-swatch:hover   { transform: scale(1.1); border-color: rgba(255,255,255,.55); }
-    .dsp-mat-swatch.active  { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.3); }
+    .dsp-mat-swatch:hover  { transform: scale(1.06); border-color: rgba(255,255,255,.55); }
+    .dsp-mat-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.35); }
+    .dsp-mat-thumb { width: 100%; aspect-ratio: 1.2; }
+    .dsp-mat-label {
+      font-size: 9px; font-weight: 700; letter-spacing: .04em;
+      color: rgba(255,255,255,.82); text-align: center;
+      padding: 3px 2px 4px; background: rgba(0,0,0,.38);
+      text-shadow: 0 1px 2px rgba(0,0,0,.8);
+    }
+    /* Colour picker row inside dock settings */
+    .dsp-color-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .dsp-color-pick {
+      width: 30px; height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,.18);
+      cursor: pointer; padding: 2px; background: none; flex-shrink: 0;
+    }
+    .dsp-color-hex {
+      flex: 1; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+      color: #d8e0f0; border-radius: 6px; padding: 4px 7px;
+      font-size: 11px; font-family: monospace; outline: none;
+      transition: border-color .12s;
+    }
+    .dsp-color-hex:focus { border-color: rgba(100,180,255,.6); }
+    .dsp-color-reset {
+      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+      color: #90a8c8; border-radius: 6px; padding: 4px 9px;
+      font-size: 12px; cursor: pointer; transition: background .12s, color .12s; flex-shrink: 0;
+    }
+    .dsp-color-reset:hover { background: rgba(255,255,255,.18); color: #fff; }
     .dsp-ui-style-row { display: flex; gap: 6px; }
     .dsp-ui-btn {
       flex: 1; padding: 7px 4px; border-radius: 8px;
@@ -2511,6 +2536,15 @@
       <div>
         <div class="dsp-section-label">Dock Material</div>
         <div class="dsp-materials" id="dsp-materials"></div>
+        <div class="dsp-section-label" style="margin-top:10px;">Custom Colour</div>
+        <div class="dsp-color-row">
+          <input type="color" class="dsp-color-pick" id="dsp-color-picker" value="#1a1a2e"
+                 oninput="_applyDockCustomColor(this.value)">
+          <input type="text"  class="dsp-color-hex"  id="dsp-color-hex"  value="#1a1a2e" maxlength="7"
+                 spellcheck="false" autocomplete="off"
+                 oninput="if(/^#[0-9a-f]{6}$/i.test(this.value))_applyDockCustomColor(this.value)">
+          <button class="dsp-color-reset" title="Reset to material" onclick="_resetDockCustomColor()">↺</button>
+        </div>
       </div>
       <div>
         <div class="dsp-section-label">UI Style</div>
@@ -7069,15 +7103,15 @@ const DOCK_MATERIALS = [
 ];
 
 const DOCK_MAT_SWATCH_CSS = {
-  silver: 'background:linear-gradient(135deg,#e0e0e8,#b0b0bc)',
-  gold:   'background:linear-gradient(135deg,#ffd84a,#b8860b)',
-  copper: 'background:linear-gradient(135deg,#d08050,#8c4a20)',
-  wood:   'background:linear-gradient(135deg,#a0743c,#6a4015)',
-  stone:  'background:linear-gradient(135deg,#9a9a9a,#5a5a5a)',
-  glass:  'background:linear-gradient(135deg,#a0c8f0,#6090c0)',
-  water:  'background:linear-gradient(135deg,#4090d0,#1050a0)',
-  grass:  'background:linear-gradient(135deg,#50c060,#1a7030)',
-  sand:   'background:linear-gradient(135deg,#d4c07a,#a89040)',
+  silver: 'background:linear-gradient(160deg,#f2f2f6 0%,#cacad4 28%,#ededf2 52%,#aaaabc 76%,#dcdce4 100%)',
+  gold:   'background:linear-gradient(160deg,#ffe880 0%,#d4a000 28%,#ffdc50 54%,#b07800 78%,#ffd040 100%)',
+  copper: 'background:linear-gradient(160deg,#e8906a 0%,#9a4820 28%,#d07040 54%,#7a3810 78%,#c06030 100%)',
+  wood:   'background:repeating-linear-gradient(97deg,#a07840 0px,#8a6228 5px,#b08448 10px,#7a5020 16px,#9a7038 22px,#836030 27px)',
+  stone:  'background:radial-gradient(ellipse at 28% 38%,#909090 0%,#585858 38%,#787878 65%,#464646 100%)',
+  glass:  'background:linear-gradient(145deg,#ddeeff 0%,#95c5ee 40%,#cce8ff 62%,#6e98cc 100%)',
+  water:  'background:linear-gradient(170deg,#52b4f4 0%,#1464c4 44%,#3294e4 66%,#0844a4 100%)',
+  grass:  'background:repeating-linear-gradient(182deg,#52c462 0px,#3aaa4a 6px,#5ace6a 12px,#2a9040 18px,#4ab458 24px,#30a048 30px)',
+  sand:   'background:radial-gradient(ellipse at 62% 28%,#e2d6a4 0%,#c6b26c 44%,#dacb88 66%,#aa8e3c 100%)',
 };
 
 /* ── Mode Switch ── */
@@ -7324,12 +7358,20 @@ function toggleDockGenie() {
 function _buildDockMaterials() {
   const container = document.getElementById('dsp-materials');
   if (!container) return;
+  container.innerHTML = '';
   DOCK_MATERIALS.forEach(({ id, label }) => {
     const sw = document.createElement('button');
     sw.className = 'dsp-mat-swatch' + (id === _dockMaterial ? ' active' : '');
     sw.title = label;
-    sw.style.cssText = DOCK_MAT_SWATCH_CSS[id] || '';
-    sw.textContent = label.substring(0, 3);
+    sw.dataset.matId = id;
+    const thumb = document.createElement('div');
+    thumb.className = 'dsp-mat-thumb';
+    thumb.style.cssText = DOCK_MAT_SWATCH_CSS[id] || '';
+    const lbl = document.createElement('div');
+    lbl.className = 'dsp-mat-label';
+    lbl.textContent = label;
+    sw.appendChild(thumb);
+    sw.appendChild(lbl);
     sw.onclick = () => _applyDockMaterial(id);
     container.appendChild(sw);
   });
@@ -7372,14 +7414,17 @@ function _applyDockMaterial(id) {
   if (dock) {
     DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
     if (id !== 'silver') dock.classList.add('mat-' + id);
+    /* Clear any inline colour left by custom colour picker */
+    dock.style.background = '';
+    dock.style.borderColor = '';
   }
   /* Sync window bars + top menu bar */
   const t = _MAT_THEME[id] || _MAT_THEME.silver;
-  const r = document.documentElement;
-  r.style.setProperty('--mac-win-bar',   t.win);
-  r.style.setProperty('--mac-menu-bar',  t.menu);
-  r.style.setProperty('--mac-menu-text', t.text);
-  r.style.setProperty('--mac-menu-hover', t.hover);
+  const root = document.documentElement;
+  root.style.setProperty('--mac-win-bar',    t.win);
+  root.style.setProperty('--mac-menu-bar',   t.menu);
+  root.style.setProperty('--mac-menu-text',  t.text);
+  root.style.setProperty('--mac-menu-hover', t.hover);
   /* Tint the wifi icon to match text colour */
   const wifiImg = document.querySelector('#mac-wifi-btn img');
   if (wifiImg) {
@@ -7388,10 +7433,81 @@ function _applyDockMaterial(id) {
       : 'grayscale(1)';
   }
   _fitDockToScreen();
-  document.querySelectorAll('.dsp-mat-swatch').forEach((sw, i) => {
-    sw.classList.toggle('active', DOCK_MATERIALS[i] && DOCK_MATERIALS[i].id === id);
+  document.querySelectorAll('.dsp-mat-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.matId === id);
   });
+  /* Clear custom colour persistence */
   localStorage.setItem('dock-material', id);
+  localStorage.removeItem('dock-custom-color');
+  /* Sync colour-picker inputs to a neutral placeholder */
+  const cPick = document.getElementById('dsp-color-picker');
+  const cHex  = document.getElementById('dsp-color-hex');
+  const repr  = id === 'silver' ? '#2a2a30' : (DOCK_MAT_SWATCH_CSS[id] || '').match(/#[0-9a-f]{6}/i)?.[0] || '#2a2a30';
+  if (cPick) cPick.value = repr;
+  if (cHex)  cHex.value  = repr;
+}
+
+/* ── Custom dock colour (overrides material) ── */
+let _dockCustomColor = null;
+
+function _applyDockCustomColor(hex) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
+  _dockCustomColor = hex;
+  const rv = parseInt(hex.slice(1,3),16);
+  const gv = parseInt(hex.slice(3,5),16);
+  const bv = parseInt(hex.slice(5,7),16);
+
+  /* Darker shade for window title bars */
+  const d  = v => Math.max(0, Math.min(255, Math.round(v * .52)));
+  const wr = d(rv), wg = d(gv), wb = d(bv);
+
+  /* Lighter shade for menu bar top */
+  const l  = v => Math.max(0, Math.min(255, Math.round(v * 1.18 + 18)));
+  const mr = l(rv), mg = l(gv), mb = l(bv);
+
+  /* Apply dock background inline */
+  const dock = document.getElementById('mac-dock');
+  if (dock) {
+    DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
+    dock.style.background  = `linear-gradient(180deg,rgba(${rv},${gv},${bv},.70) 0%,rgba(${wr},${wg},${wb},.84) 100%)`;
+    dock.style.borderColor = `rgba(${Math.min(255,rv+60)},${Math.min(255,gv+60)},${Math.min(255,bv+60)},.22)`;
+  }
+
+  /* Determine foreground text colour from luminance */
+  const luma   = .299*rv + .587*gv + .114*bv;
+  const isLight = luma > 148;
+  const textCol  = isLight ? '#1a1a1a' : '#fff';
+  const hoverCol = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.18)';
+
+  const root = document.documentElement;
+  root.style.setProperty('--mac-win-bar',    `rgba(${wr},${wg},${wb},.96)`);
+  root.style.setProperty('--mac-menu-bar',   `linear-gradient(180deg,rgba(${mr},${mg},${mb},.97) 0%,rgba(${rv},${gv},${bv},.97) 100%)`);
+  root.style.setProperty('--mac-menu-text',  textCol);
+  root.style.setProperty('--mac-menu-hover', hoverCol);
+
+  /* Wifi icon tint */
+  const wifiImg = document.querySelector('#mac-wifi-btn img');
+  if (wifiImg) wifiImg.style.filter = isLight ? 'grayscale(1)' : 'brightness(0) invert(1)';
+
+  /* Deactivate all material swatches */
+  document.querySelectorAll('.dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
+
+  /* Sync inputs */
+  const cPick = document.getElementById('dsp-color-picker');
+  const cHex  = document.getElementById('dsp-color-hex');
+  if (cPick) cPick.value = hex;
+  if (cHex)  cHex.value  = hex;
+
+  localStorage.setItem('dock-custom-color', hex);
+  localStorage.removeItem('dock-material');
+}
+
+function _resetDockCustomColor() {
+  _dockCustomColor = null;
+  localStorage.removeItem('dock-custom-color');
+  /* Re-apply last material (or silver default) */
+  const mat = localStorage.getItem('dock-material') || 'silver';
+  _applyDockMaterial(mat);
 }
 
 /* Scale dock to fit within viewport width (mobile / portrait) */
@@ -7441,6 +7557,7 @@ document.addEventListener('click', function(e) {
   const savedMagnify = localStorage.getItem('dock-magnify');
   const savedGenie   = localStorage.getItem('dock-genie');
   const savedMat     = localStorage.getItem('dock-material');
+  const savedCustom  = localStorage.getItem('dock-custom-color');
 
   if (savedSize)                _dockIconSize = +savedSize;
   if (savedMagnify !== null)    _dockMagnify  = savedMagnify !== '0';
@@ -7457,8 +7574,13 @@ document.addEventListener('click', function(e) {
   _buildMacDock();
   _buildDockMaterials();
 
-  /* Apply saved material (always run so --mac-win-bar CSS var is initialised) */
-  _applyDockMaterial(_dockMaterial);
+  /* Apply saved colour — custom colour takes priority over material */
+  if (savedCustom && /^#[0-9a-f]{6}$/i.test(savedCustom)) {
+    _applyDockCustomColor(savedCustom);
+  } else {
+    /* Always run so --mac-win-bar CSS var is initialised */
+    _applyDockMaterial(_dockMaterial);
+  }
 
   /* Fit dock within viewport (mobile / portrait) */
   setTimeout(_fitDockToScreen, 100);
