@@ -2250,26 +2250,29 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
   let colSpeed = [];   /* rows per frame (randomised per assignment)         */
 
   /* ── App state ── */
-  let running     = true;
-  let wsConnected = false;
-  let txCount     = 0;
-  let lastHash    = null;
-  const _seen     = new Set();
-  let _wasActive  = false;
+  let running      = true;
+  let wsConnected  = false;
+  let txCount      = 0;
+  let lastHash     = null;
+  let _dpr         = 1;              /* current devicePixelRatio — updated in resize()  */
+  let _hadLiveTx   = false;          /* true once first non-replay TX arrives           */
+  const _liveTimes = [];             /* timestamps of LIVE TXs for rolling CPS window  */
+  const _seen      = new Set();
 
   /* ── Canvas resize — DPR-aware so characters are crisp on Retina ── */
   let cssW = 0, cssH = 0;
   function resize() {
-    const dpr = window.devicePixelRatio || 1;
+    _dpr = window.devicePixelRatio || 1;
     cssW = canvas.offsetWidth  || cssW  || 400;
     cssH = canvas.offsetHeight || cssH  || 300;
-    const pw = Math.round(cssW * dpr);
-    const ph = Math.round(cssH * dpr);
+    const pw = Math.round(cssW * _dpr);
+    const ph = Math.round(cssH * _dpr);
     if (canvas.width !== pw || canvas.height !== ph) {
       canvas.width  = pw;
       canvas.height = ph;
     }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    /* NOTE: transform is NOT applied here — draw() re-applies it every frame
+       so it survives any canvas.width/height reset that clears context state */
     const nc = Math.max(1, Math.floor(cssW / CW));
     if (nc !== cols) {
       colHash  = Array.from({ length: nc }, (_, i) => colHash[i]  ?? null);
@@ -2285,7 +2288,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
     colHash[c]  = hash;
     colAcct[c]  = account || null;
     colDrop[c]  = -2;                            /* start 2 rows above top */
-    colSpeed[c] = 0.5 + Math.random() * 0.35;   /* 0.50–0.85 rows/frame  */
+    colSpeed[c] = 0.15 + Math.random() * 0.12;  /* 0.15–0.27 rows/frame ≈ 9–16 rows/sec */
   }
 
   /* ── Assign a TX to a RANDOM idle column ─────────────────────────────────
@@ -2320,21 +2323,29 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
     _fillCol(best, hash, account);
   }
 
+  /* ── CPS helper — rolling 10-second window over LIVE (non-replay) TXs ── */
+  function _cps() {
+    const now = Date.now();
+    while (_liveTimes.length && _liveTimes[0] < now - 10000) _liveTimes.shift();
+    return Math.round(_liveTimes.length / 10 * 10) / 10;  /* one decimal place */
+  }
+
   /* ── SSE relay — live Nano confirmations via server-side proxy ────────────
      EventSource auto-reconnects on network drops (built-in browser spec).
-     Both replay entries and live entries are shown — they are all real
-     confirmed Nano blocks with valid hashes and blocklattice.io links.      */
+     Replay entries (msg.replay === true) fill the ticker hash immediately
+     but do NOT start falling columns — the animation begins only on the
+     first LIVE confirmed block so 1 live TX = exactly 1 falling column.    */
   let evtSrc = null;
   function connectSSE() {
     if (evtSrc) { try { evtSrc.close(); } catch {} }
     evtSrc = new EventSource('/api/nano-stream');
     evtSrc.onopen = () => {
       wsConnected = true;
-      onStatus?.({ connected: true, txCount, hash: lastHash });
+      onStatus?.({ connected: true, txCount, hash: lastHash, cps: _cps() });
     };
     evtSrc.onerror = () => {
       wsConnected = false;
-      onStatus?.({ connected: false, txCount, hash: lastHash });
+      onStatus?.({ connected: false, txCount, hash: lastHash, cps: _cps() });
     };
     evtSrc.onmessage = evt => {
       if (!evt.data || evt.data.startsWith(':')) return;
@@ -2342,13 +2353,21 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
         const msg = JSON.parse(evt.data);
         if (msg.type === 'status') {
           wsConnected = !!msg.connected;
-          onStatus?.({ connected: wsConnected, txCount, hash: lastHash });
+          onStatus?.({ connected: wsConnected, txCount, hash: lastHash, cps: _cps() });
           return;
         }
         if (msg.type === 'tx' && msg.hash) {
           txCount++;
-          _assign(msg.hash, msg.account);
-          onStatus?.({ connected: true, txCount, hash: lastHash });
+          if (msg.replay) {
+            /* Historical block — update ticker but skip the falling-column animation */
+            lastHash = msg.hash;
+          } else {
+            /* Live block — track for CPS, start a falling column */
+            _liveTimes.push(Date.now());
+            _hadLiveTx = true;
+            _assign(msg.hash, msg.account);
+          }
+          onStatus?.({ connected: true, txCount, hash: lastHash, cps: _cps() });
         }
       } catch {}
     };
@@ -2429,11 +2448,15 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
   let frame, lastTs = 0;
   function draw(ts) {
     if (!running) return;
+    /* Re-apply DPR transform every frame — setting canvas.width/height (in resize or
+       ResizeObserver) resets ALL canvas context state, including the transform.
+       Doing it here ensures characters are never drawn at wrong scale/position.     */
+    ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
     const dt  = Math.min((ts - lastTs) / 16.67, 3);
     lastTs = ts;
 
-    /* Fade: 6 % when any column is active, 1 % when idle (chars linger) */
-    ctx.fillStyle = _wasActive ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.01)';
+    /* Fade: 3% per frame — uniform, no brightness jump when the last column finishes */
+    ctx.fillStyle = 'rgba(0,0,0,0.03)';
     ctx.fillRect(0, 0, cssW, cssH);
 
     ctx.textAlign    = 'left';
@@ -2479,10 +2502,8 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
       }
     }
 
-    _wasActive = anyActive;
-
-    /* Status overlay only before any TX has arrived */
-    if (!anyActive && txCount === 0) _drawStatus();
+    /* Status overlay — shown until the first LIVE block triggers a falling column */
+    if (!anyActive && !_hadLiveTx) _drawStatus();
 
     frame = requestAnimationFrame(draw);
   }
@@ -2509,6 +2530,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
     isConnected: () => wsConnected,
     getTxCount:  () => txCount,
     getLastHash: () => lastHash,
+    getCps:      () => _cps(),
     getPoolSize: () => 0,
     reconnect()  { connectSSE(); },
     _cleanupResize: null,
@@ -4542,10 +4564,10 @@ const wm = {
       canvas.height = wrap.offsetHeight || 300;
       controller = _startMatrixRain(canvas, {
         wallpaperMode: false,
-        onStatus({ connected, txCount, hash }) {
+        onStatus({ connected, txCount, hash, cps }) {
           const dot   = connected ? '🟢' : '🟡';
           const label = connected ? 'LIVE' : 'Reconnecting…';
-          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} live TX`;
+          statusEl.textContent = `${dot} ${label} · ${txCount.toLocaleString()} TX · ${cps.toFixed(1)} CPS`;
           if (hash) _updateTicker(hash, false);
         },
         onHover(hash) {
@@ -4560,12 +4582,13 @@ const wm = {
       });
       ro.observe(wrap);
     });
-    /* Periodic status refresh so toolbar stays current even between TX */
+    /* Periodic status refresh so toolbar stays current even between TX events */
     const _statusTick = setInterval(() => {
       if (!controller) return;
       const dot   = controller.isConnected() ? '🟢' : '🟡';
       const label = controller.isConnected() ? 'LIVE' : 'Reconnecting…';
-      statusEl.textContent = `${dot} ${label} · ${controller.getTxCount().toLocaleString()} live TX`;
+      const cps   = controller.getCps();
+      statusEl.textContent = `${dot} ${label} · ${controller.getTxCount().toLocaleString()} TX · ${cps.toFixed(1)} CPS`;
     }, 2000);
     /* Expose cleanup so close() can stop WebSocket + rAF */
     shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); clearInterval(_statusTick); };
