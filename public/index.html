@@ -2165,6 +2165,7 @@
       <div class="mdp-addr" onclick="copyNanoAddr()" title="Click to copy">
         nano_1z67kr1o6dyb3sdafc87asua9eegdfxcpsqg7qihb49zmrmorncy1fnki84z
       </div>
+      <button onclick="copyNanoAddr()" style="background:#4a5a8a;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;cursor:pointer;font-family:-apple-system,'Segoe UI',sans-serif;font-weight:600;transition:background .12s;" onmouseenter="this.style.background='#5a6a9a'" onmouseleave="this.style.background='#4a5a8a'">📋 Copy Address</button>
     </div>
     <div class="mdp-sep"></div>
     <div class="mdp-credits">
@@ -5518,11 +5519,13 @@ let wifiOpen = false;
 let wifiLoaded = false;
 
 function toggleWifiPopup() {
-  const popup = document.getElementById('wifi-popup');
-  const btn   = document.getElementById('wifi-btn');
+  const popup   = document.getElementById('wifi-popup');
+  const btn     = document.getElementById('wifi-btn');
+  const macBtn  = document.getElementById('mac-wifi-btn');
   wifiOpen = !wifiOpen;
   popup.classList.toggle('open', wifiOpen);
   btn.classList.toggle('active', wifiOpen);
+  if (macBtn) macBtn.classList.toggle('active', wifiOpen);
   if (wifiOpen && !wifiLoaded) loadNanoReps();
 }
 
@@ -5530,6 +5533,8 @@ function closeWifiPopup() {
   wifiOpen = false;
   document.getElementById('wifi-popup').classList.remove('open');
   document.getElementById('wifi-btn').classList.remove('active');
+  const macBtn = document.getElementById('mac-wifi-btn');
+  if (macBtn) macBtn.classList.remove('active');
 }
 
 async function loadNanoReps() {
