@@ -1880,19 +1880,6 @@
     body.macos .wp-btn         { top: 36px; z-index: 601; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
-    /* macOS maximized windows stop at dock top, not at viewport bottom */
-    body.macos .xp-win.maximized { bottom: var(--mac-dock-clearance, 68px) !important; }
-    /* Mobile dock toggle button — shown/hidden by JS based on mode+device */
-    #dock-mobile-toggle {
-      display: none;
-      position: fixed; bottom: 10px; left: 10px;
-      width: 30px; height: 30px;
-      background: rgba(0,0,0,.38); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,.38); border-radius: 50%;
-      color: #fff; font-size: 14px; cursor: pointer; padding: 0;
-      z-index: 601; align-items: center; justify-content: center; line-height: 1;
-      box-shadow: 0 2px 8px rgba(0,0,0,.38);
-    }
     /* Wallpaper button on media windows — match macOS glass style */
     body.macos .mv-wp-btn {
       background: rgba(255,255,255,.14);
@@ -2193,11 +2180,6 @@
       position: fixed; bottom: 8px; left: 0; right: 0;
       justify-content: center; align-items: flex-end;
       z-index: 600; pointer-events: none;
-      transition: transform .32s cubic-bezier(.25, .8, .25, 1);
-    }
-    .mac-dock-wrap.dock-hidden {
-      transform: translateY(calc(100% + 12px));
-      pointer-events: none;
     }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
@@ -2691,8 +2673,6 @@
       <!-- Built dynamically by _buildMacDock() -->
     </div>
   </div>
-  <!-- Mobile dock toggle arrow (macOS mode only, shown/hidden by JS) -->
-  <button id="dock-mobile-toggle" aria-label="Toggle dock">▼</button>
 
   <!-- Dock Settings Panel -->
   <div class="dock-settings-popup" id="dock-settings-popup">
@@ -3936,7 +3916,7 @@ const wm = {
         win.style.bottom = 'auto';
       } else if (_isMobileLandscape()) {
         win.style.width  = (ar2.width - _M_LAND_L - _M_LAND_R) + 'px';
-        win.style.height = (ar2.height - _getDockClearance()) + 'px';
+        win.style.height = ar2.height + 'px';
         win.style.left   = _M_LAND_L + 'px';
         win.style.top    = '0';
         win.style.right  = 'auto';
@@ -3944,7 +3924,7 @@ const wm = {
       } else {
         const w2 = Math.round(ar2.width * 0.67);
         win.style.width  = w2 + 'px';
-        win.style.height = (ar2.height - _getDockClearance()) + 'px';
+        win.style.height = ar2.height + 'px';
         win.style.left   = Math.round((ar2.width - w2) / 2) + 'px';
         win.style.top    = '0';
         win.style.right  = 'auto';
@@ -4131,16 +4111,16 @@ const wm = {
       /* Mobile landscape: leave icon-column gaps on both sides
          (left = icon column, right = recycle-bin column) */
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = (ar.height - _getDockClearance()) + 'px';
+      win.style.height = ar.height + 'px';
       win.style.left   = _M_LAND_L + 'px';
       win.style.top    = '0';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / large tablet: 67% width, height respects dock in macOS mode */
+      /* Desktop / large tablet: 67% width, full height, horizontally centered */
       const w = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = (ar.height - _getDockClearance()) + 'px';
+      win.style.height = ar.height + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
       win.style.top    = '0';
       win.style.right  = 'auto';
@@ -5910,7 +5890,7 @@ async function loadNanoReps() {
         r.weight > 0 ? r.weight.toFixed(2) + '% weight' : null,
         r.version    ? 'v' + r.version : null,
       ].filter(Boolean).join(' · ');
-      return `<div class="wifi-rep" onclick="copyRepAddr(this,'${escHtml(r.account)}')">
+      return `<div class="wifi-rep" onclick="copyRepAddr(this,'${r.account}')">
         <div class="wifi-rep-dot" style="background:${dotColor}" title="${dotTitle}"></div>
         <div class="wifi-rep-info">
           <div class="wifi-rep-alias">${escHtml(display)}</div>
@@ -6532,7 +6512,7 @@ function openMediaViewer(idx) {
       _mvSaved = { left: win.style.left, top: win.style.top,
                    width: win.style.width, height: win.style.height };
       const topOff    = isM ? 28 : 0;
-      const bottomOff = isM ? _getDockClearance() : 48;
+      const bottomOff = isM ? 0 : 48;
       win.style.left   = '0';
       win.style.top    = topOff + 'px';
       win.style.width  = window.innerWidth + 'px';
@@ -6880,8 +6860,7 @@ function _applyWpBtnLayout() {
 
 /* ── Shared helper: compute mobile-portrait window rect ── */
 function _mobilePWinRect(ar) {
-  const safeB = _macMode ? _getDockClearance() : _M_SAFE_B;
-  const h = Math.max(120, ar.height - _M_SAFE_T - safeB);
+  const h = Math.max(120, ar.height - _M_SAFE_T - _M_SAFE_B);
   return { w: ar.width, h, l: 0, t: _M_SAFE_T };
 }
 
@@ -6907,7 +6886,7 @@ function _applyWindowsLayout() {
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = (ar.height - _getDockClearance()) + 'px';
+      win.style.height = ar.height + 'px';
       win.style.left   = _M_LAND_L + 'px';
       win.style.top    = '0';
       win.style.right  = 'auto';
@@ -6915,7 +6894,7 @@ function _applyWindowsLayout() {
     } else {
       const w = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = (ar.height - _getDockClearance()) + 'px';
+      win.style.height = ar.height + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
       win.style.top    = '0';
       win.style.right  = 'auto';
@@ -7459,94 +7438,6 @@ function setUiMode(mode) {
     if (el) el.classList.toggle('active', _macMode);
   });
   localStorage.setItem('ui-mode', mode);
-  /* Dock auto-hide + window clearance */
-  clearTimeout(_dockHideTimer);
-  _dockHideTimer = null;
-  _setDockHidden(false);  /* always reveal dock when switching mode */
-  if (_macMode) {
-    setTimeout(_applyDockClearance, 60); /* wait one frame for dock to render */
-  } else {
-    document.documentElement.style.removeProperty('--mac-dock-clearance');
-  }
-  _updateDockToggleBtn();
-}
-
-/* ══════════════════════════════════════════════════════════
-   MACOS DOCK AUTO-HIDE (desktop) & MOBILE TOGGLE BUTTON
-══════════════════════════════════════════════════════════ */
-let _dockHidden    = false;
-let _dockHideTimer = null;
-const _DOCK_HIDE_DELAY = 2000; /* ms idle before dock slides away */
-const _DOCK_EDGE_PX    = 80;   /* px from viewport bottom = "near dock" zone */
-
-function _isMobile() { return _isMobilePortrait() || _isMobileLandscape(); }
-
-/* Return how many px from the bottom of win-area the dock consumes. */
-function _getDockClearance() {
-  if (!_macMode) return 0;
-  if (_dockHidden) return 8;
-  const wrap = document.getElementById('mac-dock-wrap');
-  return wrap ? (wrap.offsetHeight + 4) : 68;
-}
-
-/* Push --mac-dock-clearance CSS var so maximized XP windows auto-resize. */
-function _applyDockClearance() {
-  document.documentElement.style.setProperty(
-    '--mac-dock-clearance', _getDockClearance() + 'px');
-}
-
-/* Toggle dock visibility state; update CSS var + mobile button label. */
-function _setDockHidden(hidden) {
-  _dockHidden = hidden;
-  const wrap = document.getElementById('mac-dock-wrap');
-  if (wrap) wrap.classList.toggle('dock-hidden', hidden);
-  const btn  = document.getElementById('dock-mobile-toggle');
-  if (btn)  btn.textContent = hidden ? '▲' : '▼';
-  _applyDockClearance();
-}
-
-function _showDock() {
-  clearTimeout(_dockHideTimer);
-  _dockHideTimer = null;
-  if (!_dockHidden) return;
-  _setDockHidden(false);
-}
-
-function _scheduleDockHide() {
-  /* Start timer only once — don't reset on every mousemove. */
-  if (_dockHidden || _dockHideTimer !== null) return;
-  _dockHideTimer = setTimeout(() => {
-    _dockHideTimer = null;
-    if (!_macMode || _isMobile()) return;
-    _setDockHidden(true);
-  }, _DOCK_HIDE_DELAY);
-}
-
-/* Show / hide the mobile toggle button based on current mode + device. */
-function _updateDockToggleBtn() {
-  const btn = document.getElementById('dock-mobile-toggle');
-  if (!btn) return;
-  btn.style.display = (_macMode && _isMobile()) ? 'flex' : 'none';
-}
-
-/* Attach all dock interaction listeners (called once from _macInit). */
-function _initDockBehavior() {
-  /* Desktop: hide after 2 s away from bottom edge, reveal on approach */
-  document.addEventListener('mousemove', e => {
-    if (!_macMode || _isMobile()) return;
-    if (e.clientY >= window.innerHeight - _DOCK_EDGE_PX) {
-      _showDock();
-    } else {
-      _scheduleDockHide();
-    }
-  });
-
-  /* Mobile: tapping the toggle arrow shows / hides the dock */
-  const btn = document.getElementById('dock-mobile-toggle');
-  if (btn) btn.onclick = () => _setDockHidden(!_dockHidden);
-
-  /* Re-evaluate button visibility when orientation / size changes */
-  window.addEventListener('resize', _updateDockToggleBtn);
 }
 
 /* ── Dock icon builder ── */
@@ -8033,9 +7924,6 @@ document.addEventListener('click', function(e) {
     const pct = ((_dockIconSize - +slider.min) / (+slider.max - +slider.min) * 100).toFixed(1) + '%';
     slider.style.setProperty('--pct', pct);
   }
-
-  /* Attach dock auto-hide + mobile toggle behaviour */
-  _initDockBehavior();
 
   /* Set UI mode last (needs dock built) */
   if (savedMode === 'macos') setUiMode('macos');
