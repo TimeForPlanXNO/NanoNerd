@@ -237,9 +237,25 @@ function getJson(hostname, path) {
   });
 }
 
+/* Try multiple RPC nodes in order — return the first that succeeds */
+async function fetchBlockCount() {
+  const nodes = [
+    ['nanoslo.0x.no',         '/proxy'    ],
+    ['mynano.ninja',          '/api/node' ],
+    ['node.nano.community',   '/'         ],
+  ];
+  for (const [hostname, path] of nodes) {
+    try {
+      const d = await postJson(hostname, path, { action: 'block_count' });
+      if (d && (d.cemented || d.count)) return d;
+    } catch {}
+  }
+  throw new Error('all RPC nodes failed');
+}
+
 async function updateNanoStats() {
   try {
-    const blockData = await postJson('nanoslo.0x.no', '/proxy', { action: 'block_count' });
+    const blockData = await fetchBlockCount();
     const now = Date.now();
     const cemented = parseInt(blockData.cemented) || 0;
     if (_prevCemented !== null && _prevCementedTime !== null) {
@@ -278,7 +294,18 @@ async function updateNanoStats() {
 updateNanoStats();
 setInterval(updateNanoStats, 2000);
 
-app.get('/api/nano-stats', (_req, res) => res.json(_nanoStats));
+app.get('/api/nano-stats', (_req, res) => {
+  /* Compute relay CPS from rolling 10-second window of confirmed TXs */
+  const now = Date.now();
+  while (_relayTimes.length && _relayTimes[0] < now - 10000) _relayTimes.shift();
+  const relayCps = Math.round(_relayTimes.length / 10 * 10) / 10;
+  res.json({
+    ..._nanoStats,
+    relayCps,          /* real-time conf/s from live WS feeds (deduped) */
+    nodesOnline: _nodesOnline,
+    totalRelayed: _totalRelayed,
+  });
+});
 
 /* ── Nano Representatives ── */
 app.get("/api/nano-reps", (req, res) => {
@@ -411,19 +438,21 @@ app.post("/api/translate-messages", async (req, res) => {
 });
 
 /* ══════════════════════════════════════════════════════════════
-   NANO LIVE TX RELAY
-   Two WebSocket connections + a frontier-polling fallback ensure
-   real confirmed-block hashes always reach browsers via SSE.
-   • Primary:   wss://node.somenano.com  (all confirmations)
-   • Secondary: wss://rainstorm.city     (account-filtered, online reps)
-   • Fallback:  nanoslo.0x.no/proxy account_info polling when WS quiet
+   NANO LIVE TX RELAY — 3-node redundant architecture
+   All hashes are deduped via _seenHashes before broadcasting.
+   • #1  wss://www.blocklattice.io/ws      (primary, all confirmations)
+   • #2  wss://node.somenano.com/websocket  (secondary, all confirmations)
+   • #3  wss://rainstorm.city/websocket     (rep-filtered confirmations)
+   • Fallback: frontier polling every 15 s when WS feeds are quiet
 ══════════════════════════════════════════════════════════════ */
 const _sseClients    = new Set();
 let   _nanoWsAlive   = false;
-let   _lastTxTime    = 0;         /* epoch ms of last relayed TX */
+let   _nodesOnline   = 0;          /* count of currently-connected WS feeds */
+let   _lastTxTime    = 0;          /* epoch ms of last relayed TX */
 let   _totalRelayed  = 0;
-const _seenHashes    = new Set(); /* deduplication across all sources */
-const _replayBuffer  = [];        /* last N hashes for new SSE clients */
+const _relayTimes    = [];         /* timestamps (ms) for rolling 10-s CPS window */
+const _seenHashes    = new Set();  /* deduplication across all sources */
+const _replayBuffer  = [];         /* last N hashes for new SSE clients */
 const REPLAY_MAX     = 20;
 
 function _broadcastTx(tx) {
@@ -442,9 +471,13 @@ function _relayHash(hash, account) {
     const iter = _seenHashes.values();
     for (let i = 0; i < 2000; i++) _seenHashes.delete(iter.next().value);
   }
-  _lastTxTime = Date.now();
+  const now = Date.now();
+  _lastTxTime = now;
   _nanoWsAlive = true;
   _totalRelayed++;
+  /* Rolling relay-time window — used to compute real-time CPS */
+  _relayTimes.push(now);
+  if (_relayTimes.length > 1000) _relayTimes.shift();
   if (_totalRelayed <= 5 || _totalRelayed % 50 === 0) {
     console.log(`[nano-relay] TX #${_totalRelayed}: ${h.slice(0, 16)}… clients=${_sseClients.size}`);
   }
@@ -466,6 +499,7 @@ function _makeWs(url, onOpen, onConfirmation) {
       ws = new WebSocket(url);
       ws.addEventListener('open', () => {
         console.log(`[nano-relay] Connected ✓ ${url}`);
+        _nodesOnline++;
         onOpen(ws);
         /* Server-side keepalive — prevents silent dead connections */
         pingTimer = setInterval(() => {
@@ -485,6 +519,7 @@ function _makeWs(url, onOpen, onConfirmation) {
       });
       ws.addEventListener('close', () => {
         clearInterval(pingTimer);
+        _nodesOnline = Math.max(0, _nodesOnline - 1);
         console.log(`[nano-relay] Closed ${url} — retry in 8 s`);
         retryTimer = setTimeout(connect, 8000);
       });

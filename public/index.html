@@ -1971,6 +1971,8 @@
       <div class="stats-section-title"><span class="stats-live-dot"></span>Network · Live</div>
       <div class="stats-row"><span class="stats-label">Conf/sec</span><span class="stats-value blue" id="sp-tps">—</span></div>
       <div class="stats-row"><span class="stats-label">Avg Finality</span><span class="stats-value green" id="sp-finality">—</span></div>
+      <div class="stats-row"><span class="stats-label">Nodes Online</span><span class="stats-value" id="sp-nodes">—</span></div>
+      <div class="stats-row"><span class="stats-label">Total Relayed</span><span class="stats-value" id="sp-relayed">—</span></div>
       <div class="stats-row"><span class="stats-label">Cemented Blocks</span><span class="stats-value" id="sp-cemented">—</span></div>
       <div class="stats-row"><span class="stats-label">Total Blocks</span><span class="stats-value" id="sp-blocks">—</span></div>
     </div>
@@ -5028,7 +5030,8 @@ function toggleStatsPopup() {
   btn.classList.toggle('active', statsOpen);
   if (statsOpen) {
     fetchAndRenderStats();
-    statsTimer = setInterval(fetchAndRenderStats, 2000);
+    /* 1-second refresh while popup is open for crisp real-time Conf/sec */
+    statsTimer = setInterval(fetchAndRenderStats, 1000);
   } else {
     clearInterval(statsTimer);
     statsTimer = null;
@@ -5073,38 +5076,51 @@ async function fetchAndRenderStats() {
     if (mcapEl) mcapEl.textContent = fmtUsd(data.marketCap);
     if (volEl)  volEl.textContent  = fmtUsd(data.volume24h);
 
-    /* Network */
+    /* Network — Conf/sec comes from live WS relay (relayCps), falls back to polled tps */
     const tpsEl      = document.getElementById('sp-tps');
     const cementedEl = document.getElementById('sp-cemented');
     const blocksEl   = document.getElementById('sp-blocks');
     const finalityEl = document.getElementById('sp-finality');
+    const nodesEl    = document.getElementById('sp-nodes');
+    const relayedEl  = document.getElementById('sp-relayed');
+
     if (tpsEl) {
-      if (data.tps === null) {
-        tpsEl.textContent = 'warming up…';
-      } else {
+      const cps = data.relayCps;
+      if (cps !== undefined && (cps > 0 || data.totalRelayed > 0)) {
+        tpsEl.textContent = cps.toFixed(1) + ' conf/s';
+        tpsEl.className   = 'stats-value blue';
+      } else if (data.tps !== null && data.tps !== undefined) {
         tpsEl.textContent = data.tps.toFixed(2) + ' conf/s';
+        tpsEl.className   = 'stats-value blue';
+      } else {
+        tpsEl.textContent = 'warming up…';
+        tpsEl.className   = 'stats-value';
       }
     }
     if (finalityEl) {
-      if (data.lastFinality != null) {
-        /* Show finality from latest block; freeze until next block arrives */
-        finalityEl.textContent = data.lastFinality.toFixed(3) + 's';
-      } else {
-        finalityEl.textContent = 'warming up…';
-      }
+      finalityEl.textContent = data.lastFinality != null
+        ? data.lastFinality.toFixed(3) + 's'
+        : 'warming up…';
     }
+    if (nodesEl) {
+      const n = data.nodesOnline ?? 0;
+      nodesEl.textContent = n > 0 ? n + ' / 3 connected' : '⚠️ reconnecting…';
+      nodesEl.className   = 'stats-value ' + (n > 0 ? 'green' : 'red');
+    }
+    if (relayedEl) relayedEl.textContent = data.totalRelayed ? fmtNum(data.totalRelayed) : '—';
     if (cementedEl) cementedEl.textContent = fmtNum(data.cemented);
     if (blocksEl)   blocksEl.textContent   = fmtNum(data.blockCount);
 
-    /* Footer */
+    /* Footer — show age of last cemented-count poll + WS node list */
     const updEl = document.getElementById('sp-updated');
-    if (updEl && data.lastUpdated) {
-      const ago = Math.round((Date.now() - data.lastUpdated) / 1000);
-      updEl.textContent = 'Updated ' + (ago < 3 ? 'just now' : ago + 's ago') + ' · nanoslo.0x.no';
+    if (updEl) {
+      const ago = data.lastUpdated ? Math.round((Date.now() - data.lastUpdated) / 1000) : null;
+      const ageStr = ago === null ? '' : (ago < 3 ? 'just now' : ago + 's ago');
+      updEl.textContent = 'Conf/sec: live WS · ' + (ageStr ? 'counts: ' + ageStr : 'live');
     }
   } catch(e) {
     const updEl = document.getElementById('sp-updated');
-    if (updEl) updEl.textContent = '⚠️ Connection error';
+    if (updEl) updEl.textContent = '⚠️ Connection error — retrying…';
   }
 }
 
@@ -5983,6 +5999,11 @@ showWelcome();
 setupChatScroll();
 updateClock();
 setInterval(updateClock, 10000);
+
+/* Background stats fetch — keeps data warm so popup is instant and fresh.
+   Runs every 10 s always; the popup's own 1-s interval fires on top when open. */
+fetchAndRenderStats();
+setInterval(fetchAndRenderStats, 10000);
 
 /* ── Orientation / resize handler ── *
  * Fires when the device rotates or the browser window is resized.
