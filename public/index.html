@@ -1669,9 +1669,9 @@
       font-size: 11px; font-weight: bold; color: #0d3880; margin: 0 0 9px;
       padding-bottom: 4px; border-bottom: 1px solid #a0a0a0;
     }
-    /* Color wallpaper swatches */
+    /* Color wallpaper swatches — 6-col to accommodate expanded set */
     .color-wp-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px;
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
     }
     .color-wp-swatch {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -1688,6 +1688,25 @@
       font-size: 8px; color: #333; text-align: center;
       line-height: 1.2; word-break: break-word;
     }
+    /* Supply banner in stats popup */
+    .sp-supply-banner { background: rgba(0,180,60,.08); border-radius: 6px;
+      border: 1px solid rgba(0,200,60,.18); padding: 7px 8px !important; }
+    .sp-supply-title { font-size: 10px; font-weight: bold; color: #00a830;
+      margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+    /* NanoNerd bg color picker inside settings dialog */
+    .nn-bg-cp-wrap {
+      background: #1a2440; border-radius: 8px; padding: 10px 10px 8px;
+      display: flex; flex-direction: column; gap: 8px; margin-top: 4px;
+    }
+    .nn-bg-cp-row { display: flex; gap: 8px; align-items: center; }
+    .nn-bg-cp-wrap .cp-presets { grid-template-columns: repeat(6,1fr); }
+    .nn-bg-reset-btn {
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+      color: #a0b8e0; border-radius: 6px; padding: 5px 10px;
+      cursor: pointer; font-size: 10px; font-family: "Tahoma",sans-serif;
+      transition: background .15s; width: 100%;
+    }
+    .nn-bg-reset-btn:hover { background: rgba(255,255,255,.16); color: #fff; }
     /* Voice buttons */
     .voice-row { display: flex; gap: 8px; margin-top: 6px; }
     .voice-btn {
@@ -1907,6 +1926,20 @@
           <div class="sdlg-title">🎨 Color Wallpapers</div>
           <div class="color-wp-grid" id="color-wp-grid"></div>
         </div>
+        <!-- Custom Chat Background Color Picker -->
+        <div class="sdlg-section">
+          <div class="sdlg-title">🎨 Pick Any Chat Background Color</div>
+          <div class="nn-bg-cp-wrap">
+            <div class="nn-bg-cp-row">
+              <input type="color" id="nn-bg-color-input" class="cp-color-wheel"
+                     value="#001800" oninput="_applyNnBgColorHex(this.value)">
+              <button class="cp-eye" id="nn-bg-eye-btn" onclick="_nnBgPickFromScreen()"
+                      title="Pick from screen">💧 Pick</button>
+            </div>
+            <div class="cp-presets" id="nn-bg-presets"></div>
+            <button class="nn-bg-reset-btn" onclick="_applyColorWallpaper('linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)','Nano Green'); document.getElementById(\'nn-bg-color-input\').value=\'#001800\'">↺ Reset to Nano Green</button>
+          </div>
+        </div>
         <!-- Voice Settings -->
         <div class="sdlg-section">
           <div class="sdlg-title">🔊 Text-to-Speech Voice</div>
@@ -1960,6 +1993,18 @@
       <span class="sp-icon xno-gold" style="font-size:14px;">Ӿ</span>
       Nano Network · Live Stats
     </div>
+    <!-- Fixed supply banner — always shown at top -->
+    <div class="stats-section sp-supply-banner">
+      <div class="sp-supply-title"><span class="xno-gold">Ӿ</span> Fixed Supply · Zero Inflation</div>
+      <div class="stats-row">
+        <span class="stats-label">Total Supply</span>
+        <span class="stats-value green" style="font-weight:bold">133,248,289 XNO</span>
+      </div>
+      <div class="stats-row">
+        <span class="stats-label">Inflation Rate</span>
+        <span class="stats-value green" style="font-weight:bold">0% — Hardcoded forever</span>
+      </div>
+    </div>
     <div class="stats-section" id="stats-price-section">
       <div class="stats-section-title">XNO Price</div>
       <div class="stats-row"><span class="stats-label">Price (USD)</span><span class="stats-value" id="sp-price">—</span></div>
@@ -1971,8 +2016,6 @@
       <div class="stats-section-title"><span class="stats-live-dot"></span>Network · Live</div>
       <div class="stats-row"><span class="stats-label">Conf/sec</span><span class="stats-value blue" id="sp-tps">—</span></div>
       <div class="stats-row"><span class="stats-label">Avg Finality</span><span class="stats-value green" id="sp-finality">—</span></div>
-      <div class="stats-row"><span class="stats-label">Nodes Online</span><span class="stats-value" id="sp-nodes">—</span></div>
-      <div class="stats-row"><span class="stats-label">Total Relayed</span><span class="stats-value" id="sp-relayed">—</span></div>
       <div class="stats-row"><span class="stats-label">Cemented Blocks</span><span class="stats-value" id="sp-cemented">—</span></div>
       <div class="stats-row"><span class="stats-label">Total Blocks</span><span class="stats-value" id="sp-blocks">—</span></div>
     </div>
@@ -2128,17 +2171,48 @@ const WALLPAPERS = [
 ];
 
 /* ── 10 AI-designed gradient wallpapers (Settings ⚙️ panel) ── */
+/* Build a repeating Ӿ-stamp SVG pattern over a gradient — used by _COLOR_WALLPAPERS */
+function _xnoSvgBg(grad, stampHex, opacity, sz) {
+  sz      = sz      || 90;
+  opacity = opacity || 0.16;
+  /* feDropShadow gives the symbol depth and a subtle glow */
+  var svg = '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'' + sz + '\' height=\'' + sz + '\'>'
+    + '<defs><filter id=\'sh\'>'
+    + '<feDropShadow dx=\'0\' dy=\'1\' stdDeviation=\'4\' flood-color=\'' + stampHex + '\' flood-opacity=\'0.55\'/>'
+    + '</filter></defs>'
+    + '<text x=\'' + (sz / 2) + '\' y=\'' + (sz * 0.70) + '\' text-anchor=\'middle\''
+    + ' font-size=\'' + Math.round(sz * 0.72) + '\' fill=\'' + stampHex + '\' opacity=\'' + opacity + '\''
+    + ' font-family=\'Georgia,serif\' filter=\'url(#sh)\'>\u04FF</text>'
+    + '</svg>';
+  return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '") center/' + sz + 'px ' + sz + 'px,' + grad;
+}
+
 const _COLOR_WALLPAPERS = [
-  { name: 'Deep Space',   css: 'linear-gradient(135deg,#080818 0%,#12124a 55%,#060620 100%)' },
-  { name: 'Nano Green',   css: 'linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)' },
-  { name: 'Sunset Glow',  css: 'linear-gradient(170deg,#0d0033 0%,#7b1fa2 35%,#e64a19 72%,#ff8f00 100%)' },
-  { name: 'Ocean Abyss',  css: 'linear-gradient(135deg,#000a14 0%,#002040 55%,#003d66 100%)' },
-  { name: 'Forest Night', css: 'linear-gradient(135deg,#010e01 0%,#0a2e0a 55%,#163616 100%)' },
-  { name: 'Midnight',     css: 'linear-gradient(135deg,#000000 0%,#060610 100%)' },
-  { name: 'Rose Ember',   css: 'linear-gradient(135deg,#140608 0%,#3d1015 42%,#7a2030 72%,#b85040 100%)' },
-  { name: 'Arctic Frost', css: 'linear-gradient(135deg,#020d1a 0%,#0a2440 55%,#1a4060 100%)' },
-  { name: 'Lava Flow',    css: 'linear-gradient(170deg,#0c0000 0%,#3d0800 35%,#7a1200 65%,#bb3000 88%,#e05010 100%)' },
-  { name: 'Amethyst',     css: 'linear-gradient(135deg,#0e0018 0%,#2e0050 55%,#5a0090 100%)' },
+  /* ── Classic dark gradients ─────────────────────────────────── */
+  { name: 'Deep Space',    css: 'linear-gradient(135deg,#080818 0%,#14145a 55%,#06061e 100%)' },
+  { name: 'Nano Green',    css: 'linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)' },
+  { name: 'Sunset Glow',   css: 'linear-gradient(170deg,#0d0033 0%,#7b1fa2 35%,#e64a19 72%,#ff8f00 100%)' },
+  { name: 'Ocean Abyss',   css: 'linear-gradient(135deg,#000a14 0%,#002040 55%,#003d66 100%)' },
+  { name: 'Forest Night',  css: 'linear-gradient(135deg,#010e01 0%,#0a2e0a 55%,#163616 100%)' },
+  { name: 'Midnight',      css: 'linear-gradient(135deg,#000000 0%,#060610 100%)' },
+  { name: 'Rose Ember',    css: 'linear-gradient(135deg,#140608 0%,#3d1015 42%,#7a2030 72%,#b85040 100%)' },
+  { name: 'Arctic Frost',  css: 'linear-gradient(135deg,#020d1a 0%,#0a2440 55%,#1a4060 100%)' },
+  { name: 'Lava Flow',     css: 'linear-gradient(170deg,#0c0000 0%,#3d0800 35%,#7a1200 65%,#bb3000 88%,#e05010 100%)' },
+  { name: 'Amethyst',      css: 'linear-gradient(135deg,#0e0018 0%,#2e0050 55%,#5a0090 100%)' },
+  /* ── Vivid Nano-colour gradients ────────────────────────────── */
+  { name: 'Nano Vivid',    css: 'linear-gradient(135deg,#00cc44 0%,#008833 40%,#002e10 100%)' },
+  { name: 'Electric Blue', css: 'linear-gradient(135deg,#0055ff 0%,#0022aa 40%,#00071e 100%)' },
+  { name: 'Neon Violet',   css: 'linear-gradient(135deg,#aa00ff 0%,#550088 40%,#110022 100%)' },
+  { name: 'Emerald Rush',  css: 'linear-gradient(160deg,#00ff88 0%,#00cc55 25%,#007733 55%,#001a0a 100%)' },
+  { name: 'Cyber Teal',    css: 'linear-gradient(135deg,#00cccc 0%,#006666 40%,#001a1a 100%)' },
+  { name: 'Radiant Gold',  css: 'linear-gradient(160deg,#ffe066 0%,#cc8800 35%,#663300 70%,#1a0800 100%)' },
+  /* ── Ӿ stamp wallpapers (symbol with drop-shadow for depth) ─── */
+  { name: 'XNO Stamp',    css: _xnoSvgBg('linear-gradient(135deg,#001500 0%,#003300 50%,#000a00 100%)','#00ff66',0.17,90) },
+  { name: 'Gold Stamp',   css: _xnoSvgBg('linear-gradient(160deg,#150800 0%,#331400 50%,#4a2000 100%)','#ffcc00',0.20,90) },
+  { name: 'Violet Stamp', css: _xnoSvgBg('linear-gradient(135deg,#0c0018 0%,#280045 50%,#440080 100%)','#cc44ff',0.18,90) },
+  { name: 'Ice Stamp',    css: _xnoSvgBg('linear-gradient(135deg,#000818 0%,#001440 50%,#002255 100%)','#44ccff',0.18,90) },
+  { name: 'Ember Stamp',  css: _xnoSvgBg('linear-gradient(135deg,#180000 0%,#440000 50%,#7a1000 100%)','#ff6633',0.18,90) },
+  { name: 'Gold Radial',  css: _xnoSvgBg('radial-gradient(ellipse at 30% 30%,#332200 0%,#1a0800 60%,#000000 100%)','#ffaa00',0.22,100) },
 ];
 
 let _currentWallpaper     = localStorage.getItem('xp-wallpaper')      || '/wallpapers/Bliss.webp';
@@ -2630,6 +2704,29 @@ function _applyColorWallpaper(css, name) {
     el.classList.toggle('active', el.dataset.css === css));
   closeSettingsDlg();
   showCopyToast(`🎨 ${name} applied to chat`);
+}
+
+/* Apply a hex colour as the NanoNerd chat background */
+function _applyNnBgColorHex(hex) {
+  /* Derive a rich gradient from the chosen base colour for depth */
+  const css = 'radial-gradient(ellipse at 20% 20%,' + hex + ' 0%,' + hex + 'aa 40%,' + hex + '55 70%,#000000 100%)';
+  const nnWin  = wm.els['nanonerd']?.win;
+  const content = nnWin ? nnWin.querySelector('.xp-content') : null;
+  if (content) content.style.background = css;
+  localStorage.setItem('xp-nn-bg',      css);
+  localStorage.setItem('xp-nn-bg-name', 'Color: ' + hex);
+  localStorage.setItem('xp-nn-bg-hex',  hex);
+  document.querySelectorAll('.color-wp-swatch').forEach(el => el.classList.remove('active'));
+  const inp = document.getElementById('nn-bg-color-input');
+  if (inp) inp.value = hex;
+  closeSettingsDlg();
+  showCopyToast('🎨 Chat background updated');
+}
+
+/* EyeDropper for NanoNerd background (Chrome / Edge) */
+async function _nnBgPickFromScreen() {
+  if (!window.EyeDropper) { alert('Screen colour picker not supported in this browser.'); return; }
+  try { const r = await new EyeDropper().open(); _applyNnBgColorHex(r.sRGBHex); } catch { /* cancelled */ }
 }
 
 /* Highlight the active voice button */
@@ -4607,8 +4704,10 @@ const wm = {
       const cps   = controller.getCps();
       statusEl.textContent = `${dot} ${label} · ${controller.getTxCount().toLocaleString()} TX · ${cps.toFixed(1)} CPS`;
     }, 2000);
+    /* Expose CPS globally so stats popup shows the same number as the Matrix toolbar */
+    window._matrixGetCps = () => controller?.getCps() ?? null;
     /* Expose cleanup so close() can stop WebSocket + rAF */
-    shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); clearInterval(_statusTick); };
+    shell._matrixStop = () => { controller?.stop(); ro?.disconnect(); clearInterval(_statusTick); window._matrixGetCps = null; };
     return shell;
   },
 
@@ -5076,17 +5175,17 @@ async function fetchAndRenderStats() {
     if (mcapEl) mcapEl.textContent = fmtUsd(data.marketCap);
     if (volEl)  volEl.textContent  = fmtUsd(data.volume24h);
 
-    /* Network — Conf/sec comes from live WS relay (relayCps), falls back to polled tps */
+    /* Network — Conf/sec: prefer Matrix engine CPS (same source as Matrix window toolbar)
+       then fall back to server relay CPS, then polled tps */
     const tpsEl      = document.getElementById('sp-tps');
     const cementedEl = document.getElementById('sp-cemented');
     const blocksEl   = document.getElementById('sp-blocks');
     const finalityEl = document.getElementById('sp-finality');
-    const nodesEl    = document.getElementById('sp-nodes');
-    const relayedEl  = document.getElementById('sp-relayed');
 
     if (tpsEl) {
-      const cps = data.relayCps;
-      if (cps !== undefined && (cps > 0 || data.totalRelayed > 0)) {
+      const matrixCps = window._matrixGetCps?.();
+      const cps = (matrixCps !== null && matrixCps !== undefined) ? matrixCps : data.relayCps;
+      if (cps !== undefined && cps !== null && (cps > 0 || data.totalRelayed > 0)) {
         tpsEl.textContent = cps.toFixed(1) + ' conf/s';
         tpsEl.className   = 'stats-value blue';
       } else if (data.tps !== null && data.tps !== undefined) {
@@ -5102,12 +5201,6 @@ async function fetchAndRenderStats() {
         ? data.lastFinality.toFixed(3) + 's'
         : 'warming up…';
     }
-    if (nodesEl) {
-      const n = data.nodesOnline ?? 0;
-      nodesEl.textContent = n > 0 ? n + ' / 3 connected' : '⚠️ reconnecting…';
-      nodesEl.className   = 'stats-value ' + (n > 0 ? 'green' : 'red');
-    }
-    if (relayedEl) relayedEl.textContent = data.totalRelayed ? fmtNum(data.totalRelayed) : '—';
     if (cementedEl) cementedEl.textContent = fmtNum(data.cemented);
     if (blocksEl)   blocksEl.textContent   = fmtNum(data.blockCount);
 
@@ -6302,9 +6395,34 @@ document.addEventListener('click', function(e) {
   });
 })();
 
-/* Disable eyedropper button if browser lacks support */
+/* Disable eyedropper buttons if browser lacks support */
 (function() {
-  if (!window.EyeDropper) document.getElementById('cp-eye-btn').disabled = true;
+  if (!window.EyeDropper) {
+    document.getElementById('cp-eye-btn').disabled = true;
+    const nbEye = document.getElementById('nn-bg-eye-btn');
+    if (nbEye) nbEye.disabled = true;
+  }
+})();
+
+/* Build NanoNerd background preset swatches in settings dialog */
+(function _buildNnBgPresets() {
+  const container = document.getElementById('nn-bg-presets');
+  if (!container) return;
+  _CP_PRESETS.forEach(function(p) {
+    const sw = document.createElement('button');
+    sw.className = 'cp-swatch';
+    sw.title = p.label;
+    sw.style.background = p.hex;
+    sw.onclick = function() { _applyNnBgColorHex(p.hex); };
+    container.appendChild(sw);
+  });
+})();
+
+/* Restore saved nn-bg hex value into the color input */
+(function() {
+  const savedHex = localStorage.getItem('xp-nn-bg-hex');
+  const inp = document.getElementById('nn-bg-color-input');
+  if (inp && savedHex) inp.value = savedHex;
 })();
 
 /* Restore saved theme colour on startup */
