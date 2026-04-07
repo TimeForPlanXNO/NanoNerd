@@ -1617,62 +1617,83 @@
     .xp-lang-btn:hover  { filter: brightness(1.25); }
     .xp-lang-btn:active { filter: brightness(.8); }
 
-    /* ── NANONERD INLINE STYLE PANEL (slides in from right inside the window) ── */
-    .nn-style-panel {
-      position: absolute; inset: 0; z-index: 25;
+    /* ── NANONERD SETTINGS DIALOG (compact floating tabbed panel) ── */
+    .nn-dlg {
+      position: absolute; top: 44px; right: 4px; z-index: 30;
+      width: 292px;
+      background: #12181f; border: 1px solid #2a3a4a;
+      border-radius: 7px; box-shadow: 0 8px 28px rgba(0,0,0,.72);
       display: flex; flex-direction: column;
-      background: var(--np);
-      transform: translateX(100%);
-      transition: transform .24s cubic-bezier(.4,0,.2,1);
+      opacity: 0; transform: translateY(-8px) scale(.97);
+      transition: opacity .18s ease, transform .18s ease;
       pointer-events: none;
     }
-    .nn-style-panel.open { transform: translateX(0); pointer-events: all; }
-    .nns-head {
+    .nn-dlg.open { opacity: 1; transform: none; pointer-events: all; }
+    /* header */
+    .nn-dlg-head {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 8px 12px 7px; border-bottom: 1px solid var(--nb);
-      flex-shrink: 0; color: var(--na); font-size: 12px; font-weight: bold;
+      padding: 7px 10px 6px; border-bottom: 1px solid #2a3a4a;
+      flex-shrink: 0; font-size: 11px; font-weight: bold; color: var(--na);
     }
-    .nns-close {
-      background: none; border: none; color: var(--nm); font-size: 15px;
-      cursor: pointer; padding: 2px 5px; border-radius: 4px; line-height: 1;
-      transition: color .12s;
+    .nn-dlg-close {
+      background: none; border: none; color: #667; font-size: 14px;
+      cursor: pointer; padding: 1px 4px; border-radius: 3px; line-height: 1;
     }
-    .nns-close:hover { color: var(--nt); }
-    .nns-body {
-      flex: 1; overflow-y: auto; padding: 10px 12px 14px;
+    .nn-dlg-close:hover { color: var(--nt); }
+    /* tab bar */
+    .nn-tabs {
+      display: flex; border-bottom: 1px solid #2a3a4a;
+      flex-shrink: 0; background: #0e1419;
+      border-radius: 0;
     }
-    .nns-body::-webkit-scrollbar { width: 6px; }
-    .nns-body::-webkit-scrollbar-track { background: transparent; }
-    .nns-body::-webkit-scrollbar-thumb { background: var(--nb); border-radius: 3px; }
-    .nns-section + .nns-section { margin-top: 14px; }
+    .nn-tab {
+      flex: 1; padding: 6px 2px; font-size: 9.5px;
+      font-family: "Tahoma", sans-serif;
+      background: none; border: none; color: #667;
+      cursor: pointer; transition: color .12s, background .12s;
+      border-bottom: 2px solid transparent;
+      line-height: 1.3;
+    }
+    .nn-tab:hover  { color: var(--nm); background: rgba(255,255,255,.04); }
+    .nn-tab.active { color: var(--na); border-bottom-color: var(--na); background: rgba(0,201,255,.06); font-weight: bold; }
+    /* panes */
+    .nn-pane {
+      display: none; overflow-y: auto; padding: 10px 10px 12px;
+      max-height: 260px;
+    }
+    .nn-pane.active { display: block; }
+    .nn-pane::-webkit-scrollbar { width: 5px; }
+    .nn-pane::-webkit-scrollbar-thumb { background: #2a3a4a; border-radius: 3px; }
+    /* section label */
     .nns-title {
-      font-size: 10px; font-weight: bold; color: var(--na); letter-spacing: .3px;
-      margin-bottom: 8px; padding-bottom: 3px; border-bottom: 1px solid var(--nb);
+      font-size: 9px; font-weight: bold; color: var(--na); letter-spacing: .3px;
+      margin-bottom: 7px; padding-bottom: 3px; border-bottom: 1px solid #2a3a4a;
     }
-    /* Wallpaper grid — 4-col, bigger previews so Ӿ stamps are visible */
+    /* Wallpaper grid — 4-col so Ӿ stamp previews are large enough to see */
     .color-wp-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
     }
     .color-wp-swatch {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      cursor: pointer; padding: 3px; border-radius: 5px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      cursor: pointer; padding: 2px; border-radius: 4px;
       border: 2px solid transparent; transition: border-color .12s, background .12s;
     }
     .color-wp-swatch:hover  { border-color: var(--na); background: rgba(255,255,255,.07); }
     .color-wp-swatch.active { border-color: var(--na); background: rgba(255,255,255,.12); }
     .color-wp-preview {
-      width: 100%; aspect-ratio: 3/2; border-radius: 4px;
-      border: 1px solid rgba(255,255,255,.12);
+      width: 100%; aspect-ratio: 3/2; border-radius: 3px;
+      border: 1px solid rgba(255,255,255,.15);
     }
     .color-wp-label {
-      font-size: 7.5px; color: var(--nm); text-align: center;
-      line-height: 1.2; word-break: break-word;
+      font-size: 7px; color: #667; text-align: center;
+      line-height: 1.1; word-break: break-word;
     }
     /* Opacity row */
-    .nns-opacity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+    .nns-opacity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
     .nns-slider { flex: 1; accent-color: var(--na); cursor: pointer; height: 4px; }
-    .nns-opacity-lbl { font-size: 9px; color: var(--nm); white-space: nowrap; }
-    .nns-opacity-pct { font-size: 9px; color: var(--na); text-align: center; }
+    .nns-opacity-lbl { font-size: 9px; color: #667; white-space: nowrap; }
+    .nns-opacity-pct { font-size: 10px; color: var(--na); text-align: center; font-weight: bold; }
+    .nns-opacity-hint { font-size: 8.5px; color: #556; margin-top: 4px; line-height: 1.4; }
     /* Background layer — positioned behind all chat content, opacity-controllable */
     .nn-bg-layer {
       position: absolute; inset: 0; z-index: 0;
@@ -2150,12 +2171,12 @@ const _COLOR_WALLPAPERS = [
   { name: 'Cyber Teal',    css: 'linear-gradient(135deg,#00cccc 0%,#006666 40%,#001a1a 100%)' },
   { name: 'Radiant Gold',  css: 'linear-gradient(160deg,#ffe066 0%,#cc8800 35%,#663300 70%,#1a0800 100%)' },
   /* ── Ӿ stamp wallpapers (symbol with drop-shadow for depth) ─── */
-  { name: 'XNO Stamp',    css: _xnoSvgBg('linear-gradient(135deg,#001500 0%,#003300 50%,#000a00 100%)','#00ff66',0.17,90) },
-  { name: 'Gold Stamp',   css: _xnoSvgBg('linear-gradient(160deg,#150800 0%,#331400 50%,#4a2000 100%)','#ffcc00',0.20,90) },
-  { name: 'Violet Stamp', css: _xnoSvgBg('linear-gradient(135deg,#0c0018 0%,#280045 50%,#440080 100%)','#cc44ff',0.18,90) },
-  { name: 'Ice Stamp',    css: _xnoSvgBg('linear-gradient(135deg,#000818 0%,#001440 50%,#002255 100%)','#44ccff',0.18,90) },
-  { name: 'Ember Stamp',  css: _xnoSvgBg('linear-gradient(135deg,#180000 0%,#440000 50%,#7a1000 100%)','#ff6633',0.18,90) },
-  { name: 'Gold Radial',  css: _xnoSvgBg('radial-gradient(ellipse at 30% 30%,#332200 0%,#1a0800 60%,#000000 100%)','#ffaa00',0.22,100) },
+  { name: 'XNO Stamp',    css: _xnoSvgBg('linear-gradient(135deg,#001500 0%,#003300 50%,#000a00 100%)','#00ff66',0.42,90) },
+  { name: 'Gold Stamp',   css: _xnoSvgBg('linear-gradient(160deg,#150800 0%,#331400 50%,#4a2000 100%)','#ffcc00',0.45,90) },
+  { name: 'Violet Stamp', css: _xnoSvgBg('linear-gradient(135deg,#0c0018 0%,#280045 50%,#440080 100%)','#cc44ff',0.44,90) },
+  { name: 'Ice Stamp',    css: _xnoSvgBg('linear-gradient(135deg,#000818 0%,#001440 50%,#002255 100%)','#44ccff',0.44,90) },
+  { name: 'Ember Stamp',  css: _xnoSvgBg('linear-gradient(135deg,#180000 0%,#440000 50%,#7a1000 100%)','#ff6633',0.44,90) },
+  { name: 'Gold Radial',  css: _xnoSvgBg('radial-gradient(ellipse at 30% 30%,#332200 0%,#1a0800 60%,#000000 100%)','#ffaa00',0.48,100) },
 ];
 
 let _currentWallpaper     = localStorage.getItem('xp-wallpaper')      || '/wallpapers/Bliss.webp';
@@ -2616,7 +2637,7 @@ function _nnStyleToggle() {
     _updateVoiceBtns();
     _restoreNnOpacitySlider();
     panel.classList.add('open');
-    document.getElementById('nn-style-btn')?.classList.add('active');
+    document.getElementById('nn-settings-tb-btn')?.classList.add('active');
     _settingsDlgOpen = true;
   } else {
     _nnStyleClose();
@@ -2626,15 +2647,29 @@ function _nnStyleToggle() {
 function _nnStyleClose() {
   const panel = document.getElementById('nn-style-panel');
   if (panel) panel.classList.remove('open');
-  document.getElementById('nn-style-btn')?.classList.remove('active');
+  document.getElementById('nn-settings-tb-btn')?.classList.remove('active');
   _settingsDlgOpen = false;
+}
+
+/* Switch visible tab inside the settings dialog */
+function _nnTab(btn, paneId) {
+  const dlg = btn.closest('.nn-dlg');
+  if (!dlg) return;
+  dlg.querySelectorAll('.nn-tab').forEach(t => t.classList.remove('active'));
+  dlg.querySelectorAll('.nn-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  const pane = dlg.querySelector('#' + paneId);
+  if (pane) pane.classList.add('active');
+  /* Lazy-init the opacity slider value when the Fade tab opens */
+  if (paneId === 'nn-pane-fade') _restoreNnOpacitySlider();
 }
 
 /* Backwards-compat stubs (some code still calls these) */
 function openSettingsDlg()  { _nnStyleToggle(); }
 function closeSettingsDlg() { _nnStyleClose(); }
 
-/* Build the 10-swatch color wallpaper grid (lazy, one-time) */
+/* Build the wallpaper grid (lazy, one-time) — uses JS style assignment to
+   avoid breaking SVG data-URL backgrounds when embedded in innerHTML */
 function _buildColorWpGrid() {
   const grid = document.getElementById('color-wp-grid');
   if (!grid || grid.children.length > 0) return;
@@ -2643,7 +2678,15 @@ function _buildColorWpGrid() {
     const el = document.createElement('div');
     el.className = 'color-wp-swatch' + (savedCss === wp.css ? ' active' : '');
     el.dataset.css = wp.css;
-    el.innerHTML = `<div class="color-wp-preview" style="background:${wp.css}"></div><div class="color-wp-label">${wp.name}</div>`;
+    /* Build preview and label via DOM (not innerHTML) so SVG data URLs are safe */
+    const preview = document.createElement('div');
+    preview.className = 'color-wp-preview';
+    preview.style.background = wp.css;        /* safe: JS property, no HTML escaping */
+    const label = document.createElement('div');
+    label.className = 'color-wp-label';
+    label.textContent = wp.name;
+    el.appendChild(preview);
+    el.appendChild(label);
     el.onclick = () => _applyColorWallpaper(wp.css, wp.name);
     grid.appendChild(el);
   });
@@ -2664,7 +2707,6 @@ function _applyColorWallpaper(css, name) {
   /* Reset color input to neutral */
   const inp = document.getElementById('nn-bg-color-input');
   if (inp) inp.value = '#001800';
-  _nnStyleClose();
   showCopyToast(`🎨 ${name} applied to chat`);
 }
 
@@ -3282,7 +3324,7 @@ const wm = {
     const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
-      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button>` : ''}
+      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button><button class="xp-lang-btn" id="nn-settings-tb-btn" title="Chat settings" onclick="_nnStyleToggle()" style="margin-left:3px;font-size:13px;padding:0 6px;">⚙️</button>` : ''}
       <div class="xp-btns">
         <button class="xp-btn min" title="Minimize">&#8211;</button>
         <button class="xp-btn max" title="${maxTitle}"><span class="max-icon"></span></button>
@@ -3295,14 +3337,14 @@ const wm = {
 
     /* Drag — mousedown on title bar (not on control buttons or lang-btn) */
     tb.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn') || e.target.closest('#nn-settings-tb-btn')) return;
       e.preventDefault();
       drag.start(id, e.clientX, e.clientY);
     });
 
     /* Drag — touchstart on title bar (not on buttons or lang-btn) */
     tb.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn') || e.target.closest('#nn-settings-tb-btn')) return;
       e.preventDefault();
       const t = e.touches[0];
       drag.start(id, t.clientX, t.clientY);
@@ -4815,54 +4857,59 @@ const wm = {
         <div class="hist-list" id="hist-list"></div>
       </div>
 
-      <!-- Style panel (slides in from right when 🎨 button is clicked) -->
-      <div class="nn-style-panel" id="nn-style-panel">
-        <div class="nns-head">
-          <span>🎨 Chat Style</span>
-          <button class="nns-close" onclick="_nnStyleClose()">✕</button>
+      <!-- Settings dialog (compact floating tabbed panel, triggered by ⚙️ in titlebar) -->
+      <div class="nn-dlg" id="nn-style-panel">
+        <div class="nn-dlg-head">
+          <span>⚙️ Chat Settings</span>
+          <button class="nn-dlg-close" onclick="_nnStyleClose()" title="Close">✕</button>
         </div>
-        <div class="nns-body">
-          <!-- Wallpapers -->
-          <div class="nns-section">
-            <div class="nns-title">🖼️ Wallpapers</div>
-            <div class="color-wp-grid" id="color-wp-grid"></div>
+        <div class="nn-tabs">
+          <button class="nn-tab active" onclick="_nnTab(this,'nn-pane-walls')">🖼️<br>Walls</button>
+          <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-fade')">💧<br>Fade</button>
+          <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-color')">🎨<br>Color</button>
+          <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-sound')">🔊<br>Sound</button>
+        </div>
+        <!-- Tab: Wallpapers -->
+        <div class="nn-pane active" id="nn-pane-walls">
+          <div class="nns-title">🖼️ Chat Wallpapers</div>
+          <div class="color-wp-grid" id="color-wp-grid"></div>
+        </div>
+        <!-- Tab: Background Opacity -->
+        <div class="nn-pane" id="nn-pane-fade">
+          <div class="nns-title">💧 Wallpaper Opacity</div>
+          <div class="nns-opacity-row">
+            <span class="nns-opacity-lbl">0%</span>
+            <input type="range" id="nn-opacity-slider" class="nns-slider"
+                   min="0" max="100" value="100"
+                   oninput="_applyNnBgOpacity(this.value)">
+            <span class="nns-opacity-lbl">100%</span>
           </div>
-          <!-- Opacity -->
-          <div class="nns-section">
-            <div class="nns-title">💧 Background Opacity</div>
-            <div class="nns-opacity-row">
-              <span class="nns-opacity-lbl">0%</span>
-              <input type="range" id="nn-opacity-slider" class="nns-slider"
-                     min="0" max="100" value="100"
-                     oninput="_applyNnBgOpacity(this.value)">
-              <span class="nns-opacity-lbl">100%</span>
+          <div class="nns-opacity-pct" id="nn-opacity-pct">100%</div>
+          <div class="nns-opacity-hint">Set a wallpaper first, then drag to adjust how strongly it shows.</div>
+        </div>
+        <!-- Tab: Custom Color -->
+        <div class="nn-pane" id="nn-pane-color">
+          <div class="nns-title">🎨 Pick Any Color</div>
+          <div class="nn-bg-cp-wrap">
+            <div class="nn-bg-cp-row">
+              <input type="color" id="nn-bg-color-input" class="cp-color-wheel"
+                     value="#001800" oninput="_applyNnBgColorHex(this.value)">
+              <button class="cp-eye" id="nn-bg-eye-btn" onclick="_nnBgPickFromScreen()"
+                      title="Pick from screen">💧 Pick</button>
             </div>
-            <div class="nns-opacity-pct" id="nn-opacity-pct">100%</div>
+            <div class="cp-presets" id="nn-bg-presets"></div>
+            <button class="nn-bg-reset-btn"
+                    onclick="_applyColorWallpaper('linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)','Nano Green')">
+              ↺ Reset to Nano Green
+            </button>
           </div>
-          <!-- Custom color picker -->
-          <div class="nns-section">
-            <div class="nns-title">🎨 Pick Any Color</div>
-            <div class="nn-bg-cp-wrap">
-              <div class="nn-bg-cp-row">
-                <input type="color" id="nn-bg-color-input" class="cp-color-wheel"
-                       value="#001800" oninput="_applyNnBgColorHex(this.value)">
-                <button class="cp-eye" id="nn-bg-eye-btn" onclick="_nnBgPickFromScreen()"
-                        title="Pick from screen">💧 Pick</button>
-              </div>
-              <div class="cp-presets" id="nn-bg-presets"></div>
-              <button class="nn-bg-reset-btn"
-                      onclick="_applyColorWallpaper('linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)','Nano Green')">
-                ↺ Reset to Nano Green
-              </button>
-            </div>
-          </div>
-          <!-- Voice -->
-          <div class="nns-section">
-            <div class="nns-title">🔊 Text-to-Speech Voice</div>
-            <div class="voice-row">
-              <button class="voice-btn" data-voice="female" onclick="setTtsVoice('female')">👩 Female</button>
-              <button class="voice-btn" data-voice="male"   onclick="setTtsVoice('male')">👨 Male</button>
-            </div>
+        </div>
+        <!-- Tab: Sound / Voice -->
+        <div class="nn-pane" id="nn-pane-sound">
+          <div class="nns-title">🔊 Text-to-Speech Voice</div>
+          <div class="voice-row">
+            <button class="voice-btn" data-voice="female" onclick="setTtsVoice('female')">👩 Female</button>
+            <button class="voice-btn" data-voice="male"   onclick="setTtsVoice('male')">👨 Male</button>
           </div>
         </div>
       </div>
@@ -4874,9 +4921,6 @@ const wm = {
         </button>
         <button class="ct-btn" onclick="_histNewChat()" title="New chat">
           <span class="ct-icon">✏️</span> New Chat
-        </button>
-        <button class="ct-btn" id="nn-style-btn" onclick="_nnStyleToggle()" title="Customize chat style">
-          <span class="ct-icon">🎨</span> Style
         </button>
       </div>
 
