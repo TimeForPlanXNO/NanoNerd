@@ -7222,6 +7222,7 @@ function _cpGrad(base) {
     border:      c(+16),
     /* min/max window buttons — noticeably lighter than the title bar */
     minmax:      `linear-gradient(180deg,${cs(-14,+14)} 0%,${cs(-10,+3)} 100%)`,
+    minmaxBorder: cs(+2,-18),
     /* taskbar app buttons */
     tbbtn:       `linear-gradient(180deg,${cs(-7,-6)} 0%,${cs(-8,+1)} 100%)`,
     tbbtnActv:   `linear-gradient(180deg,${cs(+1,-14)} 0%,${cs(+1,-7)} 100%)`,
@@ -7238,6 +7239,9 @@ function applyThemeColor(hex, isReset) {
     `.taskbar { background: ${g.taskbar} !important; border-top-color: ${g.border} !important; }`,
     `body:not(.macos) .xp-titlebar { background: ${g.titlebar} !important; }`,
     `body:not(.macos) .xp-btn.min, body:not(.macos) .xp-btn.max { background: ${g.minmax} !important; }`,
+    `body:not(.macos) .mv-titlebar { background: ${g.titlebar} !important; }`,
+    `body:not(.macos) .mv-min, body:not(.macos) .mv-max { background: ${g.minmax} !important; border-color: ${g.minmaxBorder} !important; }`,
+    `body:not(.macos) .mv-wp-btn { background: ${g.minmax} !important; border-color: ${g.minmaxBorder} !important; }`,
     `.tb-btn { background: ${g.tbbtn} !important; border-color: ${g.tbbtnBorder} !important; }`,
     `.tb-btn.active { background: ${g.tbbtnActv} !important; }`,
   ].join('\n');
