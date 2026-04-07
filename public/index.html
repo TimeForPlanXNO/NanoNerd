@@ -1941,9 +1941,10 @@
       justify-content: center;
     }
     body.macos .xp-btns {
-      order: -1;
+      order: -1;          /* move button group to the left of the title */
       gap: 6px;
       margin-right: 8px;
+      display: flex;
     }
     body.macos .xp-btn {
       width: 12px; height: 12px;
@@ -1952,9 +1953,10 @@
       box-shadow: none;
       border: 1px solid rgba(0,0,0,.2);
     }
-    body.macos .xp-btn.cls { background: #ff5f57; }
-    body.macos .xp-btn.min { background: #febc2e; }
-    body.macos .xp-btn.max { background: #28c840; }
+    /* Left-to-right order: close → minimize → maximize */
+    body.macos .xp-btn.cls { order: 1; background: #ff5f57; }
+    body.macos .xp-btn.min { order: 2; background: #febc2e; }
+    body.macos .xp-btn.max { order: 3; background: #febc2e; border-color: rgba(180,130,0,.3); }
     body.macos .xp-btn:hover  { filter: brightness(1.12); }
     body.macos .xp-btn:active { filter: brightness(.82); }
     /* lang/settings buttons in NanoNerd titlebar */
