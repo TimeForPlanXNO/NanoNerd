@@ -1694,10 +1694,12 @@
     .nns-opacity-lbl { font-size: 9px; color: #667; white-space: nowrap; }
     .nns-opacity-pct { font-size: 10px; color: var(--na); text-align: center; font-weight: bold; }
     .nns-opacity-hint { font-size: 8.5px; color: #556; margin-top: 4px; line-height: 1.4; }
+    /* NanoNerd window content area is transparent — the nn-bg-layer provides the background */
+    #win-nanonerd .xp-content { background: transparent; }
     /* Background layer — positioned behind all chat content, opacity-controllable */
     .nn-bg-layer {
       position: absolute; inset: 0; z-index: 0;
-      pointer-events: none; transition: opacity .3s;
+      pointer-events: none; transition: opacity .25s;
     }
     /* Ensure normal-flow chat children stay above the bg layer */
     .chat-toolbar, .chat-msgs, .chat-input { position: relative; z-index: 1; }
@@ -2660,8 +2662,8 @@ function _nnTab(btn, paneId) {
   btn.classList.add('active');
   const pane = dlg.querySelector('#' + paneId);
   if (pane) pane.classList.add('active');
-  /* Lazy-init the opacity slider value when the Fade tab opens */
-  if (paneId === 'nn-pane-fade') _restoreNnOpacitySlider();
+  /* Lazy-init the opacity slider value when the Transparency tab opens */
+  if (paneId === 'nn-pane-trans') _restoreNnOpacitySlider();
 }
 
 /* Backwards-compat stubs (some code still calls these) */
@@ -2730,24 +2732,26 @@ async function _nnBgPickFromScreen() {
   try { const r = await new EyeDropper().open(); _applyNnBgColorHex(r.sRGBHex); } catch { /* cancelled */ }
 }
 
-/* Opacity: controls how visible the background layer is */
+/* Transparency: opacity controls how visible the background layer is.
+   0% opacity  = 100% transparent (see through to desktop).
+   100% opacity = fully opaque (normal, can't see through). */
 function _applyNnBgOpacity(val) {
   val = Math.max(0, Math.min(100, Number(val)));
   const bgLayer = document.getElementById('nn-bg-layer');
   if (bgLayer) bgLayer.style.opacity = val / 100;
   const pctEl = document.getElementById('nn-opacity-pct');
-  if (pctEl) pctEl.textContent = val + '%';
+  if (pctEl) pctEl.textContent = val + '% opacity · ' + (100 - val) + '% transparent';
   localStorage.setItem('xp-nn-bg-opacity', val);
 }
 
-/* Restore opacity slider to saved value when panel opens */
+/* Restore opacity slider to saved value when the Transparency tab opens */
 function _restoreNnOpacitySlider() {
   const saved = localStorage.getItem('xp-nn-bg-opacity');
   const val = saved !== null ? Number(saved) : 100;
   const slider = document.getElementById('nn-opacity-slider');
   const pctEl  = document.getElementById('nn-opacity-pct');
   if (slider) slider.value = val;
-  if (pctEl)  pctEl.textContent = val + '%';
+  if (pctEl)  pctEl.textContent = val + '% opacity · ' + (100 - val) + '% transparent';
 }
 
 /* Build NanoNerd bg preset swatches (lazy — called when style panel opens) */
@@ -3360,15 +3364,20 @@ const wm = {
     else if (app.type === 'matrix')     bodyEl = this._buildMatrix();
     else                                bodyEl = this._buildBrowser(app);
     content.appendChild(bodyEl);
-    /* Restore saved NanoNerd chat background + opacity on open */
+    /* Restore saved NanoNerd chat background + opacity on open.
+       nn-bg-layer MUST always have a background because xp-content is transparent —
+       without a fallback, at 100% opacity you'd see the raw desktop. */
     if (id === 'nanonerd') {
       const savedNnBg      = localStorage.getItem('xp-nn-bg');
       const savedNnOpacity = localStorage.getItem('xp-nn-bg-opacity');
       requestAnimationFrame(() => {
         const bgLayer = content.querySelector('#nn-bg-layer');
         if (bgLayer) {
-          if (savedNnBg) bgLayer.style.background = savedNnBg;
-          if (savedNnOpacity !== null) bgLayer.style.opacity = Number(savedNnOpacity) / 100;
+          /* Always apply a background — fallback to default Nano Green if none saved */
+          bgLayer.style.background = savedNnBg ||
+            'linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)';
+          /* Apply saved opacity (default 100% = fully opaque) */
+          bgLayer.style.opacity = savedNnOpacity !== null ? Number(savedNnOpacity) / 100 : 1;
         }
       });
     }
@@ -4865,7 +4874,7 @@ const wm = {
         </div>
         <div class="nn-tabs">
           <button class="nn-tab active" onclick="_nnTab(this,'nn-pane-walls')">🖼️<br>Walls</button>
-          <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-fade')">💧<br>Fade</button>
+          <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-trans')">🪟<br>Trans</button>
           <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-color')">🎨<br>Color</button>
           <button class="nn-tab"        onclick="_nnTab(this,'nn-pane-sound')">🔊<br>Sound</button>
         </div>
@@ -4874,18 +4883,21 @@ const wm = {
           <div class="nns-title">🖼️ Chat Wallpapers</div>
           <div class="color-wp-grid" id="color-wp-grid"></div>
         </div>
-        <!-- Tab: Background Opacity -->
-        <div class="nn-pane" id="nn-pane-fade">
-          <div class="nns-title">💧 Wallpaper Opacity</div>
+        <!-- Tab: Transparency -->
+        <div class="nn-pane" id="nn-pane-trans">
+          <div class="nns-title">🪟 Background Transparency</div>
           <div class="nns-opacity-row">
-            <span class="nns-opacity-lbl">0%</span>
+            <span class="nns-opacity-lbl" title="Fully see-through">0%</span>
             <input type="range" id="nn-opacity-slider" class="nns-slider"
                    min="0" max="100" value="100"
                    oninput="_applyNnBgOpacity(this.value)">
-            <span class="nns-opacity-lbl">100%</span>
+            <span class="nns-opacity-lbl" title="Fully opaque">100%</span>
           </div>
-          <div class="nns-opacity-pct" id="nn-opacity-pct">100%</div>
-          <div class="nns-opacity-hint">Set a wallpaper first, then drag to adjust how strongly it shows.</div>
+          <div class="nns-opacity-pct" id="nn-opacity-pct">100% opacity · 0% transparent</div>
+          <div class="nns-opacity-hint">
+            Drag left → see through to the desktop behind the window.<br>
+            Drag right → fully opaque (default). Works for all wallpapers &amp; colours.
+          </div>
         </div>
         <!-- Tab: Custom Color -->
         <div class="nn-pane" id="nn-pane-color">
