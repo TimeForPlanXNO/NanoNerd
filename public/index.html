@@ -1868,6 +1868,66 @@
     /* wallpaper btn sits below the menu bar in macOS mode */
     body.macos .wp-btn         { top: 36px; z-index: 601; }
 
+    /* ── Display Properties dialog — macOS style ── */
+    /* Traffic-light buttons: hidden in XP, shown in macOS */
+    .wp-mac-btns { display: none; gap: 6px; align-items: center; flex-shrink: 0; }
+    .wp-mac-btn  {
+      width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+      border: 1px solid rgba(0,0,0,.2); padding: 0; flex-shrink: 0; cursor: default;
+    }
+    .wp-mac-cls  { background: #ff5f57; cursor: pointer; }
+    .wp-mac-min  { background: #febc2e; }
+    .wp-mac-max  { background: #28c840; }
+    .wp-mac-cls:hover { filter: brightness(1.14); }
+
+    /* Dialog shell */
+    body.macos .wp-dialog {
+      top: 66px;
+      background: rgba(28,28,34,.96);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.70), 0 0 0 1px rgba(255,255,255,.04);
+    }
+    /* Titlebar */
+    body.macos .wp-dialog-head {
+      background: var(--mac-win-bar, rgba(42,42,48,.96));
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px 10px 0 0;
+      padding: 8px 12px 8px 10px;
+      color: rgba(255,255,255,.90);
+      font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
+      font-size: 12px; font-weight: 600;
+      text-shadow: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    body.macos .wp-mac-btns { display: flex; }
+    body.macos .wp-dialog-title { flex: 1; text-align: center; margin-right: 42px; }
+    /* Body */
+    body.macos .wp-dialog-body { background: transparent; }
+    body.macos .wp-dialog-body::-webkit-scrollbar-track { background: rgba(255,255,255,.04); }
+    body.macos .wp-dialog-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 4px; }
+    /* Thumbnails */
+    body.macos .wp-thumb:hover  { border-color: rgba(255,255,255,.42); background: rgba(255,255,255,.09); }
+    body.macos .wp-thumb.active { border-color: rgba(255,255,255,.78); background: rgba(255,255,255,.17); }
+    body.macos .wp-thumb img    { border-color: rgba(255,255,255,.14); }
+    body.macos .wp-thumb-label  { color: rgba(255,255,255,.70); font-family: -apple-system,"Segoe UI",sans-serif; }
+    /* Footer */
+    body.macos .wp-dialog-foot {
+      background: rgba(255,255,255,.05);
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 8px 12px;
+    }
+    body.macos .wp-foot-btn {
+      background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.18);
+      color: #d0e0f8; border-radius: 7px; box-shadow: none;
+      font-family: -apple-system,"Segoe UI",sans-serif; font-size: 12px; padding: 4px 18px;
+    }
+    body.macos .wp-foot-btn:hover { filter: none; background: rgba(255,255,255,.24); }
+
     /* ── macOS popup overrides (stats + wifi) ── */
     body.macos .stats-popup,
     body.macos .wifi-popup {
@@ -2410,7 +2470,14 @@
 
   <!-- Wallpaper Picker Dialog -->
   <div class="wp-dialog" id="wp-dialog">
-    <div class="wp-dialog-head">🖼️ Display Properties — Wallpaper</div>
+    <div class="wp-dialog-head">
+      <div class="wp-mac-btns">
+        <button class="wp-mac-btn wp-mac-cls" onclick="closeWpPicker()" title="Close"></button>
+        <span class="wp-mac-btn wp-mac-min"></span>
+        <span class="wp-mac-btn wp-mac-max"></span>
+      </div>
+      <span class="wp-dialog-title">🖼️ Display Properties — Wallpaper</span>
+    </div>
     <div class="wp-dialog-body">
       <div class="wp-grid" id="wp-grid"></div>
     </div>
