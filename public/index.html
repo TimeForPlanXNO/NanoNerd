@@ -694,7 +694,7 @@
     .welcome { align-self: center; text-align: center; padding: 12px 8px; }
     .welcome .wi { font-size: 24px; margin-bottom: 6px; }
     .welcome h2 { font-size: 13px; font-weight: 700; color: var(--na); margin-bottom: 5px; }
-    .welcome p  { font-size: 11px; color: var(--nm); line-height: 1.5; margin-bottom: 10px; }
+    .welcome p  { font-size: 11px; color: var(--nm); line-height: 1.5; margin-bottom: 10px; text-shadow: 0 1px 6px rgba(0,0,0,.18), 0 0 2px rgba(0,0,0,.08); }
 
     .sugg { display: flex; flex-direction: column; gap: 4px; }
 
@@ -5856,7 +5856,7 @@ function showWelcome() {
   w.innerHTML = `
     <div class="wi">🥦</div>
     <h2>Welcome to NanoNerd 🧠</h2>
-    <p style="color:#fff;text-shadow:-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,2px 2px 0 #000;">Your dedicated Nano (XNO) expert.<br>Ask me anything!</p>
+    <p>Your dedicated Nano (XNO) expert.<br>Ask me anything!</p>
     ${langBadge}
     <div class="sugg">
       ${immediate.map(q=>`<button class="sq">${q}</button>`).join('')}
