@@ -39,11 +39,14 @@ Starts the server on port 5000.
 
 ## Live XNO Matrix
 - `_startMatrixRain(canvas, opts)` — shared engine used by both the app window and the wallpaper
-- **Only real confirmed TX hashes drop** — no simHash fallback; columns start DORMANT and wake when a real TX arrives
-- `_tryWakeCol()` finds next dormant column and assigns the next queued TX (FIFO)
+- **One column = one TX** — each confirmed block hash is assigned to a randomly-chosen idle column
+- Multiple TXs can fall simultaneously — each column shows a DIFFERENT hash
+- If all columns are occupied, the most-progressed (oldest) column is replaced with the new TX
+- Replay buffer entries (20 real confirmed hashes) are shown immediately on load — no waiting
 - CW=13px / CH=15px so each hex character (0-9, A-F) is clearly legible as it falls
-- Hover tooltip shows full TX hash + truncated account; click opens `https://nanolooker.com/block/{hash}`
-- Status overlay shows "⬤ LIVE — waiting for next confirmed block…" when canvas is dark
+- Speed: 0.50–0.85 rows/frame, randomised per TX for visual variety
+- Hover tooltip shows full TX hash + truncated account; click opens `https://blocklattice.io/block/{hash}`
+- Dedup via `_seen` Set (bounded at 300, auto-cleared and repopulated from active columns)
 - Wallpaper mode: `_applyMatrixWallpaper()` inserts `<canvas id="wp-matrix-canvas">` as desktop background
 - `_stopMatrixWallpaper()` cleans up canvas + rAF + resize listener
 
@@ -66,7 +69,7 @@ Three-layer architecture ensuring real confirmed block hashes always reach brows
 - **This layer is what currently delivers real hashes** (network TPS ~0.03-0.1)
 
 ### Replay Buffer
-- `_replayBuffer[]` holds last 10 confirmed hashes (FIFO)
+- `_replayBuffer[]` holds last 20 confirmed hashes (FIFO)
 - New SSE clients receive replay buffer immediately on connect → matrix starts raining at once
 - Deduplication via `_seenHashes` Set (trimmed at 10k entries)
 
