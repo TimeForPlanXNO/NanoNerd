@@ -1954,9 +1954,11 @@
       border: 1px solid rgba(0,0,0,.2);
     }
     /* Left-to-right order: close → minimize → maximize */
-    body.macos .xp-btn.cls { order: 1; background: #ff5f57; }
-    body.macos .xp-btn.min { order: 2; background: #febc2e; }
-    body.macos .xp-btn.max { order: 3; background: #febc2e; border-color: rgba(180,130,0,.3); }
+    body.macos .xp-btn.cls { order: 1; background: #ff5f57 !important; }
+    body.macos .xp-btn.min { order: 2; background: #febc2e !important; }
+    body.macos .xp-btn.max { order: 3; background: #28c840 !important; border-color: rgba(0,120,0,.25) !important; }
+    /* Hide the XP square icon inside the max button — macOS uses a plain circle */
+    body.macos .max-icon { display: none !important; }
     body.macos .xp-btn:hover  { filter: brightness(1.12); }
     body.macos .xp-btn:active { filter: brightness(.82); }
     /* lang/settings buttons in NanoNerd titlebar */
@@ -6959,7 +6961,7 @@ function applyThemeColor(hex, isReset) {
   document.getElementById('theme-style').textContent = [
     `.taskbar { background: ${g.taskbar} !important; border-top-color: ${g.border} !important; }`,
     `.xp-titlebar { background: ${g.titlebar} !important; }`,
-    `.xp-btn.min, .xp-btn.max { background: ${g.minmax} !important; }`,
+    `body:not(.macos) .xp-btn.min, body:not(.macos) .xp-btn.max { background: ${g.minmax} !important; }`,
     `.tb-btn { background: ${g.tbbtn} !important; border-color: ${g.tbbtnBorder} !important; }`,
     `.tb-btn.active { background: ${g.tbbtnActv} !important; }`,
   ].join('\n');
