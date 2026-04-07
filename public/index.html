@@ -899,7 +899,7 @@
       width: 260px;
       background: #ece9d8; border: 1px solid #0055e5;
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
-      border-radius: 4px 4px 0 0; z-index: 9999;
+      border-radius: 4px 4px 0 0; z-index: 100000;
       font-family: "Tahoma", sans-serif; font-size: 11px;
       animation: wifipop-in .15s ease;
       flex-direction: column; overflow: hidden;
@@ -1183,7 +1183,7 @@
       width: 320px; max-height: 420px;
       background: #ece9d8; border: 1px solid #0055e5;
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
-      border-radius: 4px 4px 0 0; z-index: 9999;
+      border-radius: 4px 4px 0 0; z-index: 100000;
       font-family: "Tahoma", sans-serif; font-size: 11px;
       animation: wifipop-in .15s ease;
       flex-direction: column;
@@ -1241,14 +1241,14 @@
     }
 
     .start-menu {
-      position: absolute;
+      position: fixed;
       bottom: 38px; left: 4px;
       width: 238px;
       background: #d4d0c8;
       border: 2px solid #0055e5;
       border-radius: 8px 8px 0 0;
       box-shadow: 3px -2px 12px rgba(0,0,0,.45);
-      z-index: 9999;
+      z-index: 100001;
       overflow: hidden;
       display: none;
       flex-direction: column;
@@ -1336,8 +1336,8 @@
     }
 
     .copy-toast {
-      position: absolute;
-      bottom: 48px; left: 50%;
+      position: fixed;
+      bottom: 56px; left: 50%;
       transform: translateX(-50%);
       background: #1a50d0; color: #fff;
       font-size: 11px; font-family: "Tahoma", sans-serif;
@@ -1345,7 +1345,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,.35);
       pointer-events: none; white-space: nowrap;
       animation: toast-in .18s ease forwards;
-      z-index: 10001;
+      z-index: 100001;
     }
 
     .sm-footer {
@@ -1367,8 +1367,8 @@
 
     /* Click-outside overlay */
     .menu-overlay {
-      position: absolute; inset: 0;
-      z-index: 9998; display: none;
+      position: fixed; inset: 0;
+      z-index: 100000; display: none;
     }
 
     .menu-overlay.visible { display: block; }
@@ -1747,7 +1747,7 @@
 
     /* ── LANGUAGE PICKER DROPDOWN ── */
     .lang-picker {
-      position: fixed; z-index: 99999;
+      position: fixed; z-index: 100002;
       width: 220px; max-height: 320px;
       background: #fff; border: 1px solid #316ac5;
       border-radius: 0 0 4px 4px;
@@ -1794,7 +1794,7 @@
 
     /* ── Color Picker Popup ── */
     .cp-popup {
-      display: none; position: fixed; z-index: 601;
+      display: none; position: fixed; z-index: 100000;
       background: linear-gradient(160deg, #0c1428 0%, #111d3a 100%);
       border: 1px solid rgba(100,140,255,.3);
       border-radius: 12px; padding: 14px; width: 234px;
@@ -2133,7 +2133,7 @@
       border: 1px solid rgba(0,0,0,.18);
       border-radius: 10px;
       box-shadow: 0 8px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.15);
-      z-index: 9999; flex-direction: column; overflow: hidden;
+      z-index: 100000; flex-direction: column; overflow: hidden;
       font-family: -apple-system, "Segoe UI", sans-serif;
       animation: mac-popup-in .15s ease;
     }
@@ -2289,7 +2289,7 @@
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 14px;
       box-shadow: 0 -4px 28px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
-      z-index: 9998; flex-direction: column; overflow: hidden;
+      z-index: 100000; flex-direction: column; overflow: hidden;
       font-family: -apple-system, "Segoe UI", "Tahoma", sans-serif;
     }
     .dock-settings-popup.open { display: flex; }
@@ -5769,7 +5769,8 @@ document.addEventListener('touchmove', e => {
   if (drag.active)    { e.preventDefault(); drag.move(cx, cy); }
   if (resizer.active) { e.preventDefault(); resizer.move(cx, cy); }
 }, { passive: false });
-document.addEventListener('touchend',  () => { drag.end(); resizer.end(); });
+document.addEventListener('touchend',    () => { drag.end(); resizer.end(); });
+document.addEventListener('touchcancel', () => { drag.end(); resizer.end(); });
 
 /* ══════════════════════════════════════════
    START MENU
@@ -6394,11 +6395,28 @@ function _grabVideoThumb(src, canvas, wrap, spinner) {
 ══════════════════════════════════════════ */
 let _mvZ = 9000;
 
+/* Safely increment the media-window z counter.
+   Renormalises all .mv-win elements back to 9000..9000+n when
+   the counter approaches the popup ceiling (100000), so menus
+   always stay above all media windows.  Pass the window element
+   to also update its style.zIndex immediately. */
+function _mvBumpZ(win) {
+  if (_mvZ >= 89990) {
+    const sorted = [...document.querySelectorAll('.mv-win')]
+      .sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
+    sorted.forEach((w, i) => { w.style.zIndex = 9000 + i; });
+    _mvZ = 9000 + sorted.length;
+  }
+  _mvZ++;
+  if (win) win.style.zIndex = _mvZ;
+  return _mvZ;
+}
+
 function openMediaViewer(idx) {
   const file = MEDIA_FILES[idx];
   if (!file) return;
   const area = document.getElementById('win-area');
-  _mvZ++;
+  _mvBumpZ();
 
   /* Aspect ratio of the actual media; set once the element fires load/loadedmetadata */
   let _mediaAR = null;
@@ -6456,7 +6474,7 @@ function openMediaViewer(idx) {
     win.style.display = 'flex';
     tbBtn.classList.add('active');
     tbBtn.classList.remove('minimized');
-    _mvZ++; win.style.zIndex = _mvZ;
+    _mvBumpZ(win);
     _minimized = false;
     if (_dockGenie) {
       _mvRunAnim('anim-genie-restore');
@@ -6499,7 +6517,7 @@ function openMediaViewer(idx) {
       win.style.top    = topOff + 'px';
       win.style.width  = window.innerWidth + 'px';
       win.style.height = (window.innerHeight - topOff - bottomOff) + 'px';
-      win.style.zIndex = ++_mvZ;
+      _mvBumpZ(win);
       if (media) media.style.objectFit = 'contain';
       win.querySelector('.mv-max').innerHTML = '❐';
       _mvMaximized = true;
@@ -6541,8 +6559,8 @@ function openMediaViewer(idx) {
   const titlebar = win.querySelector('.mv-titlebar');
   let dragging = false, ox = 0, oy = 0;
   const onDragDown = (cx, cy) => {
-    dragging = true; _mvZ++;
-    win.style.zIndex = _mvZ;
+    dragging = true;
+    _mvBumpZ(win);
     ox = cx - win.offsetLeft; oy = cy - win.offsetTop;
   };
   const onDragMove = (cx, cy) => {
@@ -6566,7 +6584,7 @@ function openMediaViewer(idx) {
     rSx = cx; rSy = cy;
     rW0 = win.offsetWidth; rH0 = win.offsetHeight;
     rX0 = win.offsetLeft;  rY0 = win.offsetTop;
-    _mvZ++; win.style.zIndex = _mvZ;
+    _mvBumpZ(win);
   };
   const onResizeMove = (cx, cy) => {
     if (!resizing) return;
@@ -6628,7 +6646,7 @@ function openMediaViewer(idx) {
     document.removeEventListener('touchcancel', onGlobalUp);
   };
 
-  win.addEventListener('mousedown', () => { _mvZ++; win.style.zIndex = _mvZ; });
+  win.addEventListener('mousedown', () => { _mvBumpZ(win); });
 
   /* ── Auto-size window to media's natural aspect ratio ─────────────────
      Called once the image/video fires its load event.
