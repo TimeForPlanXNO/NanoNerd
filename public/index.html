@@ -1127,6 +1127,15 @@
       flex-shrink: 0; line-height: 1; padding-bottom: 2px;
     }
     .mv-min:hover { filter: brightness(1.25); }
+    .mv-max {
+      background: linear-gradient(180deg,#4a9be0 0%,#2070c0 100%);
+      border: 1px solid #1050a0; border-radius: 3px;
+      color: #fff; font-size: 9px;
+      width: 16px; height: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mv-max:hover { filter: brightness(1.25); }
     .mv-close {
       background: #c0392b; border: 1px solid #922b21; border-radius: 3px;
       color: #fff; font-size: 10px; width: 16px; height: 16px;
@@ -2049,8 +2058,24 @@
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(255,255,255,.07);
     }
-    body.macos .mv-min   { background: #febc2e; border-color: rgba(180,130,0,.4); }
-    body.macos .mv-close { background: #ff5f57; border-color: rgba(180,0,0,.4); }
+    /* macOS media window: circles on the left, title centred */
+    body.macos .mv-btns {
+      order: -1; display: flex; gap: 6px; margin-right: 6px; flex-shrink: 0;
+    }
+    body.macos .mv-min,
+    body.macos .mv-max,
+    body.macos .mv-close {
+      width: 12px; height: 12px; border-radius: 50%;
+      font-size: 0; box-shadow: none; border: 1px solid rgba(0,0,0,.2);
+      padding: 0;
+    }
+    body.macos .mv-close { order: 1; background: #ff5f57 !important; border-color: rgba(160,0,0,.25) !important; }
+    body.macos .mv-min   { order: 2; background: #febc2e !important; border-color: rgba(160,120,0,.25) !important; }
+    body.macos .mv-max   { order: 3; background: #28c840 !important; border-color: rgba(0,110,0,.25) !important; }
+    body.macos .mv-min:hover,
+    body.macos .mv-max:hover,
+    body.macos .mv-close:hover { filter: brightness(1.12); }
+    body.macos .mv-title { flex: 1; text-align: center; font-family: -apple-system,"Segoe UI",sans-serif; }
 
     /* ── Dock responsive ── */
     .mac-dock-wrap { max-width: calc(100vw - 16px); }
@@ -2403,8 +2428,8 @@
       65%  { transform: scaleX(.65) scaleY(.55)  skewX(8deg)  translateY(24px); opacity: .9; transform-origin: bottom center; }
       100% { transform: scaleX(1)   scaleY(1)    skewX(0deg)  translateY(0);    opacity: 1;  transform-origin: bottom center; }
     }
-    .xp-win.anim-genie-minimize { animation: genie-minimize .35s cubic-bezier(.4,0,.6,1)    forwards; }
-    .xp-win.anim-genie-restore  { animation: genie-restore  .38s cubic-bezier(.18,.89,.32,1.28) forwards; }
+    .xp-win.anim-genie-minimize, .mv-win.anim-genie-minimize { animation: genie-minimize .35s cubic-bezier(.4,0,.6,1)    forwards; }
+    .xp-win.anim-genie-restore,  .mv-win.anim-genie-restore  { animation: genie-restore  .38s cubic-bezier(.18,.89,.32,1.28) forwards; }
 
   </style>
   <!-- Dynamic theme colours injected by applyThemeColor() -->
@@ -6393,6 +6418,7 @@ function openMediaViewer(idx) {
       <button class="mv-wp-btn" title="Set as desktop wallpaper">🖼️ Wallpaper</button>
       <div class="mv-btns">
         <button class="mv-min"   title="Minimize">&#8211;</button>
+        <button class="mv-max"   title="Maximise">□</button>
         <button class="mv-close" title="Close">✕</button>
       </div>
     </div>
@@ -6411,18 +6437,36 @@ function openMediaViewer(idx) {
   tbBtn.innerHTML = `<span>${icon}</span> <span>${label}</span>`;
   let _minimized = false;
 
+  /* ── Local genie helper for media windows ── */
+  const _mvRunAnim = (cls, onEnd) => {
+    win.classList.remove('anim-genie-minimize', 'anim-genie-restore');
+    void win.offsetWidth;
+    win.classList.add(cls);
+    if (onEnd) {
+      const onDone = () => { win.classList.remove(cls); win.removeEventListener('animationend', onDone); onEnd(); };
+      win.addEventListener('animationend', onDone);
+    }
+  };
+
   const _mvShow = () => {
     win.style.display = 'flex';
     tbBtn.classList.add('active');
     tbBtn.classList.remove('minimized');
     _mvZ++; win.style.zIndex = _mvZ;
     _minimized = false;
+    if (_macMode && _dockGenie) {
+      _mvRunAnim('anim-genie-restore');
+    }
   };
   const _mvHide = () => {
-    win.style.display = 'none';
     tbBtn.classList.remove('active');
     tbBtn.classList.add('minimized');
     _minimized = true;
+    if (_macMode && _dockGenie) {
+      _mvRunAnim('anim-genie-minimize', () => { win.style.display = 'none'; });
+    } else {
+      win.style.display = 'none';
+    }
   };
 
   tbBtn.onclick = () => { _minimized ? _mvShow() : _mvHide(); };
@@ -6436,6 +6480,39 @@ function openMediaViewer(idx) {
 
   /* ── Minimize button ── */
   win.querySelector('.mv-min').onclick = () => _mvHide();
+
+  /* ── Maximize / restore button ── */
+  let _mvMaximized = false, _mvSaved = null;
+  const _mvMaxToggle = () => {
+    const media = win.querySelector('img, video');
+    const isM   = document.body.classList.contains('macos');
+    if (!_mvMaximized) {
+      _mvSaved = { left: win.style.left, top: win.style.top,
+                   width: win.style.width, height: win.style.height };
+      const topOff    = isM ? 28 : 0;
+      const bottomOff = isM ? 0 : 48;
+      win.style.left   = '0';
+      win.style.top    = topOff + 'px';
+      win.style.width  = window.innerWidth + 'px';
+      win.style.height = (window.innerHeight - topOff - bottomOff) + 'px';
+      win.style.zIndex = ++_mvZ;
+      if (media) media.style.objectFit = 'contain';
+      win.querySelector('.mv-max').innerHTML = '❐';
+      _mvMaximized = true;
+    } else {
+      if (_mvSaved) {
+        win.style.left   = _mvSaved.left;
+        win.style.top    = _mvSaved.top;
+        win.style.width  = _mvSaved.width;
+        win.style.height = _mvSaved.height;
+      }
+      if (media) media.style.objectFit = '';
+      win.querySelector('.mv-max').innerHTML = '□';
+      _mvMaximized = false;
+      _mvSaved = null;
+    }
+  };
+  win.querySelector('.mv-max').onclick = _mvMaxToggle;
 
   /* ── Close button ── */
   win.querySelector('.mv-close').onclick = () => {
@@ -6541,8 +6618,19 @@ function openMediaViewer(idx) {
      • Works out the largest size that fits in win-area (90% each axis).
      • Stores the ratio in _mediaAR so the resize handler can lock to it.
      • Centers the window and shows it.                                  */
+  let _mvFirstShown = false;
+  function _mvFirstShow() {
+    win.style.display = 'flex';
+    if (!_mvFirstShown && _macMode && _dockGenie) {
+      _mvFirstShown = true;
+      _mvRunAnim('anim-genie-restore');
+    } else {
+      _mvFirstShown = true;
+    }
+  }
+
   function _fitToMedia(mw, mh) {
-    if (!mw || !mh) { win.style.display = 'flex'; return; } /* fallback */
+    if (!mw || !mh) { _mvFirstShow(); return; } /* fallback */
     _mediaAR = mw / mh;
     const tbH   = titlebar.offsetHeight || 24;
     const maxW  = area.offsetWidth  * 0.92;
@@ -6557,7 +6645,7 @@ function openMediaViewer(idx) {
     win.style.height = winH + 'px';
     win.style.left   = Math.max(0, Math.round((area.offsetWidth  - winW) / 2)) + 'px';
     win.style.top    = Math.max(0, Math.round((area.offsetHeight - winH) / 2)) + 'px';
-    win.style.display = 'flex';
+    _mvFirstShow();
   }
 
   if (file.type === 'image') {
@@ -6566,7 +6654,7 @@ function openMediaViewer(idx) {
       _fitToMedia(img.naturalWidth, img.naturalHeight);
     } else if (img) {
       img.addEventListener('load',  () => _fitToMedia(img.naturalWidth, img.naturalHeight), { once: true });
-      img.addEventListener('error', () => { win.style.display = 'flex'; },                   { once: true });
+      img.addEventListener('error', () => _mvFirstShow(),                                    { once: true });
     }
   } else {
     const vid = win.querySelector('.mv-body video');
@@ -6575,7 +6663,7 @@ function openMediaViewer(idx) {
         _fitToMedia(vid.videoWidth, vid.videoHeight);
       } else {
         vid.addEventListener('loadedmetadata', () => _fitToMedia(vid.videoWidth, vid.videoHeight), { once: true });
-        vid.addEventListener('error',          () => { win.style.display = 'flex'; },                { once: true });
+        vid.addEventListener('error',          () => _mvFirstShow(),                                 { once: true });
       }
     }
   }
@@ -7357,7 +7445,8 @@ function _updateDockDot(id) {
   const _origMinimize = wm.minimize.bind(wm);
 
   wm.open = function(id) {
-    if (_macMode && _dockGenie && wm.state[id] === 'minimized') {
+    const prevState = wm.state[id];
+    if (_macMode && _dockGenie && prevState === 'minimized') {
       const { win } = wm.els[id];
       win.classList.add('animating');
       win.style.display = 'flex';
@@ -7369,6 +7458,10 @@ function _updateDockDot(id) {
       wm.focus(id);
     } else {
       _origOpen(id);
+      /* Also play genie-restore when opening a closed window in macOS+genie mode */
+      if (_macMode && _dockGenie && prevState === 'closed' && wm.els[id]) {
+        wm._runAnim(wm.els[id].win, 'anim-genie-restore');
+      }
     }
     _updateDockDot(id);
   };
