@@ -5910,7 +5910,7 @@ async function loadNanoReps() {
         r.weight > 0 ? r.weight.toFixed(2) + '% weight' : null,
         r.version    ? 'v' + r.version : null,
       ].filter(Boolean).join(' · ');
-      return `<div class="wifi-rep" onclick="copyRepAddr(this,'${r.account}')">
+      return `<div class="wifi-rep" onclick="copyRepAddr(this,'${escHtml(r.account)}')">
         <div class="wifi-rep-dot" style="background:${dotColor}" title="${dotTitle}"></div>
         <div class="wifi-rep-info">
           <div class="wifi-rep-alias">${escHtml(display)}</div>
@@ -7461,6 +7461,7 @@ function setUiMode(mode) {
   localStorage.setItem('ui-mode', mode);
   /* Dock auto-hide + window clearance */
   clearTimeout(_dockHideTimer);
+  _dockHideTimer = null;
   _setDockHidden(false);  /* always reveal dock when switching mode */
   if (_macMode) {
     setTimeout(_applyDockClearance, 60); /* wait one frame for dock to render */
@@ -7506,14 +7507,16 @@ function _setDockHidden(hidden) {
 
 function _showDock() {
   clearTimeout(_dockHideTimer);
+  _dockHideTimer = null;
   if (!_dockHidden) return;
   _setDockHidden(false);
 }
 
 function _scheduleDockHide() {
-  if (_dockHidden) return;          /* already hidden — nothing to do */
-  clearTimeout(_dockHideTimer);
+  /* Start timer only once — don't reset on every mousemove. */
+  if (_dockHidden || _dockHideTimer !== null) return;
   _dockHideTimer = setTimeout(() => {
+    _dockHideTimer = null;
     if (!_macMode || _isMobile()) return;
     _setDockHidden(true);
   }, _DOCK_HIDE_DELAY);
