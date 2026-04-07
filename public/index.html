@@ -2095,14 +2095,49 @@
       box-shadow: 0 4px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);
       pointer-events: all;
     }
-    .mac-dock.mat-gold   { background: rgba(255,210,80,.32);  border-color: rgba(255,220,100,.6); }
-    .mac-dock.mat-copper { background: rgba(180,100,60,.32);  border-color: rgba(200,120,70,.6); }
-    .mac-dock.mat-wood   { background: rgba(120,75,40,.45);   border-color: rgba(150,100,60,.6); }
-    .mac-dock.mat-stone  { background: rgba(110,110,110,.38); border-color: rgba(160,160,160,.55); }
-    .mac-dock.mat-glass  { background: rgba(200,230,255,.22); border-color: rgba(200,230,255,.8); box-shadow: 0 4px 28px rgba(0,100,255,.2), inset 0 1px 0 rgba(255,255,255,.9); }
-    .mac-dock.mat-water  { background: rgba(40,120,200,.32);  border-color: rgba(80,160,220,.6); }
-    .mac-dock.mat-grass  { background: rgba(50,140,60,.32);   border-color: rgba(80,160,80,.6); }
-    .mac-dock.mat-sand   { background: rgba(210,185,120,.42); border-color: rgba(220,200,140,.65); }
+    .mac-dock.mat-silver {
+      background: linear-gradient(160deg,rgba(242,242,246,.55) 0%,rgba(202,202,212,.48) 28%,rgba(237,237,242,.52) 52%,rgba(170,170,188,.46) 76%,rgba(220,220,228,.50) 100%);
+      border-color: rgba(200,200,215,.70);
+    }
+    .mac-dock.mat-gold {
+      background: linear-gradient(160deg,rgba(255,232,128,.48) 0%,rgba(212,160,0,.40) 28%,rgba(255,220,80,.45) 54%,rgba(176,120,0,.42) 78%,rgba(255,208,64,.44) 100%);
+      border-color: rgba(255,220,100,.68);
+    }
+    .mac-dock.mat-copper {
+      background: linear-gradient(160deg,rgba(232,144,106,.46) 0%,rgba(154,72,32,.38) 28%,rgba(208,112,64,.44) 54%,rgba(122,56,16,.40) 78%,rgba(192,96,48,.44) 100%);
+      border-color: rgba(200,120,70,.68);
+    }
+    .mac-dock.mat-wood {
+      background: repeating-linear-gradient(97deg,
+        rgba(160,120,64,.48) 0px,rgba(138,98,40,.40) 5px,
+        rgba(176,132,72,.46) 10px,rgba(122,80,32,.42) 16px,
+        rgba(154,112,56,.46) 22px,rgba(130,95,43,.42) 27px);
+      border-color: rgba(160,120,70,.62);
+    }
+    .mac-dock.mat-stone {
+      background: radial-gradient(ellipse at 28% 38%,rgba(144,144,144,.46) 0%,rgba(88,88,88,.40) 38%,rgba(120,120,120,.44) 65%,rgba(70,70,70,.46) 100%);
+      border-color: rgba(160,160,160,.58);
+    }
+    .mac-dock.mat-glass {
+      background: linear-gradient(145deg,rgba(221,238,255,.38) 0%,rgba(149,197,238,.30) 40%,rgba(204,232,255,.35) 62%,rgba(110,152,204,.30) 100%);
+      border-color: rgba(200,230,255,.88);
+      box-shadow: 0 4px 28px rgba(0,100,255,.18), inset 0 1px 0 rgba(255,255,255,.92);
+    }
+    .mac-dock.mat-water {
+      background: linear-gradient(170deg,rgba(82,180,244,.44) 0%,rgba(20,100,196,.38) 44%,rgba(50,148,228,.42) 66%,rgba(8,68,164,.44) 100%);
+      border-color: rgba(80,160,220,.68);
+    }
+    .mac-dock.mat-grass {
+      background: repeating-linear-gradient(182deg,
+        rgba(82,196,98,.44) 0px,rgba(58,170,74,.38) 6px,
+        rgba(90,206,106,.42) 12px,rgba(42,144,64,.40) 18px,
+        rgba(74,180,88,.44) 24px,rgba(48,160,72,.38) 30px);
+      border-color: rgba(80,160,80,.62);
+    }
+    .mac-dock.mat-sand {
+      background: radial-gradient(ellipse at 62% 28%,rgba(226,214,164,.48) 0%,rgba(198,178,108,.40) 44%,rgba(218,203,136,.45) 66%,rgba(170,142,60,.44) 100%);
+      border-color: rgba(220,200,140,.68);
+    }
     .dock-icon-wrap {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
       position: relative; cursor: pointer;
@@ -6994,7 +7029,7 @@ function applyThemeColor(hex, isReset) {
   const g = _cpGrad(hex);
   document.getElementById('theme-style').textContent = [
     `.taskbar { background: ${g.taskbar} !important; border-top-color: ${g.border} !important; }`,
-    `.xp-titlebar { background: ${g.titlebar} !important; }`,
+    `body:not(.macos) .xp-titlebar { background: ${g.titlebar} !important; }`,
     `body:not(.macos) .xp-btn.min, body:not(.macos) .xp-btn.max { background: ${g.minmax} !important; }`,
     `.tb-btn { background: ${g.tbbtn} !important; border-color: ${g.tbbtnBorder} !important; }`,
     `.tb-btn.active { background: ${g.tbbtnActv} !important; }`,
@@ -7413,7 +7448,7 @@ function _applyDockMaterial(id) {
   const dock = document.getElementById('mac-dock');
   if (dock) {
     DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
-    if (id !== 'silver') dock.classList.add('mat-' + id);
+    dock.classList.add('mat-' + id);
     /* Clear any inline colour left by custom colour picker */
     dock.style.background = '';
     dock.style.borderColor = '';
