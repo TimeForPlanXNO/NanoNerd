@@ -1867,6 +1867,17 @@
     body.macos .icon-col       { display: none !important; }
     /* wallpaper btn sits below the menu bar in macOS mode */
     body.macos .wp-btn         { top: 36px; z-index: 601; }
+    /* Hide reset button in macOS top bar */
+    body.macos #mac-reset-btn  { display: none !important; }
+    /* Wallpaper button on media windows — match macOS glass style */
+    body.macos .mv-wp-btn {
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.22);
+      color: rgba(255,255,255,.88);
+      border-radius: 5px;
+      font-family: -apple-system, "Segoe UI", sans-serif;
+    }
+    body.macos .mv-wp-btn:hover { filter: none; background: rgba(255,255,255,.24); }
 
     /* ── Display Properties dialog — macOS style ── */
     /* Traffic-light buttons: hidden in XP, shown in macOS */
@@ -2244,6 +2255,7 @@
     .dock-settings-popup {
       display: none; position: fixed;
       width: 242px;
+      max-height: calc(100vh - 90px);       /* never taller than the viewport */
       background: rgba(28,28,34,.97);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -2259,13 +2271,34 @@
       padding: 11px 14px 8px;
       color: #e8e8e8; font-size: 13px; font-weight: 600;
       border-bottom: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;                        /* never squash the header */
     }
     .dsp-close {
       background: none; border: none; color: #888; cursor: pointer;
       font-size: 14px; padding: 0 2px; line-height: 1; transition: color .12s;
     }
     .dsp-close:hover { color: #fff; }
-    .dsp-body { display: flex; flex-direction: column; padding: 10px 14px 14px; gap: 12px; }
+    .dsp-body {
+      display: flex; flex-direction: column; padding: 10px 14px 14px; gap: 12px;
+      overflow-y: auto; overflow-x: hidden;  /* scroll when content overflows */
+    }
+    /* Thin scrollbar inside dock settings */
+    .dsp-body::-webkit-scrollbar { width: 4px; }
+    .dsp-body::-webkit-scrollbar-track { background: transparent; }
+    .dsp-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 2px; }
+    /* ── Landscape / short-screen compact mode ── */
+    @media (max-height: 520px) {
+      .dock-settings-popup { width: 210px; border-radius: 12px; }
+      .dsp-head  { padding: 7px 12px 6px; font-size: 12px; }
+      .dsp-body  { padding: 7px 12px 10px; gap: 8px; }
+      .dsp-section-label { margin-bottom: 3px; }
+      .dsp-slider-row { gap: 6px; }
+      .dsp-mat-thumb  { aspect-ratio: 1.6; }     /* shorter swatches */
+      .dsp-mat-label  { padding: 2px 2px 3px; font-size: 8px; }
+      .dsp-color-row  { gap: 4px; }
+      .dsp-color-pick { width: 26px; height: 24px; }
+      .dsp-color-hex  { font-size: 10px; padding: 3px 6px; }
+    }
     .dsp-section-label {
       font-size: 10px; font-weight: 700; color: #6a7a9a;
       text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px;
@@ -2389,7 +2422,7 @@
       <button class="mac-mb-btn" style="font-weight:700;" onclick="wm.open('nanonerd')" title="Open NanoNerd">NanoNerd</button>
     </div>
     <div class="mac-mb-right">
-      <button class="mac-mb-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
+      <button class="mac-mb-btn" id="mac-reset-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
       <button class="mac-mb-btn" id="mac-wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Reps">
         <img src="/wifi-icon.png" style="width:13px;height:13px;filter:grayscale(1);vertical-align:middle;" alt="wifi">
       </button>
@@ -7393,10 +7426,14 @@ function toggleDockSettings() {
   popup.classList.toggle('open', _dspOpen);
   if (btn) btn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
-    const dockR = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-    popup.style.bottom = (window.innerHeight - dockR.top + 6) + 'px';
-    popup.style.right  = '14px';
-    popup.style.left   = 'auto';
+    const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
+    const fromBot = window.innerHeight - dockR.top + 6;
+    /* Leave at least 10 px headroom at the top of the screen */
+    const maxH    = dockR.top - 10;
+    popup.style.bottom    = fromBot + 'px';
+    popup.style.right     = '14px';
+    popup.style.left      = 'auto';
+    popup.style.maxHeight = Math.max(160, maxH) + 'px';
   }
 }
 
