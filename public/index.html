@@ -6393,7 +6393,6 @@ function _grabVideoThumb(src, canvas, wrap, spinner) {
    MEDIA VIEWER (spawns individual windows)
 ══════════════════════════════════════════ */
 let _mvZ = 9000;
-const _mvWins = [];
 
 function openMediaViewer(idx) {
   const file = MEDIA_FILES[idx];
@@ -6523,9 +6522,19 @@ function openMediaViewer(idx) {
   win.querySelector('.mv-close').onclick = () => {
     const v = win.querySelector('video');
     if (v) { v.pause(); v.src = ''; }
-    _mvCleanup();
-    tbBtn.remove();
-    win.remove();
+    tbBtn.classList.remove('active');
+    tbBtn.classList.add('minimized');
+    if (_dockGenie) {
+      _mvRunAnim('anim-genie-minimize', () => {
+        _mvCleanup();
+        tbBtn.remove();
+        win.remove();
+      });
+    } else {
+      _mvCleanup();
+      tbBtn.remove();
+      win.remove();
+    }
   };
 
   /* ── Drag ── */
@@ -6543,7 +6552,8 @@ function openMediaViewer(idx) {
   };
   const onDragUp = () => { dragging = false; };
 
-  const _mvDragGuard = e => e.target.closest('.mv-btns') || e.target.closest('.mv-wp-btn');
+  /* Guard: block drag when maximised, or over buttons */
+  const _mvDragGuard = e => _mvMaximized || e.target.closest('.mv-btns') || e.target.closest('.mv-wp-btn');
   titlebar.addEventListener('mousedown',  e => { if (!_mvDragGuard(e)) { e.preventDefault(); onDragDown(e.clientX, e.clientY); } });
   titlebar.addEventListener('touchstart', e => { if (!_mvDragGuard(e)) { e.preventDefault(); const t = e.touches[0]; onDragDown(t.clientX, t.clientY); } }, {passive:false});
 
@@ -6594,8 +6604,8 @@ function openMediaViewer(idx) {
   ['n','s','e','w','ne','nw','se','sw'].forEach(dir => {
     const rh = document.createElement('div');
     rh.className = `mv-resize mv-resize-${dir}`;
-    rh.addEventListener('mousedown',  e => { e.preventDefault(); e.stopPropagation(); onResizeDown(dir, e.clientX, e.clientY); });
-    rh.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); const t = e.touches[0]; onResizeDown(dir, t.clientX, t.clientY); }, {passive:false});
+    rh.addEventListener('mousedown',  e => { if (_mvMaximized) return; e.preventDefault(); e.stopPropagation(); onResizeDown(dir, e.clientX, e.clientY); });
+    rh.addEventListener('touchstart', e => { if (_mvMaximized) return; e.preventDefault(); e.stopPropagation(); const t = e.touches[0]; onResizeDown(dir, t.clientX, t.clientY); }, {passive:false});
     win.appendChild(rh);
   });
 
@@ -6603,17 +6613,19 @@ function openMediaViewer(idx) {
   const onGlobalMove  = e => { const cx = e.clientX ?? e.touches?.[0]?.clientX; const cy = e.clientY ?? e.touches?.[0]?.clientY; if (cx == null) return; onDragMove(cx, cy); onResizeMove(cx, cy); };
   const onGlobalMoveT = e => { if (!dragging && !resizing) return; const t = e.touches[0]; onDragMove(t.clientX, t.clientY); onResizeMove(t.clientX, t.clientY); };
   const onGlobalUp    = () => { onDragUp(); onResizeUp(); };
-  document.addEventListener('mousemove', onGlobalMove);
-  document.addEventListener('mouseup',   onGlobalUp);
-  document.addEventListener('touchmove', onGlobalMoveT, { passive: true });
-  document.addEventListener('touchend',  onGlobalUp,    { passive: true });
+  document.addEventListener('mousemove',   onGlobalMove);
+  document.addEventListener('mouseup',     onGlobalUp);
+  document.addEventListener('touchmove',   onGlobalMoveT,  { passive: true });
+  document.addEventListener('touchend',    onGlobalUp,     { passive: true });
+  document.addEventListener('touchcancel', onGlobalUp,     { passive: true });
 
   /* Clean up global listeners when viewer is destroyed */
   const _mvCleanup = () => {
-    document.removeEventListener('mousemove', onGlobalMove);
-    document.removeEventListener('mouseup',   onGlobalUp);
-    document.removeEventListener('touchmove', onGlobalMoveT);
-    document.removeEventListener('touchend',  onGlobalUp);
+    document.removeEventListener('mousemove',   onGlobalMove);
+    document.removeEventListener('mouseup',     onGlobalUp);
+    document.removeEventListener('touchmove',   onGlobalMoveT);
+    document.removeEventListener('touchend',    onGlobalUp);
+    document.removeEventListener('touchcancel', onGlobalUp);
   };
 
   win.addEventListener('mousedown', () => { _mvZ++; win.style.zIndex = _mvZ; });
@@ -7521,7 +7533,19 @@ function _updateDockDot(id) {
   };
 
   wm.close = function(id) {
-    _origClose(id);
+    if (_dockGenie && wm.els[id] && wm.state[id] !== 'closed') {
+      const { win } = wm.els[id];
+      if (win._matrixStop) { win._matrixStop(); win._matrixStop = null; }
+      if (id === 'nanonerd' && typeof _cancelTTS === 'function') _cancelTTS();
+      wm._runAnim(win, 'anim-genie-minimize', () => {
+        win.style.display = 'none';
+        win.classList.remove('maximized');
+      });
+      wm._removeTbBtn(id);
+      wm.state[id] = 'closed';
+    } else {
+      _origClose(id);
+    }
     _updateDockDot(id);
   };
 
