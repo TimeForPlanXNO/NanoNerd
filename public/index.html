@@ -1617,115 +1617,100 @@
     .xp-lang-btn:hover  { filter: brightness(1.25); }
     .xp-lang-btn:active { filter: brightness(.8); }
 
-    /* ── SETTINGS BUTTON (NanoNerd titlebar) ── */
-    .xp-settings-btn {
-      background: linear-gradient(180deg, rgba(255,255,255,.28) 0%, rgba(255,255,255,.10) 100%);
-      border: 1px solid rgba(255,255,255,.4); border-radius: 3px;
-      color: #fff; font-size: 14px; line-height: 1;
-      padding: 0 5px; cursor: pointer; height: 18px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.25);
-      transition: filter .12s;
-      display: flex; align-items: center; flex-shrink: 0;
+    /* ── NANONERD INLINE STYLE PANEL (slides in from right inside the window) ── */
+    .nn-style-panel {
+      position: absolute; inset: 0; z-index: 25;
+      display: flex; flex-direction: column;
+      background: var(--np);
+      transform: translateX(100%);
+      transition: transform .24s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
     }
-    .xp-settings-btn:hover  { filter: brightness(1.25); }
-    .xp-settings-btn:active { filter: brightness(.8); }
-
-    /* ── SETTINGS DIALOG ── */
-    .settings-dlg {
-      display: none; position: fixed; inset: 0; z-index: 800;
-      align-items: center; justify-content: center;
-      background: rgba(0,0,0,.5);
-    }
-    .settings-dlg.open { display: flex; }
-    .settings-dlg-box {
-      width: 360px; max-height: 88vh;
-      background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
-      border: 2px solid #0a36a0; border-top: 3px solid #2259c8;
-      border-radius: 6px 6px 4px 4px;
-      box-shadow: 5px 5px 18px rgba(0,0,0,.6);
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    .settings-dlg-head {
-      background: linear-gradient(180deg, #2259c8 0%, #0d40b0 100%);
-      padding: 5px 8px 6px; color: #fff; font-size: 11px; font-weight: bold;
-      font-family: "Tahoma", sans-serif;
-      text-shadow: 0 1px 2px rgba(0,0,0,.5); flex-shrink: 0;
+    .nn-style-panel.open { transform: translateX(0); pointer-events: all; }
+    .nns-head {
       display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px 7px; border-bottom: 1px solid var(--nb);
+      flex-shrink: 0; color: var(--na); font-size: 12px; font-weight: bold;
     }
-    .settings-dlg-close {
-      background: none; border: none; color: rgba(255,255,255,.8); cursor: pointer;
-      font-size: 13px; padding: 0 4px; line-height: 1;
+    .nns-close {
+      background: none; border: none; color: var(--nm); font-size: 15px;
+      cursor: pointer; padding: 2px 5px; border-radius: 4px; line-height: 1;
+      transition: color .12s;
     }
-    .settings-dlg-close:hover { color: #fff; }
-    .settings-dlg-body {
-      flex: 1; overflow-y: auto; padding: 14px 12px;
-      font-family: "Tahoma", sans-serif;
+    .nns-close:hover { color: var(--nt); }
+    .nns-body {
+      flex: 1; overflow-y: auto; padding: 10px 12px 14px;
     }
-    .settings-dlg-body::-webkit-scrollbar { width: 8px; }
-    .settings-dlg-body::-webkit-scrollbar-track { background: #d4d0c8; }
-    .settings-dlg-body::-webkit-scrollbar-thumb { background: #8a8676; border-radius: 2px; }
-    .sdlg-section + .sdlg-section { margin-top: 16px; }
-    .sdlg-title {
-      font-size: 11px; font-weight: bold; color: #0d3880; margin: 0 0 9px;
-      padding-bottom: 4px; border-bottom: 1px solid #a0a0a0;
+    .nns-body::-webkit-scrollbar { width: 6px; }
+    .nns-body::-webkit-scrollbar-track { background: transparent; }
+    .nns-body::-webkit-scrollbar-thumb { background: var(--nb); border-radius: 3px; }
+    .nns-section + .nns-section { margin-top: 14px; }
+    .nns-title {
+      font-size: 10px; font-weight: bold; color: var(--na); letter-spacing: .3px;
+      margin-bottom: 8px; padding-bottom: 3px; border-bottom: 1px solid var(--nb);
     }
-    /* Color wallpaper swatches — 6-col to accommodate expanded set */
+    /* Wallpaper grid — 4-col, bigger previews so Ӿ stamps are visible */
     .color-wp-grid {
-      display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
     }
     .color-wp-swatch {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
-      cursor: pointer; padding: 3px; border-radius: 4px;
+      cursor: pointer; padding: 3px; border-radius: 5px;
       border: 2px solid transparent; transition: border-color .12s, background .12s;
     }
-    .color-wp-swatch:hover  { border-color: #316ac5; background: rgba(49,106,197,.12); }
-    .color-wp-swatch.active { border-color: #316ac5; background: rgba(49,106,197,.22); }
+    .color-wp-swatch:hover  { border-color: var(--na); background: rgba(255,255,255,.07); }
+    .color-wp-swatch.active { border-color: var(--na); background: rgba(255,255,255,.12); }
     .color-wp-preview {
-      width: 100%; aspect-ratio: 4/3; border-radius: 3px;
-      border: 1px solid rgba(0,0,0,.25);
+      width: 100%; aspect-ratio: 3/2; border-radius: 4px;
+      border: 1px solid rgba(255,255,255,.12);
     }
     .color-wp-label {
-      font-size: 8px; color: #333; text-align: center;
+      font-size: 7.5px; color: var(--nm); text-align: center;
       line-height: 1.2; word-break: break-word;
     }
+    /* Opacity row */
+    .nns-opacity-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+    .nns-slider { flex: 1; accent-color: var(--na); cursor: pointer; height: 4px; }
+    .nns-opacity-lbl { font-size: 9px; color: var(--nm); white-space: nowrap; }
+    .nns-opacity-pct { font-size: 9px; color: var(--na); text-align: center; }
+    /* Background layer — positioned behind all chat content, opacity-controllable */
+    .nn-bg-layer {
+      position: absolute; inset: 0; z-index: 0;
+      pointer-events: none; transition: opacity .3s;
+    }
+    /* Ensure normal-flow chat children stay above the bg layer */
+    .chat-toolbar, .chat-msgs, .chat-input { position: relative; z-index: 1; }
+    #scroll-arrow { z-index: 2; }
     /* Supply banner in stats popup */
     .sp-supply-banner { background: rgba(0,180,60,.08); border-radius: 6px;
       border: 1px solid rgba(0,200,60,.18); padding: 7px 8px !important; }
     .sp-supply-title { font-size: 10px; font-weight: bold; color: #00a830;
       margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
-    /* NanoNerd bg color picker inside settings dialog */
+    /* NanoNerd bg custom color picker (dark wrap inside the style panel) */
     .nn-bg-cp-wrap {
-      background: #1a2440; border-radius: 8px; padding: 10px 10px 8px;
-      display: flex; flex-direction: column; gap: 8px; margin-top: 4px;
+      background: rgba(0,0,0,.35); border: 1px solid var(--nb); border-radius: 8px;
+      padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 8px;
     }
     .nn-bg-cp-row { display: flex; gap: 8px; align-items: center; }
     .nn-bg-cp-wrap .cp-presets { grid-template-columns: repeat(6,1fr); }
     .nn-bg-reset-btn {
       background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-      color: #a0b8e0; border-radius: 6px; padding: 5px 10px;
+      color: var(--nm); border-radius: 6px; padding: 5px 10px;
       cursor: pointer; font-size: 10px; font-family: "Tahoma",sans-serif;
       transition: background .15s; width: 100%;
     }
-    .nn-bg-reset-btn:hover { background: rgba(255,255,255,.16); color: #fff; }
-    /* Voice buttons */
-    .voice-row { display: flex; gap: 8px; margin-top: 6px; }
+    .nn-bg-reset-btn:hover { background: rgba(255,255,255,.16); color: var(--nt); }
+    /* Voice buttons (dark-themed for the inline panel) */
+    .voice-row { display: flex; gap: 8px; margin-top: 2px; }
     .voice-btn {
-      flex: 1; padding: 7px 6px; font-size: 12px; font-family: "Tahoma", sans-serif;
-      background: linear-gradient(180deg, #fff 0%, #d4d0c8 100%);
-      border: 1px solid #7a7672; border-radius: 3px;
-      cursor: pointer; color: #111;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
-      transition: filter .1s, border-color .1s;
+      flex: 1; padding: 7px 6px; font-size: 11px; font-family: "Tahoma", sans-serif;
+      background: rgba(255,255,255,.07); border: 1px solid var(--nb); border-radius: 4px;
+      cursor: pointer; color: var(--nm);
+      transition: filter .1s, border-color .1s, background .1s;
     }
-    .voice-btn:hover { filter: brightness(.93); }
+    .voice-btn:hover { background: rgba(255,255,255,.13); color: var(--nt); }
     .voice-btn.active {
-      background: linear-gradient(180deg, #cce0f8 0%, #9ac4f0 100%);
-      border-color: #316ac5; color: #0d3880; font-weight: bold;
-    }
-    .settings-dlg-foot {
-      padding: 7px 12px; border-top: 1px solid #b0aa98; flex-shrink: 0;
-      display: flex; justify-content: flex-end;
-      background: linear-gradient(180deg, #e0ddd0 0%, #cac7b8 100%);
+      background: rgba(0,201,255,.18); border-color: var(--na); color: var(--na); font-weight: bold;
     }
 
     /* ── LANGUAGE PICKER DROPDOWN ── */
@@ -1910,48 +1895,6 @@
     </div>
     <div class="wp-dialog-foot">
       <button class="wp-foot-btn" onclick="closeWpPicker()">Close</button>
-    </div>
-  </div>
-
-  <!-- Settings Dialog (wallpapers + voice) -->
-  <div class="settings-dlg" id="settings-dlg">
-    <div class="settings-dlg-box">
-      <div class="settings-dlg-head">
-        <span>⚙️ NanoNerd Settings</span>
-        <button class="settings-dlg-close" onclick="closeSettingsDlg()">✕</button>
-      </div>
-      <div class="settings-dlg-body">
-        <!-- Color Wallpapers -->
-        <div class="sdlg-section">
-          <div class="sdlg-title">🎨 Color Wallpapers</div>
-          <div class="color-wp-grid" id="color-wp-grid"></div>
-        </div>
-        <!-- Custom Chat Background Color Picker -->
-        <div class="sdlg-section">
-          <div class="sdlg-title">🎨 Pick Any Chat Background Color</div>
-          <div class="nn-bg-cp-wrap">
-            <div class="nn-bg-cp-row">
-              <input type="color" id="nn-bg-color-input" class="cp-color-wheel"
-                     value="#001800" oninput="_applyNnBgColorHex(this.value)">
-              <button class="cp-eye" id="nn-bg-eye-btn" onclick="_nnBgPickFromScreen()"
-                      title="Pick from screen">💧 Pick</button>
-            </div>
-            <div class="cp-presets" id="nn-bg-presets"></div>
-            <button class="nn-bg-reset-btn" onclick="_applyColorWallpaper('linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)','Nano Green'); document.getElementById(\'nn-bg-color-input\').value=\'#001800\'">↺ Reset to Nano Green</button>
-          </div>
-        </div>
-        <!-- Voice Settings -->
-        <div class="sdlg-section">
-          <div class="sdlg-title">🔊 Text-to-Speech Voice</div>
-          <div class="voice-row">
-            <button class="voice-btn" data-voice="female" onclick="setTtsVoice('female')">👩 Female</button>
-            <button class="voice-btn" data-voice="male"   onclick="setTtsVoice('male')">👨 Male</button>
-          </div>
-        </div>
-      </div>
-      <div class="settings-dlg-foot">
-        <button class="wp-foot-btn" onclick="closeSettingsDlg()">Close</button>
-      </div>
     </div>
   </div>
 
@@ -2659,21 +2602,37 @@ function closeWpPicker() {
 }
 
 /* ══════════════════════════════════════════
-   SETTINGS DIALOG — color wallpapers + voice
+   NANONERD STYLE PANEL — wallpapers + opacity + voice
 ══════════════════════════════════════════ */
 let _settingsDlgOpen = false;
 
-function openSettingsDlg() {
-  if (_settingsDlgOpen) { closeSettingsDlg(); return; }
-  _buildColorWpGrid();
-  _updateVoiceBtns();
-  document.getElementById('settings-dlg').classList.add('open');
-  _settingsDlgOpen = true;
+function _nnStyleToggle() {
+  const panel = document.getElementById('nn-style-panel');
+  if (!panel) return;
+  const opening = !panel.classList.contains('open');
+  if (opening) {
+    _buildColorWpGrid();
+    _buildNnBgPresetsLazy();
+    _updateVoiceBtns();
+    _restoreNnOpacitySlider();
+    panel.classList.add('open');
+    document.getElementById('nn-style-btn')?.classList.add('active');
+    _settingsDlgOpen = true;
+  } else {
+    _nnStyleClose();
+  }
 }
-function closeSettingsDlg() {
-  document.getElementById('settings-dlg').classList.remove('open');
+
+function _nnStyleClose() {
+  const panel = document.getElementById('nn-style-panel');
+  if (panel) panel.classList.remove('open');
+  document.getElementById('nn-style-btn')?.classList.remove('active');
   _settingsDlgOpen = false;
 }
+
+/* Backwards-compat stubs (some code still calls these) */
+function openSettingsDlg()  { _nnStyleToggle(); }
+function closeSettingsDlg() { _nnStyleClose(); }
 
 /* Build the 10-swatch color wallpaper grid (lazy, one-time) */
 function _buildColorWpGrid() {
@@ -2690,36 +2649,36 @@ function _buildColorWpGrid() {
   });
 }
 
-/* Apply one of the 10 AI-designed gradients to the NanoNerd chat background only */
+/* Apply a gradient/stamp wallpaper to the NanoNerd chat background layer */
 function _applyColorWallpaper(css, name) {
-  /* Target the NanoNerd window content area — not the desktop */
-  const nnWin = wm.els['nanonerd']?.win;
-  const content = nnWin ? nnWin.querySelector('.xp-content') : null;
-  if (content) content.style.background = css;
+  /* Target the dedicated background layer inside the chat-wrap */
+  const bgLayer = document.getElementById('nn-bg-layer');
+  if (bgLayer) bgLayer.style.background = css;
   /* Persist for next session */
   localStorage.setItem('xp-nn-bg',      css);
   localStorage.setItem('xp-nn-bg-name', name);
+  localStorage.removeItem('xp-nn-bg-hex');
   /* Update active swatch */
   document.querySelectorAll('.color-wp-swatch').forEach(el =>
     el.classList.toggle('active', el.dataset.css === css));
-  closeSettingsDlg();
+  /* Reset color input to neutral */
+  const inp = document.getElementById('nn-bg-color-input');
+  if (inp) inp.value = '#001800';
+  _nnStyleClose();
   showCopyToast(`🎨 ${name} applied to chat`);
 }
 
 /* Apply a hex colour as the NanoNerd chat background */
 function _applyNnBgColorHex(hex) {
-  /* Derive a rich gradient from the chosen base colour for depth */
   const css = 'radial-gradient(ellipse at 20% 20%,' + hex + ' 0%,' + hex + 'aa 40%,' + hex + '55 70%,#000000 100%)';
-  const nnWin  = wm.els['nanonerd']?.win;
-  const content = nnWin ? nnWin.querySelector('.xp-content') : null;
-  if (content) content.style.background = css;
+  const bgLayer = document.getElementById('nn-bg-layer');
+  if (bgLayer) bgLayer.style.background = css;
   localStorage.setItem('xp-nn-bg',      css);
   localStorage.setItem('xp-nn-bg-name', 'Color: ' + hex);
   localStorage.setItem('xp-nn-bg-hex',  hex);
   document.querySelectorAll('.color-wp-swatch').forEach(el => el.classList.remove('active'));
   const inp = document.getElementById('nn-bg-color-input');
   if (inp) inp.value = hex;
-  closeSettingsDlg();
   showCopyToast('🎨 Chat background updated');
 }
 
@@ -2727,6 +2686,47 @@ function _applyNnBgColorHex(hex) {
 async function _nnBgPickFromScreen() {
   if (!window.EyeDropper) { alert('Screen colour picker not supported in this browser.'); return; }
   try { const r = await new EyeDropper().open(); _applyNnBgColorHex(r.sRGBHex); } catch { /* cancelled */ }
+}
+
+/* Opacity: controls how visible the background layer is */
+function _applyNnBgOpacity(val) {
+  val = Math.max(0, Math.min(100, Number(val)));
+  const bgLayer = document.getElementById('nn-bg-layer');
+  if (bgLayer) bgLayer.style.opacity = val / 100;
+  const pctEl = document.getElementById('nn-opacity-pct');
+  if (pctEl) pctEl.textContent = val + '%';
+  localStorage.setItem('xp-nn-bg-opacity', val);
+}
+
+/* Restore opacity slider to saved value when panel opens */
+function _restoreNnOpacitySlider() {
+  const saved = localStorage.getItem('xp-nn-bg-opacity');
+  const val = saved !== null ? Number(saved) : 100;
+  const slider = document.getElementById('nn-opacity-slider');
+  const pctEl  = document.getElementById('nn-opacity-pct');
+  if (slider) slider.value = val;
+  if (pctEl)  pctEl.textContent = val + '%';
+}
+
+/* Build NanoNerd bg preset swatches (lazy — called when style panel opens) */
+function _buildNnBgPresetsLazy() {
+  const container = document.getElementById('nn-bg-presets');
+  if (!container || container.children.length > 0) return;
+  _CP_PRESETS.forEach(function(p) {
+    const sw = document.createElement('button');
+    sw.className = 'cp-swatch';
+    sw.title = p.label;
+    sw.style.background = p.hex;
+    sw.onclick = function() { _applyNnBgColorHex(p.hex); };
+    container.appendChild(sw);
+  });
+  /* Disable eyedropper if not supported */
+  const eye = document.getElementById('nn-bg-eye-btn');
+  if (eye && !window.EyeDropper) eye.disabled = true;
+  /* Restore saved hex */
+  const savedHex = localStorage.getItem('xp-nn-bg-hex');
+  const inp = document.getElementById('nn-bg-color-input');
+  if (inp && savedHex) inp.value = savedHex;
 }
 
 /* Highlight the active voice button */
@@ -2867,12 +2867,8 @@ function _speakText(rawHtml, btn) {
   }
 }
 
-/* Close settings dialog on outside click */
-document.addEventListener('click', e => {
-  if (_settingsDlgOpen && !e.target.closest('#settings-dlg') && !e.target.closest('.xp-settings-btn')) {
-    closeSettingsDlg();
-  }
-});
+/* Style panel closes only via its own ✕ or the 🎨 button — no outside-click close
+   (the panel is inside the NanoNerd window, not a modal overlay) */
 
 /* Close wallpaper picker on outside click */
 document.addEventListener('click', e => {
@@ -3286,7 +3282,7 @@ const wm = {
     const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
-      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button><button class="xp-settings-btn" title="Settings" onclick="openSettingsDlg()">⚙️</button>` : ''}
+      ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button>` : ''}
       <div class="xp-btns">
         <button class="xp-btn min" title="Minimize">&#8211;</button>
         <button class="xp-btn max" title="${maxTitle}"><span class="max-icon"></span></button>
@@ -3299,14 +3295,14 @@ const wm = {
 
     /* Drag — mousedown on title bar (not on control buttons or lang-btn) */
     tb.addEventListener('mousedown', (e) => {
-      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn') || e.target.closest('.xp-settings-btn')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
       e.preventDefault();
       drag.start(id, e.clientX, e.clientY);
     });
 
     /* Drag — touchstart on title bar (not on buttons or lang-btn) */
     tb.addEventListener('touchstart', (e) => {
-      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn') || e.target.closest('.xp-settings-btn')) return;
+      if (e.target.closest('.xp-btns') || e.target.closest('.xp-lang-btn')) return;
       e.preventDefault();
       const t = e.touches[0];
       drag.start(id, t.clientX, t.clientY);
@@ -3322,10 +3318,17 @@ const wm = {
     else if (app.type === 'matrix')     bodyEl = this._buildMatrix();
     else                                bodyEl = this._buildBrowser(app);
     content.appendChild(bodyEl);
-    /* Restore saved NanoNerd chat background on open */
+    /* Restore saved NanoNerd chat background + opacity on open */
     if (id === 'nanonerd') {
-      const savedNnBg = localStorage.getItem('xp-nn-bg');
-      if (savedNnBg) content.style.background = savedNnBg;
+      const savedNnBg      = localStorage.getItem('xp-nn-bg');
+      const savedNnOpacity = localStorage.getItem('xp-nn-bg-opacity');
+      requestAnimationFrame(() => {
+        const bgLayer = content.querySelector('#nn-bg-layer');
+        if (bgLayer) {
+          if (savedNnBg) bgLayer.style.background = savedNnBg;
+          if (savedNnOpacity !== null) bgLayer.style.opacity = Number(savedNnOpacity) / 100;
+        }
+      });
     }
 
     /* Resize handles (8 directions) */
@@ -4799,6 +4802,10 @@ const wm = {
     const wrap = document.createElement('div');
     wrap.className = 'chat-wrap';
     wrap.innerHTML = `
+      <!-- Background layer (opacity-controllable wallpaper, sits below everything) -->
+      <div class="nn-bg-layer" id="nn-bg-layer"></div>
+
+      <!-- History slide panel -->
       <div class="hist-panel" id="hist-panel">
         <div class="hist-head">
           <span class="hist-head-title">💬 Chat History</span>
@@ -4807,6 +4814,60 @@ const wm = {
         <button class="hist-new-btn" onclick="_histNewChat()">✏️ &nbsp;New Chat</button>
         <div class="hist-list" id="hist-list"></div>
       </div>
+
+      <!-- Style panel (slides in from right when 🎨 button is clicked) -->
+      <div class="nn-style-panel" id="nn-style-panel">
+        <div class="nns-head">
+          <span>🎨 Chat Style</span>
+          <button class="nns-close" onclick="_nnStyleClose()">✕</button>
+        </div>
+        <div class="nns-body">
+          <!-- Wallpapers -->
+          <div class="nns-section">
+            <div class="nns-title">🖼️ Wallpapers</div>
+            <div class="color-wp-grid" id="color-wp-grid"></div>
+          </div>
+          <!-- Opacity -->
+          <div class="nns-section">
+            <div class="nns-title">💧 Background Opacity</div>
+            <div class="nns-opacity-row">
+              <span class="nns-opacity-lbl">0%</span>
+              <input type="range" id="nn-opacity-slider" class="nns-slider"
+                     min="0" max="100" value="100"
+                     oninput="_applyNnBgOpacity(this.value)">
+              <span class="nns-opacity-lbl">100%</span>
+            </div>
+            <div class="nns-opacity-pct" id="nn-opacity-pct">100%</div>
+          </div>
+          <!-- Custom color picker -->
+          <div class="nns-section">
+            <div class="nns-title">🎨 Pick Any Color</div>
+            <div class="nn-bg-cp-wrap">
+              <div class="nn-bg-cp-row">
+                <input type="color" id="nn-bg-color-input" class="cp-color-wheel"
+                       value="#001800" oninput="_applyNnBgColorHex(this.value)">
+                <button class="cp-eye" id="nn-bg-eye-btn" onclick="_nnBgPickFromScreen()"
+                        title="Pick from screen">💧 Pick</button>
+              </div>
+              <div class="cp-presets" id="nn-bg-presets"></div>
+              <button class="nn-bg-reset-btn"
+                      onclick="_applyColorWallpaper('linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)','Nano Green')">
+                ↺ Reset to Nano Green
+              </button>
+            </div>
+          </div>
+          <!-- Voice -->
+          <div class="nns-section">
+            <div class="nns-title">🔊 Text-to-Speech Voice</div>
+            <div class="voice-row">
+              <button class="voice-btn" data-voice="female" onclick="setTtsVoice('female')">👩 Female</button>
+              <button class="voice-btn" data-voice="male"   onclick="setTtsVoice('male')">👨 Male</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top toolbar -->
       <div class="chat-toolbar">
         <button class="ct-btn" id="hist-btn" onclick="_histToggle()" title="Chat history">
           <span class="ct-icon">📋</span> History
@@ -4814,7 +4875,11 @@ const wm = {
         <button class="ct-btn" onclick="_histNewChat()" title="New chat">
           <span class="ct-icon">✏️</span> New Chat
         </button>
+        <button class="ct-btn" id="nn-style-btn" onclick="_nnStyleToggle()" title="Customize chat style">
+          <span class="ct-icon">🎨</span> Style
+        </button>
       </div>
+
       <div class="chat-msgs" id="chat"></div>
       <button id="scroll-arrow" onclick="clickScrollArrow()" title="Scroll to bottom">⬇️</button>
       <div class="chat-input">
@@ -6395,34 +6460,10 @@ document.addEventListener('click', function(e) {
   });
 })();
 
-/* Disable eyedropper buttons if browser lacks support */
+/* Disable eyedropper button on taskbar colour picker if not supported */
 (function() {
-  if (!window.EyeDropper) {
-    document.getElementById('cp-eye-btn').disabled = true;
-    const nbEye = document.getElementById('nn-bg-eye-btn');
-    if (nbEye) nbEye.disabled = true;
-  }
-})();
-
-/* Build NanoNerd background preset swatches in settings dialog */
-(function _buildNnBgPresets() {
-  const container = document.getElementById('nn-bg-presets');
-  if (!container) return;
-  _CP_PRESETS.forEach(function(p) {
-    const sw = document.createElement('button');
-    sw.className = 'cp-swatch';
-    sw.title = p.label;
-    sw.style.background = p.hex;
-    sw.onclick = function() { _applyNnBgColorHex(p.hex); };
-    container.appendChild(sw);
-  });
-})();
-
-/* Restore saved nn-bg hex value into the color input */
-(function() {
-  const savedHex = localStorage.getItem('xp-nn-bg-hex');
-  const inp = document.getElementById('nn-bg-color-input');
-  if (inp && savedHex) inp.value = savedHex;
+  if (!window.EyeDropper) document.getElementById('cp-eye-btn').disabled = true;
+  /* nn-bg-eye-btn is built lazily inside the style panel — handled in _buildNnBgPresetsLazy() */
 })();
 
 /* Restore saved theme colour on startup */
