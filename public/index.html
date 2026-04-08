@@ -1837,29 +1837,7 @@
       }
     }
 
-    /* ── Color Picker Popup ── */
-    .cp-popup {
-      display: none; position: fixed; z-index: 100000;
-      background: linear-gradient(160deg, #0c1428 0%, #111d3a 100%);
-      border: 1px solid rgba(100,140,255,.3);
-      border-radius: 12px; padding: 14px; width: 234px;
-      box-shadow: 0 -4px 24px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
-      flex-direction: column; gap: 10px;
-      font-family: "Tahoma", sans-serif;
-    }
-    .cp-popup.open { display: flex; }
-    @media (max-height: 520px) {
-      .cp-popup { max-height: calc(100vh - 50px); overflow-y: auto; }
-    }
-    .cp-head {
-      display: flex; align-items: center; justify-content: space-between;
-      color: #c8d8ff; font-size: 12px; font-weight: bold;
-    }
-    .cp-close {
-      background: none; border: none; color: #6880aa; cursor: pointer;
-      font-size: 14px; padding: 0 2px; line-height: 1; transition: color .12s;
-    }
-    .cp-close:hover { color: #fff; }
+    /* ── Theme colour controls (now inside dock/taskbar settings panel) ── */
     .cp-main { display: flex; gap: 8px; align-items: center; }
     .cp-color-wheel {
       flex: 1; height: 40px; border: 2px solid rgba(255,255,255,.15);
@@ -7595,11 +7573,10 @@ async function cpPickFromScreen() {
 /* Declared early so applyThemeColor (called from startup IIFEs) can safely read it */
 let _macMode = false;
 
-/* Color popup consolidated into dock settings — these are kept as stubs
-   so any residual call-sites do not throw. */
+/* Color popup consolidated into dock settings — stubs kept so call-sites don't throw. */
 let _cpOpen = false;
 function toggleCpPopup()  { toggleDockSettings(); }
-function _closeCpPopup()  { /* no-op — settings panel stays open after colour pick */ }
+function _closeCpPopup()  { _closeDockSettings(); }
 
 /* Build preset swatches */
 (function _cpBuildPresets() {
@@ -8065,9 +8042,12 @@ function toggleDockSettings() {
       popup.style.bottom    = fromBot + 'px';
       popup.style.maxHeight = Math.max(160, maxH) + 'px';
     } else {
-      /* XP mode — position above taskbar (34 px) + 8 px gap */
-      popup.style.bottom    = '42px';
-      popup.style.maxHeight = (window.innerHeight - 60) + 'px';
+      /* XP mode — anchor above the #cp-btn trigger, clamped to viewport */
+      const triggerR = (document.getElementById('cp-btn') || {}).getBoundingClientRect?.() || null;
+      const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : 42;
+      const maxH     = triggerR ? (triggerR.top - 10) : (window.innerHeight - 60);
+      popup.style.bottom    = Math.max(42, fromBot) + 'px';
+      popup.style.maxHeight = Math.max(160, maxH) + 'px';
     }
     popup.style.top = 'auto';
     if (window.innerWidth <= 480) {
