@@ -2353,7 +2353,7 @@
     .dock-settings-popup.open { display: flex; }
     .dsp-head {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 14px 8px;
+      padding: 9px 14px 7px;
       color: #e8e8e8; font-size: 13px; font-weight: 600;
       border-bottom: 1px solid rgba(255,255,255,.08);
       flex-shrink: 0;                        /* never squash the header */
@@ -2364,7 +2364,7 @@
     }
     .dsp-close:hover { color: #fff; }
     .dsp-body {
-      display: flex; flex-direction: column; padding: 10px 14px 14px; gap: 12px;
+      display: flex; flex-direction: column; padding: 8px 14px 12px; gap: 8px;
       overflow-y: auto; overflow-x: hidden;  /* scroll when content overflows */
     }
     /* Thin scrollbar inside dock settings */
@@ -2390,7 +2390,7 @@
     }
     .dsp-section-label {
       font-size: 10px; font-weight: 700; color: #6a7a9a;
-      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
     }
     .dsp-slider-row { display: flex; align-items: center; gap: 8px; }
     .dsp-slider-row span { font-size: 10px; color: #8888aa; flex-shrink: 0; }
@@ -2741,56 +2741,10 @@
   <!-- Dock Settings Panel -->
   <div class="dock-settings-popup" id="dock-settings-popup">
     <div class="dsp-head">
-      <span id="dsp-title-text">🎨 Dock Settings</span>
+      <span id="dsp-title-text">🎨 Settings</span>
       <button class="dsp-close" onclick="toggleDockSettings()">✕</button>
     </div>
     <div class="dsp-body">
-      <div>
-        <div class="dsp-section-label" id="dsp-size-label">Dock Size</div>
-        <div class="dsp-slider-row">
-          <span>S</span>
-          <input type="range" class="dsp-slider" id="dsp-size-slider" min="36" max="80" value="52"
-                 oninput="setDockIconSize(+this.value)">
-          <span>L</span>
-        </div>
-      </div>
-      <div class="dsp-toggle-row dsp-macos-only">
-        <span class="dsp-toggle-label">Magnification</span>
-        <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
-      </div>
-      <div class="dsp-toggle-row dsp-macos-only">
-        <span class="dsp-toggle-label">Genie Effect</span>
-        <button class="dsp-pill on" id="dsp-genie-pill" onclick="toggleDockGenie()"></button>
-      </div>
-      <div>
-        <div class="dsp-section-label" id="dsp-material-label">Dock Material</div>
-        <div class="dsp-materials" id="dsp-materials"></div>
-        <div class="dsp-section-label" style="margin-top:10px;">Custom Colour</div>
-        <div class="dsp-color-row">
-          <input type="color" class="dsp-color-pick" id="dsp-color-picker" value="#1a1a2e"
-                 oninput="_applyDockCustomColor(this.value)">
-          <input type="text"  class="dsp-color-hex"  id="dsp-color-hex"  value="#1a1a2e" maxlength="7"
-                 spellcheck="false" autocomplete="off"
-                 oninput="if(/^#[0-9a-f]{6}$/i.test(this.value))_applyDockCustomColor(this.value)">
-          <button class="dsp-color-reset" title="Reset to material" onclick="_resetDockCustomColor()">↺</button>
-        </div>
-      </div>
-      <hr class="cp-sep">
-      <div>
-        <div class="dsp-section-label">Theme Colour</div>
-        <div class="cp-main">
-          <input type="color" id="cp-input" class="cp-color-wheel" value="#1550d4"
-                 oninput="applyThemeColor(this.value)">
-          <button class="cp-eye" id="cp-eye-btn" onclick="cpPickFromScreen()" title="Pick color from screen">💧 Pick</button>
-        </div>
-        <div class="cp-presets" id="cp-presets" style="margin-top:8px;"></div>
-      </div>
-      <div class="dsp-xp-only">
-        <div class="dsp-section-label" style="margin-top:2px;">Window Material</div>
-        <div class="cp-mat-grid" id="cp-xp-materials"></div>
-      </div>
-      <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset XP Blue</button>
-      <hr class="cp-sep">
       <div>
         <div class="dsp-section-label">UI Style</div>
         <div class="dsp-ui-style-row">
@@ -2798,6 +2752,37 @@
           <button class="dsp-ui-btn"        id="dsp-mac-btn" onclick="setUiMode('macos')">🍎 macOS</button>
         </div>
       </div>
+      <div>
+        <div class="dsp-section-label" id="dsp-material-label">Material</div>
+        <div class="dsp-materials" id="dsp-materials"></div>
+      </div>
+      <div>
+        <div class="dsp-section-label">Colour</div>
+        <div class="cp-main">
+          <input type="color" id="cp-input" class="cp-color-wheel" value="#1550d4"
+                 oninput="applyThemeColor(this.value)">
+          <button class="cp-eye" id="cp-eye-btn" onclick="cpPickFromScreen()" title="Pick color from screen">💧 Pick</button>
+        </div>
+        <div class="cp-presets" id="cp-presets" style="margin-top:6px;"></div>
+      </div>
+      <div class="dsp-macos-only">
+        <div class="dsp-section-label" id="dsp-size-label">Dock Size</div>
+        <div class="dsp-slider-row">
+          <span>S</span>
+          <input type="range" class="dsp-slider" id="dsp-size-slider" min="36" max="80" value="52"
+                 oninput="setDockIconSize(+this.value)">
+          <span>L</span>
+        </div>
+        <div class="dsp-toggle-row" style="margin-top:8px;">
+          <span class="dsp-toggle-label">Magnification</span>
+          <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
+        </div>
+        <div class="dsp-toggle-row" style="margin-top:4px;">
+          <span class="dsp-toggle-label">Genie Effect</span>
+          <button class="dsp-pill on" id="dsp-genie-pill" onclick="toggleDockGenie()"></button>
+        </div>
+      </div>
+      <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset</button>
     </div>
   </div>
 
@@ -7531,10 +7516,10 @@ function _cpGrad(base) {
 }
 
 /* Apply a colour to taskbar + title bars + all themed buttons */
-function applyThemeColor(hex, isReset) {
+function applyThemeColor(hex, isReset, skipMacSync) {
   const g = _cpGrad(hex);
-  /* Deselect XP material swatches whenever a free colour is chosen */
-  document.querySelectorAll('#cp-xp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
+  /* Deselect material swatches whenever a free colour is chosen */
+  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
   document.getElementById('theme-style').textContent = [
     `.taskbar { background: ${g.taskbar} !important; border-top-color: ${g.border} !important; }`,
     `body:not(.macos) .xp-titlebar { background: ${g.titlebar} !important; }`,
@@ -7551,13 +7536,9 @@ function applyThemeColor(hex, isReset) {
   );
   if (!isReset) localStorage.setItem('xp-theme-color', hex);
   else          localStorage.removeItem('xp-theme-color');
-  /* In macOS mode, tint macOS window bars from the chosen colour */
-  if (typeof _macMode !== 'undefined' && _macMode) {
-    const rv = parseInt(hex.slice(1,3),16);
-    const gv = parseInt(hex.slice(3,5),16);
-    const bv = parseInt(hex.slice(5,7),16);
-    const d  = v => Math.max(0, Math.min(255, Math.round(v * .52)));
-    document.documentElement.style.setProperty('--mac-win-bar', `rgba(${d(rv)},${d(gv)},${d(bv)},.96)`);
+  /* In macOS mode, sync dock + menu bar + window bars from the same colour */
+  if (typeof _macMode !== 'undefined' && _macMode && !skipMacSync) {
+    _syncMacDockFromHex(hex);
   }
 }
 
@@ -7753,7 +7734,8 @@ function _applyXpMaterial(id) {
   _xpMaterial = id;
   applyThemeColor(XP_MAT_HEX[id]);
   localStorage.setItem('xp-material', id);
-  document.querySelectorAll('#cp-xp-materials .dsp-mat-swatch').forEach(sw => {
+  /* Sync active state on the unified material swatches */
+  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.matId === id);
   });
 }
@@ -8168,6 +8150,37 @@ const _MAT_THEME = {
             text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
 };
 
+/* ── Sync dock + macOS menu bar + window bars from a hex colour ── */
+function _syncMacDockFromHex(hex) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
+  const rv = parseInt(hex.slice(1,3),16);
+  const gv = parseInt(hex.slice(3,5),16);
+  const bv = parseInt(hex.slice(5,7),16);
+  const d  = v => Math.max(0, Math.min(255, Math.round(v * .52)));
+  const l  = v => Math.max(0, Math.min(255, Math.round(v * 1.18 + 18)));
+  const [wr,wg,wb] = [d(rv),d(gv),d(bv)];
+  const [mr,mg,mb] = [l(rv),l(gv),l(bv)];
+  const dock = document.getElementById('mac-dock');
+  if (dock) {
+    DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
+    dock.style.background  = `linear-gradient(180deg,rgba(${rv},${gv},${bv},.70) 0%,rgba(${wr},${wg},${wb},.84) 100%)`;
+    dock.style.borderColor = `rgba(${Math.min(255,rv+60)},${Math.min(255,gv+60)},${Math.min(255,bv+60)},.22)`;
+  }
+  const luma    = .299*rv + .587*gv + .114*bv;
+  const isLight = luma > 148;
+  const textCol  = isLight ? '#1a1a1a' : '#fff';
+  const hoverCol = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.18)';
+  const root = document.documentElement;
+  root.style.setProperty('--mac-win-bar',    `rgba(${wr},${wg},${wb},.96)`);
+  root.style.setProperty('--mac-menu-bar',   `linear-gradient(180deg,rgba(${mr},${mg},${mb},.97) 0%,rgba(${rv},${gv},${bv},.97) 100%)`);
+  root.style.setProperty('--mac-menu-text',  textCol);
+  root.style.setProperty('--mac-menu-hover', hoverCol);
+  const wifiImg = document.querySelector('#mac-wifi-btn img');
+  if (wifiImg) wifiImg.style.filter = isLight ? 'grayscale(1)' : 'brightness(0) invert(1)';
+  /* Deactivate material swatches since we're now using a custom colour */
+  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
+}
+
 function _applyDockMaterial(id) {
   _dockMaterial = id;
   const dock = document.getElementById('mac-dock');
@@ -8196,17 +8209,15 @@ function _applyDockMaterial(id) {
   document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.matId === id);
   });
-  /* Clear custom colour persistence */
+  /* Persist */
   localStorage.setItem('dock-material', id);
   localStorage.removeItem('dock-custom-color');
-  /* Sync colour-picker inputs to a neutral placeholder */
-  const cPick = document.getElementById('dsp-color-picker');
-  const cHex  = document.getElementById('dsp-color-hex');
-  const repr  = id === 'silver' ? '#2a2a30' : (DOCK_MAT_SWATCH_CSS[id] || '').match(/#[0-9a-f]{6}/i)?.[0] || '#2a2a30';
-  if (cPick) cPick.value = repr;
-  if (cHex)  cHex.value  = repr;
-  /* In XP mode, mirror material to XP taskbar/titlebars for visible feedback */
-  if (!_macMode && XP_MAT_HEX[id]) applyThemeColor(XP_MAT_HEX[id]);
+  /* Always mirror material to XP taskbar/titlebars; skipMacSync avoids overriding _MAT_THEME */
+  if (XP_MAT_HEX[id]) {
+    _xpMaterial = id;
+    localStorage.setItem('xp-material', id);
+    applyThemeColor(XP_MAT_HEX[id], false, true);
+  }
 }
 
 /* ── Custom dock colour (overrides material) ── */
@@ -8215,51 +8226,7 @@ let _dockCustomColor = null;
 function _applyDockCustomColor(hex) {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
   _dockCustomColor = hex;
-  const rv = parseInt(hex.slice(1,3),16);
-  const gv = parseInt(hex.slice(3,5),16);
-  const bv = parseInt(hex.slice(5,7),16);
-
-  /* Darker shade for window title bars */
-  const d  = v => Math.max(0, Math.min(255, Math.round(v * .52)));
-  const wr = d(rv), wg = d(gv), wb = d(bv);
-
-  /* Lighter shade for menu bar top */
-  const l  = v => Math.max(0, Math.min(255, Math.round(v * 1.18 + 18)));
-  const mr = l(rv), mg = l(gv), mb = l(bv);
-
-  /* Apply dock background inline */
-  const dock = document.getElementById('mac-dock');
-  if (dock) {
-    DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
-    dock.style.background  = `linear-gradient(180deg,rgba(${rv},${gv},${bv},.70) 0%,rgba(${wr},${wg},${wb},.84) 100%)`;
-    dock.style.borderColor = `rgba(${Math.min(255,rv+60)},${Math.min(255,gv+60)},${Math.min(255,bv+60)},.22)`;
-  }
-
-  /* Determine foreground text colour from luminance */
-  const luma   = .299*rv + .587*gv + .114*bv;
-  const isLight = luma > 148;
-  const textCol  = isLight ? '#1a1a1a' : '#fff';
-  const hoverCol = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.18)';
-
-  const root = document.documentElement;
-  root.style.setProperty('--mac-win-bar',    `rgba(${wr},${wg},${wb},.96)`);
-  root.style.setProperty('--mac-menu-bar',   `linear-gradient(180deg,rgba(${mr},${mg},${mb},.97) 0%,rgba(${rv},${gv},${bv},.97) 100%)`);
-  root.style.setProperty('--mac-menu-text',  textCol);
-  root.style.setProperty('--mac-menu-hover', hoverCol);
-
-  /* Wifi icon tint */
-  const wifiImg = document.querySelector('#mac-wifi-btn img');
-  if (wifiImg) wifiImg.style.filter = isLight ? 'grayscale(1)' : 'brightness(0) invert(1)';
-
-  /* Deactivate dock material swatches only (not XP window material swatches) */
-  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
-
-  /* Sync inputs */
-  const cPick = document.getElementById('dsp-color-picker');
-  const cHex  = document.getElementById('dsp-color-hex');
-  if (cPick) cPick.value = hex;
-  if (cHex)  cHex.value  = hex;
-
+  _syncMacDockFromHex(hex);
   localStorage.setItem('dock-custom-color', hex);
   localStorage.removeItem('dock-material');
 }
