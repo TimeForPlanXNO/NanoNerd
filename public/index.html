@@ -2102,6 +2102,9 @@
     body.macos .mv-close { order: 1; background: #ff5f57 !important; border-color: rgba(160,0,0,.25) !important; }
     body.macos .mv-min   { order: 2; background: #febc2e !important; border-color: rgba(160,120,0,.25) !important; }
     body.macos .mv-max   { order: 3; background: #28c840 !important; border-color: rgba(0,110,0,.25) !important; }
+    /* In macOS mode, media viewer has no dock slot — minimising would strand the window.
+       Grey out the yellow dot and block all interaction. */
+    body.macos .mv-min   { opacity: 0.32; pointer-events: none; cursor: default !important; }
     body.macos .mv-min:hover,
     body.macos .mv-max:hover,
     body.macos .mv-close:hover { filter: brightness(1.12); }
@@ -4098,8 +4101,8 @@ const wm = {
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
       ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button><button class="xp-lang-btn" id="nn-settings-tb-btn" title="Chat settings" onclick="_nnStyleToggle()" style="margin-left:3px;font-size:9px;padding:0 6px;">⚙️</button>` : ''}
       <div class="xp-btns">
-        <button class="xp-btn min" title="Minimize">&#8211;</button>
-        <button class="xp-btn max" title="${maxTitle}"><span class="max-icon"></span></button>
+        <button class="xp-btn min" title="${_macMode ? 'Minimise' : 'Minimize'}">&#8211;</button>
+        <button class="xp-btn max" title="${_macMode && app.type !== 'browser' ? 'Zoom' : maxTitle}"><span class="max-icon"></span></button>
         <button class="xp-btn cls" title="Close">&#10005;</button>
       </div>
     `;
@@ -6641,8 +6644,8 @@ function openMediaViewer(idx) {
       <div class="mv-title">${icon} ${file.name}</div>
       <button class="mv-wp-btn" title="Set as desktop wallpaper">🖼️ Wallpaper</button>
       <div class="mv-btns">
-        <button class="mv-min"   title="Minimize">&#8211;</button>
-        <button class="mv-max"   title="Maximise">□</button>
+        <button class="mv-min"   title="${_macMode ? 'Minimise (disabled — no dock slot)' : 'Minimize'}">&#8211;</button>
+        <button class="mv-max"   title="${_macMode ? 'Zoom' : 'Maximise'}">□</button>
         <button class="mv-close" title="Close">✕</button>
       </div>
     </div>
@@ -7769,13 +7772,20 @@ function setUiMode(mode, noAnim) {
     if (dspMatLbl) dspMatLbl.textContent = 'Material';
     const cpReset = document.getElementById('cp-reset-btn');
     if (cpReset) cpReset.textContent = _macMode ? '↺ Reset Colour' : '↺ Reset XP Blue';
+
+    /* Update window control button titles to match the new mode */
+    document.querySelectorAll('.xp-btn.min').forEach(b => { b.title = _macMode ? 'Minimise' : 'Minimize'; });
+    document.querySelectorAll('.xp-btn.max').forEach(b => { if (b.title !== 'Open in browser') b.title = _macMode ? 'Zoom' : 'Maximize / Restore'; });
+    document.querySelectorAll('.mv-min').forEach(b   => { b.title = _macMode ? 'Minimise (disabled — no dock slot)' : 'Minimize'; });
+    document.querySelectorAll('.mv-max').forEach(b   => { b.title = _macMode ? 'Zoom' : 'Maximise'; });
   }
 
   if (noAnim) {
     /* Direct swap with no animation (used by startup restore) */
     _doSwap();
   } else {
-    /* Smooth fade-through overlay */
+    /* Smooth fade-through overlay — remove any stale overlay from a rapid previous click */
+    document.getElementById('mode-fade-overlay')?.remove();
     const ov = document.createElement('div');
     ov.id = 'mode-fade-overlay';
     document.body.appendChild(ov);
@@ -7982,11 +7992,16 @@ function toggleDockSettings() {
   if (xpBtn)   xpBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
     if (_macMode) {
-      /* Anchor above the 🎨 dock trigger button; fall back to dock-wrap if btn not found */
-      const triggerR = document.getElementById('dock-settings-btn')?.getBoundingClientRect?.() || null;
-      const dockR    = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-      const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : (window.innerHeight - dockR.top + 6);
-      const maxH     = triggerR ? (triggerR.top - 10) : (dockR.top - 10);
+      /* Anchor above the 🎨 dock trigger button; fall back to dock-wrap if btn not found.
+         When dock auto-hide has slid the dock off-screen, triggerR.top > window.innerHeight
+         which would make fromBot negative (popup off screen). Clamp to the nominal dock top
+         so the popup always appears in the correct visible position. */
+      const triggerR   = document.getElementById('dock-settings-btn')?.getBoundingClientRect?.() || null;
+      const dockR      = document.getElementById('mac-dock-wrap').getBoundingClientRect();
+      const rawTop     = triggerR ? triggerR.top : dockR.top;
+      const nominalTop = Math.min(rawTop, window.innerHeight - _macDockH() - 1);
+      const fromBot    = window.innerHeight - nominalTop + 6;
+      const maxH       = nominalTop - 10;
       popup.style.bottom    = fromBot + 'px';
       popup.style.maxHeight = Math.max(160, maxH) + 'px';
     } else {
