@@ -1803,6 +1803,9 @@
       font-family: "Tahoma", sans-serif;
     }
     .cp-popup.open { display: flex; }
+    @media (max-height: 520px) {
+      .cp-popup { max-height: calc(100vh - 50px); overflow-y: auto; }
+    }
     .cp-head {
       display: flex; align-items: center; justify-content: space-between;
       color: #c8d8ff; font-size: 12px; font-weight: bold;
@@ -2490,6 +2493,7 @@
     </div>
     <div class="mac-mb-right">
       <button class="mac-mb-btn" id="mac-reset-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
+      <button class="mac-mb-btn" id="mac-cp-btn" onclick="toggleCpPopup()" title="Theme color">🎨</button>
       <button class="mac-mb-btn" id="mac-wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Reps">
         <img src="/wifi-icon.png" style="width:13px;height:13px;filter:grayscale(1);vertical-align:middle;" alt="wifi">
       </button>
@@ -2623,6 +2627,7 @@
   <div class="taskbar">
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
+    <button class="wifi-btn" id="xp-settings-btn" onclick="toggleDockSettings()" title="Taskbar Settings">⚙️</button>
     <button class="wifi-btn" id="cp-btn" onclick="toggleCpPopup()" title="Theme color">🎨</button>
     <button class="wifi-btn" id="refresh-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">🔄</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
@@ -7429,23 +7434,42 @@ let _cpOpen = false;
 function toggleCpPopup() {
   _cpOpen = !_cpOpen;
   const popup = document.getElementById('cp-popup');
-  const btn   = document.getElementById('cp-btn');
   popup.classList.toggle('open', _cpOpen);
-  btn.classList.toggle('active', _cpOpen);
+  /* Highlight whichever trigger button is visible */
+  const xpBtn  = document.getElementById('cp-btn');
+  const macBtn = document.getElementById('mac-cp-btn');
+  if (xpBtn)  xpBtn.classList.toggle('active', _cpOpen);
+  if (macBtn) macBtn.classList.toggle('active', _cpOpen);
   if (_cpOpen) {
-    const br = btn.getBoundingClientRect();
-    popup.style.bottom = (window.innerHeight - br.top + 4) + 'px';
-    popup.style.right  = Math.max(4, window.innerWidth - br.right) + 'px';
-    popup.style.left   = 'auto';
+    /* Anchor to whichever trigger button is visible in the current mode */
+    const anchorId = _macMode ? 'mac-cp-btn' : 'cp-btn';
+    const btn = document.getElementById(anchorId);
+    const br  = btn.getBoundingClientRect();
+    if (_macMode) {
+      /* macOS: popup drops DOWN from menubar */
+      popup.style.top    = (br.bottom + 4) + 'px';
+      popup.style.right  = Math.max(4, window.innerWidth - br.right) + 'px';
+      popup.style.bottom = 'auto';
+      popup.style.left   = 'auto';
+    } else {
+      /* XP: popup rises UP from taskbar */
+      popup.style.bottom = (window.innerHeight - br.top + 4) + 'px';
+      popup.style.right  = Math.max(4, window.innerWidth - br.right) + 'px';
+      popup.style.top    = 'auto';
+      popup.style.left   = 'auto';
+    }
   }
 }
 
 /* Close on outside click */
 document.addEventListener('click', function(e) {
-  if (_cpOpen && !e.target.closest('#cp-popup') && !e.target.closest('#cp-btn')) {
+  if (_cpOpen && !e.target.closest('#cp-popup') && !e.target.closest('#cp-btn') && !e.target.closest('#mac-cp-btn')) {
     _cpOpen = false;
     document.getElementById('cp-popup').classList.remove('open');
-    document.getElementById('cp-btn').classList.remove('active');
+    const xpBtn  = document.getElementById('cp-btn');
+    const macBtn = document.getElementById('mac-cp-btn');
+    if (xpBtn)  xpBtn.classList.remove('active');
+    if (macBtn) macBtn.classList.remove('active');
   }
 });
 
@@ -7656,6 +7680,9 @@ function _applyXpMaterial(id) {
 
 /* ── Mode Switch ── */
 function setUiMode(mode) {
+  /* Close any open popup to prevent stale positioning after mode change */
+  if (_cpOpen)  { _cpOpen  = false; document.getElementById('cp-popup').classList.remove('open'); const cb = document.getElementById('cp-btn'); if (cb) cb.classList.remove('active'); const mcb = document.getElementById('mac-cp-btn'); if (mcb) mcb.classList.remove('active'); }
+  if (_dspOpen) { _dspOpen = false; document.getElementById('dock-settings-popup').classList.remove('open'); const db = document.getElementById('dock-settings-btn'); if (db) db.classList.remove('active'); }
   _macMode = (mode === 'macos');
   document.body.classList.toggle('macos', _macMode);
   ['cp-xp-btn','dsp-xp-btn'].forEach(id => {
@@ -7858,23 +7885,43 @@ let _dspOpen = false;
 function toggleDockSettings() {
   _dspOpen = !_dspOpen;
   const popup = document.getElementById('dock-settings-popup');
-  const btn   = document.getElementById('dock-settings-btn');
+  const macDockBtn = document.getElementById('dock-settings-btn');
+  const xpBtn      = document.getElementById('xp-settings-btn');
   popup.classList.toggle('open', _dspOpen);
-  if (btn) btn.classList.toggle('active', _dspOpen);
+  if (macDockBtn) macDockBtn.classList.toggle('active', _dspOpen);
+  if (xpBtn)      xpBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
-    const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-    const fromBot = window.innerHeight - dockR.top + 6;
-    /* Leave at least 10 px headroom at the top of the screen */
-    const maxH = dockR.top - 10;
-    popup.style.bottom    = fromBot + 'px';
-    popup.style.maxHeight = Math.max(160, maxH) + 'px';
-    /* Portrait: center horizontally; landscape: right-align to edge */
-    if (window.innerWidth <= 480) {
-      popup.style.left  = '14px';
-      popup.style.right = '14px';
+    if (_macMode) {
+      /* macOS: position above the dock */
+      const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
+      const fromBot = window.innerHeight - dockR.top + 6;
+      const maxH    = dockR.top - 10;
+      popup.style.bottom    = fromBot + 'px';
+      popup.style.maxHeight = Math.max(160, maxH) + 'px';
+      popup.style.top       = 'auto';
+      if (window.innerWidth <= 480) {
+        popup.style.left  = '14px';
+        popup.style.right = '14px';
+      } else {
+        popup.style.left  = 'auto';
+        popup.style.right = '14px';
+      }
     } else {
-      popup.style.left  = 'auto';
-      popup.style.right = '14px';
+      /* XP: position above the taskbar, anchored to #xp-settings-btn */
+      const tbBtn   = document.getElementById('xp-settings-btn');
+      const br      = tbBtn ? tbBtn.getBoundingClientRect() : { top: window.innerHeight - 34, right: window.innerWidth - 8 };
+      const fromBot = window.innerHeight - br.top + 4;
+      const maxH    = br.top - 10;
+      popup.style.bottom    = fromBot + 'px';
+      popup.style.maxHeight = Math.max(160, maxH) + 'px';
+      popup.style.top       = 'auto';
+      if (window.innerWidth <= 480) {
+        popup.style.left  = '14px';
+        popup.style.right = '14px';
+      } else {
+        popup.style.left  = 'auto';
+        popup.style.right = Math.max(4, window.innerWidth - br.right) + 'px';
+      }
     }
   }
 }
@@ -7882,11 +7929,14 @@ function toggleDockSettings() {
 document.addEventListener('click', function(e) {
   if (_dspOpen &&
       !e.target.closest('#dock-settings-popup') &&
-      !e.target.closest('#dock-settings-btn')) {
+      !e.target.closest('#dock-settings-btn') &&
+      !e.target.closest('#xp-settings-btn')) {
     _dspOpen = false;
     document.getElementById('dock-settings-popup').classList.remove('open');
-    const b = document.getElementById('dock-settings-btn');
-    if (b) b.classList.remove('active');
+    const macDockBtn = document.getElementById('dock-settings-btn');
+    const xpBtn      = document.getElementById('xp-settings-btn');
+    if (macDockBtn) macDockBtn.classList.remove('active');
+    if (xpBtn)      xpBtn.classList.remove('active');
   }
 });
 
