@@ -1876,8 +1876,8 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
     body.macos .icon-col       { display: none !important; }
-    /* wallpaper btn sits below the menu bar in macOS mode */
-    body.macos .wp-btn         { top: 36px; z-index: 601; }
+    /* wallpaper btn sits below the menu bar in macOS mode — behind open windows */
+    body.macos .wp-btn         { top: 36px; z-index: 3; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
     /* Maximised regular windows stop at the dock (CSS var set by JS) */
@@ -2192,24 +2192,30 @@
     .dock-toggle-btn {
       display: none;
       position: fixed;
-      bottom: 16px;
-      left: 10px;
-      z-index: 601;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.22);
-      border: 1px solid rgba(255,255,255,.40);
-      color: rgba(255,255,255,.90);
-      font-size: 14px;
+      bottom: 8px;
+      left: 8px;
+      z-index: 600;
+      min-width: 32px; height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.26);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border: 1px solid rgba(255,255,255,.55);
+      box-shadow: 0 4px 24px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.65);
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
       cursor: pointer;
       align-items: center; justify-content: center;
-      transition: transform .35s cubic-bezier(.4,0,.2,1), background .12s;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 0;
+      transition: transform .35s cubic-bezier(.4,0,.2,1), opacity .2s, box-shadow .2s;
+      padding: 0 8px;
       line-height: 1;
     }
     .dock-toggle-btn.dock-collapsed { transform: rotate(180deg); }
+    .dock-toggle-btn.dock-peek {
+      opacity: 1;
+      box-shadow: 0 4px 28px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.7),
+                  0 0 0 2px rgba(255,255,255,.18);
+    }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
       padding: 6px 10px;
@@ -3993,7 +3999,13 @@ const wm = {
 
   clickTb(id) {
     if (this.state[id] === 'open') {
-      this.minimize(id);
+      const { win } = this.els[id];
+      // If already the topmost focused window → minimize; otherwise bring to front
+      if (parseInt(win.style.zIndex || 0) === this.z) {
+        this.minimize(id);
+      } else {
+        this.focus(id);
+      }
     } else {
       this.open(id);
     }
@@ -4132,30 +4144,47 @@ const wm = {
     /* Initial window size based on layout mode */
     const ar = area.getBoundingClientRect();
     if (_isMobilePortrait()) {
-      /* Mobile portrait: full width, fills space between top and bottom icon rows, centered */
-      const r = _mobilePWinRect(ar);
-      win.style.width  = r.w + 'px';
-      win.style.height = r.h + 'px';
-      win.style.left   = r.l + 'px';   /* full-width = inherently centered */
-      win.style.top    = r.t + 'px';   /* below wallpaper btn + recycle bin */
+      /* Mobile portrait: full width, fills space between top and bottom icon rows, centered.
+         In macOS mode the dock replaces the bottom icon row so use its height instead. */
+      if (_macMode) {
+        const dockH = _macDockHOrEst();
+        const safeB = Math.max(_M_SAFE_B, dockH);
+        win.style.width  = ar.width + 'px';
+        win.style.height = Math.max(120, ar.height - _M_SAFE_T - safeB) + 'px';
+        win.style.left   = '0';
+        win.style.top    = _M_SAFE_T + 'px';
+      } else {
+        const r = _mobilePWinRect(ar);
+        win.style.width  = r.w + 'px';
+        win.style.height = r.h + 'px';
+        win.style.left   = r.l + 'px';
+        win.style.top    = r.t + 'px';
+      }
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
-      /* Mobile landscape: leave icon-column gaps on both sides
-         (left = icon column, right = recycle-bin column) */
+      /* Mobile landscape: leave icon-column gaps on both sides.
+         In macOS mode account for dock height. */
+      const dockH  = _macDockHOrEst();
+      const topOff = _macMode ? 4 : 0;
+      const h      = _macMode ? Math.max(80, ar.height - dockH - topOff) : ar.height;
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = h + 'px';
       win.style.left   = _M_LAND_L + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / large tablet: 67% width, full height, horizontally centered */
-      const w = Math.round(ar.width * 0.67);
+      /* Desktop / large tablet: 67% width, horizontally centered.
+         In macOS mode leave a gap at top and stop at dock. */
+      const dockH  = _macDockHOrEst();
+      const topOff = _macMode ? 4 : 0;
+      const h      = _macMode ? Math.max(120, ar.height - dockH - topOff) : ar.height;
+      const w      = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = h + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -6544,7 +6573,15 @@ function openMediaViewer(idx) {
     }
   };
 
-  tbBtn.onclick = () => { _minimized ? _mvShow() : _mvHide(); };
+  tbBtn.onclick = () => {
+    if (_minimized) {
+      _mvShow();
+    } else if (parseInt(win.style.zIndex) === _mvZ) {
+      _mvHide();        // topmost media window → minimize
+    } else {
+      _mvBumpZ(win);    // not topmost → bring to front
+    }
+  };
   tbApps.appendChild(tbBtn);
 
   /* ── Set as Wallpaper button ── */
@@ -6946,26 +6983,40 @@ function _applyWindowsLayout() {
       return;
     }
     if (mobile) {
-      const r = _mobilePWinRect(ar);
-      win.style.width  = r.w + 'px';
-      win.style.height = r.h + 'px';
-      win.style.left   = r.l + 'px';
-      win.style.top    = r.t + 'px';
+      /* Portrait: in macOS mode the dock sits at the bottom instead of icon rows */
+      if (_macMode) {
+        const dockH = _macDockHOrEst();
+        const safeB = Math.max(_M_SAFE_B, dockH);
+        win.style.width  = ar.width + 'px';
+        win.style.height = Math.max(120, ar.height - _M_SAFE_T - safeB) + 'px';
+        win.style.left   = '0';
+        win.style.top    = _M_SAFE_T + 'px';
+      } else {
+        const r = _mobilePWinRect(ar);
+        win.style.width  = r.w + 'px';
+        win.style.height = r.h + 'px';
+        win.style.left   = r.l + 'px';
+        win.style.top    = r.t + 'px';
+      }
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
+      const dockH  = _macDockHOrEst();
+      const topOff = _macMode ? 4 : 0;
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = (_macMode ? Math.max(80, ar.height - dockH - topOff) : ar.height) + 'px';
       win.style.left   = _M_LAND_L + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
-      const w = Math.round(ar.width * 0.67);
+      const dockH  = _macDockHOrEst();
+      const topOff = _macMode ? 4 : 0;
+      const w      = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = (_macMode ? Math.max(120, ar.height - dockH - topOff) : ar.height) + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -7437,6 +7488,14 @@ function _macDockH() {
   return Math.max(0, window.innerHeight - rect.top);
 }
 
+/* Estimated dock height for initial window sizing — falls back to icon size + label
+   when the dock element is not yet visible (e.g. just after entering macOS mode). */
+function _macDockHOrEst() {
+  if (!_macMode) return 0;
+  const h = _macDockH();
+  return h > 0 ? h : _dockIconSize + 30;
+}
+
 /* Keeps the --mac-dock-h CSS variable in sync (drives maximised-window bottom). */
 function _updateDockCssVar() {
   document.documentElement.style.setProperty('--mac-dock-h', _macDockH() + 'px');
@@ -7448,7 +7507,11 @@ function _setDockVisible(v) {
   const wrap = document.getElementById('mac-dock-wrap');
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
   const btn  = document.getElementById('dock-toggle-btn');
-  if (btn)  btn.classList.toggle('dock-collapsed', !v);
+  if (btn) {
+    btn.classList.toggle('dock-collapsed', !v);
+    /* dock-peek: more prominent shadow/glow when dock is hidden so user can find the button */
+    btn.classList.toggle('dock-peek', !v);
+  }
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
