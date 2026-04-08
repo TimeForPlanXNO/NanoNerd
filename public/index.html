@@ -2380,9 +2380,6 @@
       .dsp-slider-row { gap: 6px; }
       .dsp-mat-thumb  { aspect-ratio: 1.6; }     /* shorter swatches */
       .dsp-mat-label  { padding: 2px 2px 3px; font-size: 8px; }
-      .dsp-color-row  { gap: 4px; }
-      .dsp-color-pick { width: 26px; height: 24px; }
-      .dsp-color-hex  { font-size: 10px; padding: 3px 6px; }
     }
     /* ── Portrait narrow screens: center the popup and constrain height ── */
     @media (max-width: 480px) {
@@ -2437,25 +2434,6 @@
       padding: 3px 2px 4px; background: rgba(0,0,0,.38);
       text-shadow: 0 1px 2px rgba(0,0,0,.8);
     }
-    /* Colour picker row inside dock settings */
-    .dsp-color-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-    .dsp-color-pick {
-      width: 30px; height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,.18);
-      cursor: pointer; padding: 2px; background: none; flex-shrink: 0;
-    }
-    .dsp-color-hex {
-      flex: 1; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
-      color: #d8e0f0; border-radius: 6px; padding: 4px 7px;
-      font-size: 11px; font-family: monospace; outline: none;
-      transition: border-color .12s;
-    }
-    .dsp-color-hex:focus { border-color: rgba(100,180,255,.6); }
-    .dsp-color-reset {
-      background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
-      color: #90a8c8; border-radius: 6px; padding: 4px 9px;
-      font-size: 12px; cursor: pointer; transition: background .12s, color .12s; flex-shrink: 0;
-    }
-    .dsp-color-reset:hover { background: rgba(255,255,255,.18); color: #fff; }
     .dsp-ui-style-row { display: flex; gap: 6px; }
     .dsp-ui-btn {
       flex: 1; padding: 7px 4px; border-radius: 8px;
@@ -7739,30 +7717,6 @@ function _applyXpMaterial(id) {
     sw.classList.toggle('active', sw.dataset.matId === id);
   });
 }
-
-(function _buildXpMaterials() {
-  const container = document.getElementById('cp-xp-materials');
-  if (!container) return;
-  DOCK_MATERIALS.forEach(({ id, label }) => {
-    const sw = document.createElement('button');
-    sw.className = 'dsp-mat-swatch';
-    sw.title = label;
-    sw.dataset.matId = id;
-    const thumb = document.createElement('div');
-    thumb.className = 'dsp-mat-thumb';
-    thumb.style.cssText = DOCK_MAT_SWATCH_CSS[id] || '';
-    const lbl = document.createElement('div');
-    lbl.className = 'dsp-mat-label';
-    lbl.textContent = label;
-    sw.appendChild(thumb);
-    sw.appendChild(lbl);
-    sw.onclick = () => { _applyXpMaterial(id); _closeCpPopup(); };
-    container.appendChild(sw);
-  });
-  /* Restore saved XP material on startup */
-  const saved = localStorage.getItem('xp-material');
-  if (saved && XP_MAT_HEX[saved]) _applyXpMaterial(saved);
-})();
 
 /* ── Mode Switch ── */
 function setUiMode(mode, noAnim) {
