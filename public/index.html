@@ -6579,7 +6579,20 @@ function openMediaViewer(idx) {
     }
   };
 
-  tbBtn.onclick = () => { _minimized ? _mvShow() : _mvHide(); };
+  /* Clicking the taskbar button: restore-and-focus if minimised/hidden;
+     bring to front if open but not topmost; minimise only if already topmost. */
+  tbBtn.onclick = () => {
+    if (_minimized) {
+      _mvShow();
+    } else {
+      const currentZ = parseInt(win.style.zIndex || 0);
+      if (currentZ >= wm.z) {
+        _mvHide();
+      } else {
+        _mvBumpZ(win);
+      }
+    }
+  };
   tbApps.appendChild(tbBtn);
 
   /* ── Set as Wallpaper button ── */
@@ -7501,6 +7514,11 @@ function _setDockVisible(v) {
   /* Update the toggle tab arrow: ⌄ = dock visible (click to hide), ⌃ = hidden (click to show) */
   const arrow = document.getElementById('dock-toggle-arrow');
   if (arrow) arrow.textContent = v ? '⌄' : '⌃';
+  /* When dock is hidden the toggle must remain clickable above all windows
+     (z-index 601 = above taskbar 500, dock 600, and all regular windows);
+     when dock is visible it sits behind windows at z-index 5. */
+  const toggleBtn = document.getElementById('dock-toggle-btn');
+  if (toggleBtn) toggleBtn.style.zIndex = v ? '5' : '601';
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
