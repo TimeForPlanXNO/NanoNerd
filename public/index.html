@@ -1876,8 +1876,8 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
     body.macos .icon-col       { display: none !important; }
-    /* wallpaper btn sits below the menu bar in macOS mode */
-    body.macos .wp-btn         { top: 36px; z-index: 601; }
+    /* wallpaper btn sits below the menu bar in macOS mode — no z-index override, stays at 5 so windows cover it */
+    body.macos .wp-btn         { top: 36px; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
     /* Maximised regular windows stop at the dock (CSS var set by JS) */
@@ -2192,24 +2192,27 @@
     .dock-toggle-btn {
       display: none;
       position: fixed;
-      bottom: 16px;
-      left: 10px;
-      z-index: 601;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.22);
-      border: 1px solid rgba(255,255,255,.40);
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5; /* below windows so focused windows cover it */
+      width: 52px; height: 18px;
+      border-radius: 10px 10px 0 0;
+      background: rgba(255,255,255,.28);
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      border: 1px solid rgba(255,255,255,.55);
+      border-bottom: none;
+      box-shadow: 0 -2px 10px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.55);
       color: rgba(255,255,255,.90);
-      font-size: 14px;
+      font-size: 11px;
       cursor: pointer;
       align-items: center; justify-content: center;
-      transition: transform .35s cubic-bezier(.4,0,.2,1), background .12s;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      transition: background .12s;
       padding: 0;
       line-height: 1;
     }
-    .dock-toggle-btn.dock-collapsed { transform: rotate(180deg); }
+    .dock-toggle-btn:hover { background: rgba(255,255,255,.42); }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
       padding: 6px 10px;
@@ -2354,6 +2357,10 @@
       .dsp-color-row  { gap: 4px; }
       .dsp-color-pick { width: 26px; height: 24px; }
       .dsp-color-hex  { font-size: 10px; padding: 3px 6px; }
+    }
+    /* ── Portrait narrow screens: center the popup and constrain height ── */
+    @media (max-width: 480px) {
+      .dock-settings-popup { max-height: calc(100vh - 100px); }
     }
     .dsp-section-label {
       font-size: 10px; font-weight: 700; color: #6a7a9a;
@@ -2603,7 +2610,7 @@
       <button class="cp-ui-btn"        id="cp-mac-btn" onclick="setUiMode('macos')">🍎 macOS</button>
     </div>
     <hr class="cp-sep">
-    <button class="cp-reset" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset XP Blue</button>
+    <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset XP Blue</button>
   </div>
 
   <!-- Taskbar -->
@@ -2702,18 +2709,18 @@
       <!-- Built dynamically by _buildMacDock() -->
     </div>
   </div>
-  <!-- Mobile dock toggle arrow (shown only in macOS + mobile mode) -->
-  <button id="dock-toggle-btn" class="dock-toggle-btn" title="Toggle dock">⌃</button>
+  <!-- Dock toggle tab (shown only in macOS + mobile mode) pinned at bottom edge -->
+  <button id="dock-toggle-btn" class="dock-toggle-btn" title="Toggle dock"><span id="dock-toggle-arrow">⌄</span></button>
 
   <!-- Dock Settings Panel -->
   <div class="dock-settings-popup" id="dock-settings-popup">
     <div class="dsp-head">
-      🎨 Dock Settings
+      <span id="dsp-title-text">🎨 Dock Settings</span>
       <button class="dsp-close" onclick="toggleDockSettings()">✕</button>
     </div>
     <div class="dsp-body">
       <div>
-        <div class="dsp-section-label">Dock Size</div>
+        <div class="dsp-section-label" id="dsp-size-label">Dock Size</div>
         <div class="dsp-slider-row">
           <span>S</span>
           <input type="range" class="dsp-slider" id="dsp-size-slider" min="36" max="80" value="52"
@@ -2730,7 +2737,7 @@
         <button class="dsp-pill on" id="dsp-genie-pill" onclick="toggleDockGenie()"></button>
       </div>
       <div>
-        <div class="dsp-section-label">Dock Material</div>
+        <div class="dsp-section-label" id="dsp-material-label">Dock Material</div>
         <div class="dsp-materials" id="dsp-materials"></div>
         <div class="dsp-section-label" style="margin-top:10px;">Custom Colour</div>
         <div class="dsp-color-row">
@@ -3955,11 +3962,14 @@ const wm = {
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       } else {
-        const w2 = Math.round(ar2.width * 0.67);
+        const w2      = Math.round(ar2.width * 0.67);
+        const topGap2 = _macMode ? 4 : 0;
+        const botOff2 = _macMode ? _macDockH() : 34;
+        const h2      = Math.max(200, ar2.height - botOff2 - topGap2);
         win.style.width  = w2 + 'px';
-        win.style.height = ar2.height + 'px';
+        win.style.height = h2 + 'px';
         win.style.left   = Math.round((ar2.width - w2) / 2) + 'px';
-        win.style.top    = '0';
+        win.style.top    = topGap2 + 'px';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       }
@@ -3969,12 +3979,15 @@ const wm = {
 
   focus(id) {
     this.z++;
-    /* Renormalize all windows back into range 100..N when the counter approaches
-       the taskbar z-index (500).  This preserves their stacking order while keeping
-       every window strictly below the taskbar at all times. */
+    /* Renormalize ALL windows (regular + media) back into range 100..N when the
+       counter approaches 490.  Keeps every window below the taskbar (500) and
+       below the macOS dock/menu-bar (600) while the two window types share one
+       z-counter so clicking any window truly brings it to the absolute front. */
     if (this.z >= 490) {
-      const allWins = Object.values(this.els)
-        .map(e => e.win).filter(Boolean);
+      const allWins = [
+        ...Object.values(this.els).map(e => e.win).filter(Boolean),
+        ...[...document.querySelectorAll('.mv-win')]
+      ];
       allWins.sort((a, b) => parseInt(a.style.zIndex || 0) - parseInt(b.style.zIndex || 0));
       allWins.forEach((w, i) => { w.style.zIndex = 100 + i; });
       this.z = 100 + allWins.length;
@@ -4150,12 +4163,16 @@ const wm = {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / large tablet: 67% width, full height, horizontally centered */
-      const w = Math.round(ar.width * 0.67);
+      /* Desktop / large tablet: 67% width, horizontally centered.
+         Bottom edge aligns with taskbar/dock top; small gap at top in macOS. */
+      const w       = Math.round(ar.width * 0.67);
+      const topGap  = _macMode ? 4 : 0;
+      const botOff  = _macMode ? _macDockH() : 34; /* dock height or taskbar height */
+      const h       = Math.max(200, ar.height - botOff - topGap);
       win.style.width  = w + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = h + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = '0';
+      win.style.top    = topGap + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -6446,30 +6463,32 @@ function _grabVideoThumb(src, canvas, wrap, spinner) {
 /* ══════════════════════════════════════════
    MEDIA VIEWER (spawns individual windows)
 ══════════════════════════════════════════ */
-let _mvZ = 9000;
 
-/* Safely increment the media-window z counter.
-   Renormalises all .mv-win elements back to 9000..9000+n when
-   the counter approaches the popup ceiling (100000), so menus
-   always stay above all media windows.  Pass the window element
-   to also update its style.zIndex immediately. */
+/* Unified z-index bump shared with the regular window manager (wm.z).
+   All windows — regular (.xp-win) and media (.mv-win) — live on the same
+   counter so clicking any window brings it to the true absolute front.
+   Renormalises ALL windows (both types) back to 100..N when approaching 490,
+   keeping everything below the taskbar (500) / macOS dock+menu-bar (600). */
 function _mvBumpZ(win) {
-  if (_mvZ >= 89990) {
-    const sorted = [...document.querySelectorAll('.mv-win')]
-      .sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
-    sorted.forEach((w, i) => { w.style.zIndex = 9000 + i; });
-    _mvZ = 9000 + sorted.length;
+  wm.z++;
+  if (wm.z >= 490) {
+    const allWins = [
+      ...Object.values(wm.els).map(e => e.win).filter(Boolean),
+      ...[...document.querySelectorAll('.mv-win')]
+    ];
+    allWins.sort((a, b) => (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0));
+    allWins.forEach((w, i) => { w.style.zIndex = 100 + i; });
+    wm.z = 100 + allWins.length;
   }
-  _mvZ++;
-  if (win) win.style.zIndex = _mvZ;
-  return _mvZ;
+  if (win) win.style.zIndex = wm.z;
+  return wm.z;
 }
 
 function openMediaViewer(idx) {
   const file = MEDIA_FILES[idx];
   if (!file) return;
   const area = document.getElementById('win-area');
-  _mvBumpZ();
+  _mvBumpZ(); /* bumps wm.z */
 
   /* Aspect ratio of the actual media; set once the element fires load/loadedmetadata */
   let _mediaAR = null;
@@ -6478,10 +6497,10 @@ function openMediaViewer(idx) {
   const win = document.createElement('div');
   win.className = 'mv-win';
   win.style.cssText = `
-    display:none; z-index:${_mvZ};
+    display:none; z-index:${wm.z};
     width:320px; height:240px;
-    left:${80 + (_mvZ % 12) * 22}px;
-    top:${60 + (_mvZ % 10) * 18}px;
+    left:${80 + (wm.z % 12) * 22}px;
+    top:${60 + (wm.z % 10) * 18}px;
   `;
 
   const icon = file.type === 'image' ? '🖼️' : '▶️';
@@ -6607,6 +6626,10 @@ function openMediaViewer(idx) {
       win.remove();
     }
   };
+
+  /* ── Bring to front on any click/touch ── */
+  win.addEventListener('mousedown',  () => { _mvBumpZ(win); }, { passive: true });
+  win.addEventListener('touchstart', () => { _mvBumpZ(win); }, { passive: true });
 
   /* ── Drag ── */
   const titlebar = win.querySelector('.mv-titlebar');
@@ -6961,11 +6984,14 @@ function _applyWindowsLayout() {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
-      const w = Math.round(ar.width * 0.67);
-      win.style.width  = w + 'px';
-      win.style.height = ar.height + 'px';
-      win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = '0';
+      const wL      = Math.round(ar.width * 0.67);
+      const topGapL = _macMode ? 4 : 0;
+      const botOffL = _macMode ? _macDockH() : 34;
+      const hL      = Math.max(200, ar.height - botOffL - topGapL);
+      win.style.width  = wL + 'px';
+      win.style.height = hL + 'px';
+      win.style.left   = Math.round((ar.width - wL) / 2) + 'px';
+      win.style.top    = topGapL + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -7445,10 +7471,11 @@ function _updateDockCssVar() {
 /* Single source of truth for showing/hiding the dock. */
 function _setDockVisible(v) {
   _dockVisible = v;
-  const wrap = document.getElementById('mac-dock-wrap');
+  const wrap  = document.getElementById('mac-dock-wrap');
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
-  const btn  = document.getElementById('dock-toggle-btn');
-  if (btn)  btn.classList.toggle('dock-collapsed', !v);
+  /* Update the toggle tab arrow: ⌄ = dock visible (click to hide), ⌃ = hidden (click to show) */
+  const arrow = document.getElementById('dock-toggle-arrow');
+  if (arrow) arrow.textContent = v ? '⌄' : '⌃';
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
@@ -7589,6 +7616,15 @@ function setUiMode(mode) {
   _setDockVisible(true);
   _updateDockToggleBtn();
   _updateDockCssVar();
+  /* Update mode-dependent labels instantly */
+  const dspTitle = document.getElementById('dsp-title-text');
+  if (dspTitle) dspTitle.textContent = _macMode ? '🎨 Dock Settings' : '🎨 Taskbar Settings';
+  const dspSizeLbl = document.getElementById('dsp-size-label');
+  if (dspSizeLbl) dspSizeLbl.textContent = _macMode ? 'Dock Size' : 'Taskbar Size';
+  const dspMatLbl = document.getElementById('dsp-material-label');
+  if (dspMatLbl) dspMatLbl.textContent = _macMode ? 'Dock Material' : 'Taskbar Material';
+  const cpReset = document.getElementById('cp-reset-btn');
+  if (cpReset) cpReset.textContent = _macMode ? '↺ Reset Color' : '↺ Reset XP Blue';
 }
 
 /* ── Dock icon builder ── */
@@ -7773,11 +7809,17 @@ function toggleDockSettings() {
     const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
     const fromBot = window.innerHeight - dockR.top + 6;
     /* Leave at least 10 px headroom at the top of the screen */
-    const maxH    = dockR.top - 10;
+    const maxH = dockR.top - 10;
     popup.style.bottom    = fromBot + 'px';
-    popup.style.right     = '14px';
-    popup.style.left      = 'auto';
     popup.style.maxHeight = Math.max(160, maxH) + 'px';
+    /* Portrait: center horizontally; landscape: right-align to edge */
+    if (window.innerWidth <= 480) {
+      popup.style.left  = '14px';
+      popup.style.right = '14px';
+    } else {
+      popup.style.left  = 'auto';
+      popup.style.right = '14px';
+    }
   }
 }
 
