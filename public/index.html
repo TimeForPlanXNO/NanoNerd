@@ -2489,6 +2489,20 @@
     .dsp-ui-btn.active      { background: rgba(0,170,255,.25); color: #fff; border-color: rgba(0,170,255,.5); }
     .dsp-ui-btn:hover:not(.active) { background: rgba(255,255,255,.14); color: #fff; }
 
+    /* ── Mode-conditional visibility in dock settings ── */
+    body:not(.macos) .dsp-macos-only { display: none !important; }
+    body.macos .dsp-xp-only          { display: none !important; }
+
+    /* ── Mode-switch overlay animation ── */
+    @keyframes _modeFadeIn  { from { opacity:0 } to { opacity:.38 } }
+    @keyframes _modeFadeOut { from { opacity:.38 } to { opacity:0 } }
+    #mode-fade-overlay {
+      position: fixed; inset: 0; background: #000;
+      z-index: 999999; pointer-events: none;
+      animation: _modeFadeIn .12s ease forwards;
+    }
+    #mode-fade-overlay.out { animation: _modeFadeOut .18s ease forwards; }
+
     /* ── UI Style section inside XP colour picker ── */
     .cp-ui-style-row { display: flex; gap: 6px; }
     .cp-ui-btn {
@@ -2534,7 +2548,6 @@
     </div>
     <div class="mac-mb-right">
       <button class="mac-mb-btn" id="mac-reset-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
-      <button class="mac-mb-btn" id="mac-cp-btn" onclick="toggleCpPopup()" title="Theme color">🎨</button>
       <button class="mac-mb-btn" id="mac-wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Reps">
         <img src="/wifi-icon.png" style="width:13px;height:13px;filter:grayscale(1);vertical-align:middle;" alt="wifi">
       </button>
@@ -2648,38 +2661,11 @@
     <div class="lang-list" id="lang-list"></div>
   </div>
 
-  <!-- Theme Color Picker Popup -->
-  <div class="cp-popup" id="cp-popup">
-    <div class="cp-head">
-      <span>🎨 Theme Color</span>
-      <button class="cp-close" onclick="toggleCpPopup()">✕</button>
-    </div>
-    <div class="cp-main">
-      <input type="color" id="cp-input" class="cp-color-wheel" value="#1550d4"
-             oninput="applyThemeColor(this.value)">
-      <button class="cp-eye" id="cp-eye-btn" onclick="cpPickFromScreen()" title="Pick color from screen">💧 Pick</button>
-    </div>
-    <div class="cp-presets" id="cp-presets"></div>
-    <hr class="cp-sep">
-    <div class="cp-xp-only">
-      <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">Window Material</div>
-      <div class="cp-mat-grid" id="cp-xp-materials"></div>
-      <hr class="cp-sep">
-    </div>
-    <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">UI Style</div>
-    <div class="cp-ui-style-row">
-      <button class="cp-ui-btn active" id="cp-xp-btn"  onclick="setUiMode('xp')">🪟 Windows XP</button>
-      <button class="cp-ui-btn"        id="cp-mac-btn" onclick="setUiMode('macos')">🍎 macOS</button>
-    </div>
-    <hr class="cp-sep">
-    <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true); _closeCpPopup()">↺ Reset XP Blue</button>
-  </div>
-
   <!-- Taskbar -->
   <div class="taskbar">
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
-    <button class="wifi-btn" id="cp-btn" onclick="toggleCpPopup()" title="Theme color">🎨</button>
+    <button class="wifi-btn" id="cp-btn" onclick="toggleDockSettings()" title="Settings">🎨</button>
     <button class="wifi-btn" id="refresh-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">🔄</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
     <button class="tb-clock" id="clock" onclick="toggleStatsPopup()">00:00</button>
@@ -2811,6 +2797,22 @@
           <button class="dsp-color-reset" title="Reset to material" onclick="_resetDockCustomColor()">↺</button>
         </div>
       </div>
+      <hr class="cp-sep">
+      <div>
+        <div class="dsp-section-label">Theme Colour</div>
+        <div class="cp-main">
+          <input type="color" id="cp-input" class="cp-color-wheel" value="#1550d4"
+                 oninput="applyThemeColor(this.value)">
+          <button class="cp-eye" id="cp-eye-btn" onclick="cpPickFromScreen()" title="Pick color from screen">💧 Pick</button>
+        </div>
+        <div class="cp-presets" id="cp-presets" style="margin-top:8px;"></div>
+      </div>
+      <div class="dsp-xp-only">
+        <div class="dsp-section-label" style="margin-top:2px;">Window Material</div>
+        <div class="cp-mat-grid" id="cp-xp-materials"></div>
+      </div>
+      <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset XP Blue</button>
+      <hr class="cp-sep">
       <div>
         <div class="dsp-section-label">UI Style</div>
         <div class="dsp-ui-style-row">
@@ -7593,49 +7595,11 @@ async function cpPickFromScreen() {
 /* Declared early so applyThemeColor (called from startup IIFEs) can safely read it */
 let _macMode = false;
 
-/* Toggle popup open/closed */
+/* Color popup consolidated into dock settings — these are kept as stubs
+   so any residual call-sites do not throw. */
 let _cpOpen = false;
-function toggleCpPopup() {
-  _cpOpen = !_cpOpen;
-  const popup = document.getElementById('cp-popup');
-  popup.classList.toggle('open', _cpOpen);
-  /* Highlight whichever trigger button is visible */
-  const xpBtn  = document.getElementById('cp-btn');
-  const macBtn = document.getElementById('mac-cp-btn');
-  if (xpBtn)  xpBtn.classList.toggle('active', _cpOpen);
-  if (macBtn) macBtn.classList.toggle('active', _cpOpen);
-  if (_cpOpen) {
-    /* Always anchor to bottom-right corner, above taskbar in XP, near edge in macOS */
-    const botGap = _macMode ? 8 : 42;   /* 42 = 34px taskbar + 8px gap */
-    popup.style.bottom = botGap + 'px';
-    popup.style.right  = '12px';
-    popup.style.top    = 'auto';
-    popup.style.left   = 'auto';
-  }
-}
-
-/* Close on outside click */
-document.addEventListener('click', function(e) {
-  if (_cpOpen && !e.target.closest('#cp-popup') && !e.target.closest('#cp-btn') && !e.target.closest('#mac-cp-btn')) {
-    _cpOpen = false;
-    document.getElementById('cp-popup').classList.remove('open');
-    const xpBtn  = document.getElementById('cp-btn');
-    const macBtn = document.getElementById('mac-cp-btn');
-    if (xpBtn)  xpBtn.classList.remove('active');
-    if (macBtn) macBtn.classList.remove('active');
-  }
-});
-
-/* Close cp-popup programmatically (used by discrete-choice handlers) */
-function _closeCpPopup() {
-  if (!_cpOpen) return;
-  _cpOpen = false;
-  document.getElementById('cp-popup').classList.remove('open');
-  const xpBtn  = document.getElementById('cp-btn');
-  const macBtn = document.getElementById('mac-cp-btn');
-  if (xpBtn)  xpBtn.classList.remove('active');
-  if (macBtn) macBtn.classList.remove('active');
-}
+function toggleCpPopup()  { toggleDockSettings(); }
+function _closeCpPopup()  { /* no-op — settings panel stays open after colour pick */ }
 
 /* Build preset swatches */
 (function _cpBuildPresets() {
@@ -7842,35 +7806,62 @@ function _applyXpMaterial(id) {
 })();
 
 /* ── Mode Switch ── */
-function setUiMode(mode) {
-  /* Close any open popup to prevent stale positioning after mode change */
-  if (_cpOpen)  { _cpOpen  = false; document.getElementById('cp-popup').classList.remove('open'); const cb = document.getElementById('cp-btn'); if (cb) cb.classList.remove('active'); const mcb = document.getElementById('mac-cp-btn'); if (mcb) mcb.classList.remove('active'); }
-  if (_dspOpen) { _dspOpen = false; document.getElementById('dock-settings-popup').classList.remove('open'); const db = document.getElementById('dock-settings-btn'); if (db) db.classList.remove('active'); }
-  _macMode = (mode === 'macos');
-  document.body.classList.toggle('macos', _macMode);
-  ['cp-xp-btn','dsp-xp-btn'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('active', !_macMode);
-  });
-  ['cp-mac-btn','dsp-mac-btn'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('active', _macMode);
-  });
-  localStorage.setItem('ui-mode', mode);
-  /* Dock visibility reset on mode switch */
-  if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
-  _setDockVisible(true);
-  _updateDockToggleBtn();
-  _updateDockCssVar();
-  /* Update mode-dependent labels instantly */
-  const dspTitle = document.getElementById('dsp-title-text');
-  if (dspTitle) dspTitle.textContent = _macMode ? '🎨 Dock Settings' : '🎨 Taskbar Settings';
-  const dspSizeLbl = document.getElementById('dsp-size-label');
-  if (dspSizeLbl) dspSizeLbl.textContent = _macMode ? 'Dock Size' : 'Taskbar Size';
-  const dspMatLbl = document.getElementById('dsp-material-label');
-  if (dspMatLbl) dspMatLbl.textContent = _macMode ? 'Dock Material' : 'Taskbar Material';
-  const cpReset = document.getElementById('cp-reset-btn');
-  if (cpReset) cpReset.textContent = _macMode ? '↺ Reset Color' : '↺ Reset XP Blue';
+function setUiMode(mode, noAnim) {
+  /* Close settings panel before the visual swap */
+  if (_dspOpen) {
+    _dspOpen = false;
+    document.getElementById('dock-settings-popup').classList.remove('open');
+    const db = document.getElementById('dock-settings-btn');
+    if (db) db.classList.remove('active');
+    const cb = document.getElementById('cp-btn');
+    if (cb) cb.classList.remove('active');
+  }
+
+  /* The actual mode swap logic */
+  function _doSwap() {
+    _macMode = (mode === 'macos');
+    document.body.classList.toggle('macos', _macMode);
+
+    /* Update UI Style button active states */
+    const dspXp  = document.getElementById('dsp-xp-btn');
+    const dspMac = document.getElementById('dsp-mac-btn');
+    if (dspXp)  dspXp.classList.toggle('active', !_macMode);
+    if (dspMac) dspMac.classList.toggle('active',  _macMode);
+
+    localStorage.setItem('ui-mode', mode);
+
+    /* Dock visibility reset on mode switch */
+    if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
+    _setDockVisible(true);
+    _updateDockToggleBtn();
+    _updateDockCssVar();
+
+    /* Update mode-dependent labels instantly */
+    const dspTitle = document.getElementById('dsp-title-text');
+    if (dspTitle) dspTitle.textContent = _macMode ? '🎨 Dock Settings' : '🎨 Taskbar Settings';
+    const dspSizeLbl = document.getElementById('dsp-size-label');
+    if (dspSizeLbl) dspSizeLbl.textContent = _macMode ? 'Dock Size' : 'Taskbar Size';
+    const dspMatLbl = document.getElementById('dsp-material-label');
+    if (dspMatLbl) dspMatLbl.textContent = _macMode ? 'Dock Material' : 'Taskbar Material';
+    const cpReset = document.getElementById('cp-reset-btn');
+    if (cpReset) cpReset.textContent = _macMode ? '↺ Reset Colour' : '↺ Reset XP Blue';
+  }
+
+  if (noAnim) {
+    /* Direct swap with no animation (used by startup restore) */
+    _doSwap();
+  } else {
+    /* Smooth fade-through overlay */
+    const ov = document.createElement('div');
+    ov.id = 'mode-fade-overlay';
+    document.body.appendChild(ov);
+    /* Swap at peak opacity, then fade out */
+    setTimeout(() => {
+      _doSwap();
+      ov.classList.add('out');
+      setTimeout(() => ov.remove(), 200);
+    }, 120);
+  }
 }
 
 /* ── Dock icon builder ── */
@@ -8047,20 +8038,38 @@ function _updateDockDot(id) {
 
 /* ── Dock Settings toggle ── */
 let _dspOpen = false;
+function _closeDockSettings() {
+  if (!_dspOpen) return;
+  _dspOpen = false;
+  document.getElementById('dock-settings-popup').classList.remove('open');
+  const db = document.getElementById('dock-settings-btn');
+  if (db) db.classList.remove('active');
+  const cb = document.getElementById('cp-btn');
+  if (cb) cb.classList.remove('active');
+}
+
 function toggleDockSettings() {
   _dspOpen = !_dspOpen;
   const popup = document.getElementById('dock-settings-popup');
-  const macDockBtn = document.getElementById('dock-settings-btn');
+  const dockBtn = document.getElementById('dock-settings-btn'); /* macOS dock */
+  const xpBtn   = document.getElementById('cp-btn');           /* XP taskbar  */
   popup.classList.toggle('open', _dspOpen);
-  if (macDockBtn) macDockBtn.classList.toggle('active', _dspOpen);
+  if (dockBtn) dockBtn.classList.toggle('active', _dspOpen);
+  if (xpBtn)   xpBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
-    /* Position above the dock */
-    const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-    const fromBot = window.innerHeight - dockR.top + 6;
-    const maxH    = dockR.top - 10;
-    popup.style.bottom    = fromBot + 'px';
-    popup.style.maxHeight = Math.max(160, maxH) + 'px';
-    popup.style.top       = 'auto';
+    if (_macMode) {
+      /* Position above the dock */
+      const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
+      const fromBot = window.innerHeight - dockR.top + 6;
+      const maxH    = dockR.top - 10;
+      popup.style.bottom    = fromBot + 'px';
+      popup.style.maxHeight = Math.max(160, maxH) + 'px';
+    } else {
+      /* XP mode — position above taskbar (34 px) + 8 px gap */
+      popup.style.bottom    = '42px';
+      popup.style.maxHeight = (window.innerHeight - 60) + 'px';
+    }
+    popup.style.top = 'auto';
     if (window.innerWidth <= 480) {
       popup.style.left  = '14px';
       popup.style.right = '14px';
@@ -8074,11 +8083,9 @@ function toggleDockSettings() {
 document.addEventListener('click', function(e) {
   if (_dspOpen &&
       !e.target.closest('#dock-settings-popup') &&
-      !e.target.closest('#dock-settings-btn')) {
-    _dspOpen = false;
-    document.getElementById('dock-settings-popup').classList.remove('open');
-    const macDockBtn = document.getElementById('dock-settings-btn');
-    if (macDockBtn) macDockBtn.classList.remove('active');
+      !e.target.closest('#dock-settings-btn') &&
+      !e.target.closest('#cp-btn')) {
+    _closeDockSettings();
   }
 });
 
@@ -8369,7 +8376,7 @@ document.addEventListener('click', function(e) {
   }
 
   /* Set UI mode last (needs dock built) */
-  setUiMode(savedMode === 'macos' ? 'macos' : 'xp');
+  setUiMode(savedMode === 'macos' ? 'macos' : 'xp', true); /* noAnim on startup */
 
   /* Init dock auto-hide (desktop) and mobile toggle button */
   _initDockAutoHide();
