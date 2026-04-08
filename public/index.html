@@ -7432,6 +7432,9 @@ async function cpPickFromScreen() {
   } catch { /* user cancelled */ }
 }
 
+/* Declared early so applyThemeColor (called from startup IIFEs) can safely read it */
+let _macMode = false;
+
 /* Toggle popup open/closed */
 let _cpOpen = false;
 function toggleCpPopup() {
@@ -7519,7 +7522,6 @@ function _closeCpPopup() {
    macOS MODE
 ══════════════════════════════════════════ */
 
-let _macMode     = false;
 let _dockMagnify = true;
 let _dockGenie   = true;
 let _dockIconSize = 52;
