@@ -3955,10 +3955,13 @@ const wm = {
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       } else if (_isMobileLandscape()) {
+        const botOffML2 = _macMode ? _macDockH() : 34;
+        const topGapML2 = _macMode ? 4 : 0;
+        const hML2      = Math.max(80, ar2.height - botOffML2 - topGapML2);
         win.style.width  = (ar2.width - _M_LAND_L - _M_LAND_R) + 'px';
-        win.style.height = ar2.height + 'px';
+        win.style.height = hML2 + 'px';
         win.style.left   = _M_LAND_L + 'px';
-        win.style.top    = '0';
+        win.style.top    = topGapML2 + 'px';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       } else {
@@ -4005,8 +4008,17 @@ const wm = {
   },
 
   clickTb(id) {
-    if (this.state[id] === 'open') {
-      this.minimize(id);
+    if (this.state[id] === 'minimized') {
+      this.open(id); /* restore from minimized */
+    } else if (this.state[id] === 'open') {
+      /* Always bring to front; only minimize if it is already the topmost window */
+      const win = this.els[id]?.win;
+      const currentZ = win ? parseInt(win.style.zIndex || 0) : 0;
+      if (currentZ >= this.z) {
+        this.minimize(id);
+      } else {
+        this.focus(id);
+      }
     } else {
       this.open(id);
     }
@@ -4155,11 +4167,15 @@ const wm = {
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
       /* Mobile landscape: leave icon-column gaps on both sides
-         (left = icon column, right = recycle-bin column) */
+         (left = icon column, right = recycle-bin column).
+         Bottom edge flush with taskbar/dock top. */
+      const botOffML = _macMode ? _macDockH() : 34;
+      const topGapML = _macMode ? 4 : 0;
+      const hML      = Math.max(80, ar.height - botOffML - topGapML);
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = hML + 'px';
       win.style.left   = _M_LAND_L + 'px';
-      win.style.top    = '0';
+      win.style.top    = topGapML + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
@@ -6760,8 +6776,12 @@ function openMediaViewer(idx) {
     if (!mw || !mh) { _mvFirstShow(); return; } /* fallback */
     _mediaAR = mw / mh;
     const tbH   = titlebar.offsetHeight || 24;
-    const maxW  = area.offsetWidth  * 0.92;
-    const maxH  = area.offsetHeight * 0.92;
+    /* Available vertical space: area height minus dock/taskbar bottom offset */
+    const botOffMV = _macMode ? _macDockH() : 34;
+    const topGapMV = _macMode ? 4 : 0;
+    const availH   = area.offsetHeight - botOffMV - topGapMV;
+    const maxW     = area.offsetWidth  * 0.92;
+    const maxH     = availH * 0.92;
     /* Start from natural size, shrink only if needed */
     let bW = Math.min(mw, maxW);
     let bH = bW / _mediaAR;
@@ -6770,8 +6790,10 @@ function openMediaViewer(idx) {
     const winH = Math.max(120, Math.round(bH + tbH));
     win.style.width  = winW + 'px';
     win.style.height = winH + 'px';
-    win.style.left   = Math.max(0, Math.round((area.offsetWidth  - winW) / 2)) + 'px';
-    win.style.top    = Math.max(0, Math.round((area.offsetHeight - winH) / 2)) + 'px';
+    win.style.left   = Math.max(0, Math.round((area.offsetWidth - winW) / 2)) + 'px';
+    /* Center vertically in the available (non-dock) region */
+    const topBase = topGapMV + Math.max(0, Math.round((availH - winH) / 2));
+    win.style.top  = topBase + 'px';
     _mvFirstShow();
   }
 
@@ -6977,10 +6999,13 @@ function _applyWindowsLayout() {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
+      const botOffAL = _macMode ? _macDockH() : 34;
+      const topGapAL = _macMode ? 4 : 0;
+      const hAL      = Math.max(80, ar.height - botOffAL - topGapAL);
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = hAL + 'px';
       win.style.left   = _M_LAND_L + 'px';
-      win.style.top    = '0';
+      win.style.top    = topGapAL + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
