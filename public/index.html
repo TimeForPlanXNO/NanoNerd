@@ -1874,10 +1874,6 @@
     /* ═══════════════════════════════════════════════════
        macOS MODE
     ═══════════════════════════════════════════════════ */
-    /* Hide macOS-only popup sections in XP mode */
-    body:not(.macos) .dsp-macos-only { display: none !important; }
-    /* Hide XP-only popup sections in macOS mode */
-    body.macos .cp-xp-only { display: none !important; }
     body.macos .taskbar        { display: none !important; }
     body.macos .mac-dock-wrap  { display: flex !important; }
     body.macos .macos-menubar  { display: flex !important; }
@@ -7418,6 +7414,14 @@ function applyThemeColor(hex, isReset) {
   );
   if (!isReset) localStorage.setItem('xp-theme-color', hex);
   else          localStorage.removeItem('xp-theme-color');
+  /* In macOS mode, tint macOS window bars from the chosen colour */
+  if (typeof _macMode !== 'undefined' && _macMode) {
+    const rv = parseInt(hex.slice(1,3),16);
+    const gv = parseInt(hex.slice(3,5),16);
+    const bv = parseInt(hex.slice(5,7),16);
+    const d  = v => Math.max(0, Math.min(255, Math.round(v * .52)));
+    document.documentElement.style.setProperty('--mac-win-bar', `rgba(${d(rv)},${d(gv)},${d(bv)},.96)`);
+  }
 }
 
 /* EyeDropper (Chrome / Edge desktop only) */
@@ -8064,7 +8068,7 @@ function _applyDockMaterial(id) {
       : 'grayscale(1)';
   }
   _fitDockToScreen();
-  document.querySelectorAll('.dsp-mat-swatch').forEach(sw => {
+  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.matId === id);
   });
   /* Clear custom colour persistence */
@@ -8076,6 +8080,8 @@ function _applyDockMaterial(id) {
   const repr  = id === 'silver' ? '#2a2a30' : (DOCK_MAT_SWATCH_CSS[id] || '').match(/#[0-9a-f]{6}/i)?.[0] || '#2a2a30';
   if (cPick) cPick.value = repr;
   if (cHex)  cHex.value  = repr;
+  /* In XP mode, mirror material to XP taskbar/titlebars for visible feedback */
+  if (!_macMode && XP_MAT_HEX[id]) applyThemeColor(XP_MAT_HEX[id]);
 }
 
 /* ── Custom dock colour (overrides material) ── */
@@ -8120,8 +8126,8 @@ function _applyDockCustomColor(hex) {
   const wifiImg = document.querySelector('#mac-wifi-btn img');
   if (wifiImg) wifiImg.style.filter = isLight ? 'grayscale(1)' : 'brightness(0) invert(1)';
 
-  /* Deactivate all material swatches */
-  document.querySelectorAll('.dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
+  /* Deactivate dock material swatches only (not XP window material swatches) */
+  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
 
   /* Sync inputs */
   const cPick = document.getElementById('dsp-color-picker');
