@@ -7797,11 +7797,11 @@ function setUiMode(mode, noAnim) {
 
     /* Update mode-dependent labels instantly */
     const dspTitle = document.getElementById('dsp-title-text');
-    if (dspTitle) dspTitle.textContent = _macMode ? '🎨 Dock Settings' : '🎨 Taskbar Settings';
+    if (dspTitle) dspTitle.textContent = '🎨 Settings';
     const dspSizeLbl = document.getElementById('dsp-size-label');
     if (dspSizeLbl) dspSizeLbl.textContent = _macMode ? 'Dock Size' : 'Taskbar Size';
     const dspMatLbl = document.getElementById('dsp-material-label');
-    if (dspMatLbl) dspMatLbl.textContent = _macMode ? 'Dock Material' : 'Taskbar Material';
+    if (dspMatLbl) dspMatLbl.textContent = 'Material';
     const cpReset = document.getElementById('cp-reset-btn');
     if (cpReset) cpReset.textContent = _macMode ? '↺ Reset Colour' : '↺ Reset XP Blue';
   }
@@ -8017,10 +8017,11 @@ function toggleDockSettings() {
   if (xpBtn)   xpBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
     if (_macMode) {
-      /* Position above the dock */
-      const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-      const fromBot = window.innerHeight - dockR.top + 6;
-      const maxH    = dockR.top - 10;
+      /* Anchor above the 🎨 dock trigger button; fall back to dock-wrap if btn not found */
+      const triggerR = document.getElementById('dock-settings-btn')?.getBoundingClientRect?.() || null;
+      const dockR    = document.getElementById('mac-dock-wrap').getBoundingClientRect();
+      const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : (window.innerHeight - dockR.top + 6);
+      const maxH     = triggerR ? (triggerR.top - 10) : (dockR.top - 10);
       popup.style.bottom    = fromBot + 'px';
       popup.style.maxHeight = Math.max(160, maxH) + 'px';
     } else {
@@ -8206,18 +8207,20 @@ function _applyDockMaterial(id) {
       : 'grayscale(1)';
   }
   _fitDockToScreen();
-  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
-    sw.classList.toggle('active', sw.dataset.matId === id);
-  });
   /* Persist */
   localStorage.setItem('dock-material', id);
   localStorage.removeItem('dock-custom-color');
-  /* Always mirror material to XP taskbar/titlebars; skipMacSync avoids overriding _MAT_THEME */
+  /* Mirror material to XP taskbar/titlebars; skipMacSync avoids overriding _MAT_THEME.
+     Must run before active-state update since applyThemeColor clears all active swatches. */
   if (XP_MAT_HEX[id]) {
     _xpMaterial = id;
     localStorage.setItem('xp-material', id);
     applyThemeColor(XP_MAT_HEX[id], false, true);
   }
+  /* Re-apply active state after applyThemeColor (which clears it) */
+  document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.matId === id);
+  });
 }
 
 /* ── Custom dock colour (overrides material) ── */
