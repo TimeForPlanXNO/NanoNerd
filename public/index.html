@@ -1880,6 +1880,8 @@
     body.macos .wp-btn         { top: 36px; z-index: 601; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
+    /* Maximised regular windows stop at the dock (CSS var set by JS) */
+    body.macos .xp-win.maximized { bottom: var(--mac-dock-h, 0px) !important; }
     /* Wallpaper button on media windows — match macOS glass style */
     body.macos .mv-wp-btn {
       background: rgba(255,255,255,.14);
@@ -2180,7 +2182,34 @@
       position: fixed; bottom: 8px; left: 0; right: 0;
       justify-content: center; align-items: flex-end;
       z-index: 600; pointer-events: none;
+      transition: transform .35s cubic-bezier(.4, 0, .2, 1);
+      transform-origin: bottom center;
     }
+    .mac-dock-wrap.dock-hidden {
+      transform: translateY(calc(100% + 16px));
+      pointer-events: none !important;
+    }
+    .dock-toggle-btn {
+      display: none;
+      position: fixed;
+      bottom: 16px;
+      left: 10px;
+      z-index: 601;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      border: 1px solid rgba(255,255,255,.40);
+      color: rgba(255,255,255,.90);
+      font-size: 14px;
+      cursor: pointer;
+      align-items: center; justify-content: center;
+      transition: transform .35s cubic-bezier(.4,0,.2,1), background .12s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 0;
+      line-height: 1;
+    }
+    .dock-toggle-btn.dock-collapsed { transform: rotate(180deg); }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
       padding: 6px 10px;
@@ -2673,6 +2702,8 @@
       <!-- Built dynamically by _buildMacDock() -->
     </div>
   </div>
+  <!-- Mobile dock toggle arrow (shown only in macOS + mobile mode) -->
+  <button id="dock-toggle-btn" class="dock-toggle-btn" title="Toggle dock">⌃</button>
 
   <!-- Dock Settings Panel -->
   <div class="dock-settings-popup" id="dock-settings-popup">
@@ -3893,6 +3924,8 @@ const wm = {
       // Clear inline styles so the .maximized CSS class takes full control
       ['left','top','right','bottom','width','height'].forEach(p => win.style[p] = '');
       win.classList.add('maximized');
+      /* Ensure --mac-dock-h is current so the CSS override gets the right value */
+      if (typeof _updateDockCssVar === 'function') _updateDockCssVar();
       setTimeout(() => this._runAnim(win, 'anim-maximize'), 230);
     } else {
       win.classList.remove('maximized');
@@ -5684,8 +5717,19 @@ const drag = {
   move(cx, cy) {
     if (!this.active) return;
     const { win } = wm.els[this.id];
-    win.style.left = (this.startLeft + (cx - this.startCX)) + 'px';
-    win.style.top  = (this.startTop  + (cy - this.startCY)) + 'px';
+    let newLeft = this.startLeft + (cx - this.startCX);
+    let newTop  = this.startTop  + (cy - this.startCY);
+    if (_macMode) {
+      const dockH = _macDockH();
+      if (dockH > 0) {
+        const winH   = win.offsetHeight;
+        const areaH  = window.innerHeight - 28; /* win-area height (28 = menubar) */
+        const maxTop = areaH - dockH - winH;
+        if (newTop > maxTop) newTop = Math.max(0, maxTop);
+      }
+    }
+    win.style.left = newLeft + 'px';
+    win.style.top  = newTop  + 'px';
   },
 
   end() {
@@ -5744,6 +5788,15 @@ const resizer = {
     if (d.includes('s')) { h = Math.max(MIN_H, h + dy); }
     if (d.includes('w')) { const nw = Math.max(MIN_W, w - dx); left += w - nw; w = nw; }
     if (d.includes('n')) { const nh = Math.max(MIN_H, h - dy); top  += h - nh; h = nh; }
+    /* In macOS mode, clamp bottom edge above the dock */
+    if (_macMode) {
+      const dockH = _macDockH();
+      if (dockH > 0) {
+        const areaH   = window.innerHeight - 28; /* win-area height */
+        const maxH    = Math.max(MIN_H, areaH - top - dockH);
+        if (h > maxH) h = maxH;
+      }
+    }
     win.style.left   = left + 'px';
     win.style.top    = top  + 'px';
     win.style.width  = w    + 'px';
@@ -6512,7 +6565,7 @@ function openMediaViewer(idx) {
       _mvSaved = { left: win.style.left, top: win.style.top,
                    width: win.style.width, height: win.style.height };
       const topOff    = isM ? 28 : 0;
-      const bottomOff = isM ? 0 : 48;
+      const bottomOff = isM ? _macDockH() : 48;
       win.style.left   = '0';
       win.style.top    = topOff + 'px';
       win.style.width  = window.innerWidth + 'px';
@@ -6565,8 +6618,16 @@ function openMediaViewer(idx) {
   };
   const onDragMove = (cx, cy) => {
     if (!dragging) return;
+    let newTop = cy - oy;
+    if (_macMode) {
+      const dockH = _macDockH();
+      if (dockH > 0) {
+        const maxTop = window.innerHeight - dockH - win.offsetHeight;
+        if (newTop > maxTop) newTop = Math.max(28, maxTop);
+      }
+    }
     win.style.left = (cx - ox) + 'px';
-    win.style.top  = (cy - oy) + 'px';
+    win.style.top  = newTop + 'px';
   };
   const onDragUp = () => { dragging = false; };
 
@@ -6611,6 +6672,14 @@ function openMediaViewer(idx) {
       if (rDir.includes('s')) h = Math.max(MV_MIN_H, rH0 + dy);
       if (rDir.includes('w')) { const nw = Math.max(MV_MIN_W, rW0 - dx); x = rX0 + (rW0 - nw); w = nw; }
       if (rDir.includes('n')) { const nh = Math.max(MV_MIN_H, rH0 - dy); y = rY0 + (rH0 - nh); h = nh; }
+    }
+    /* In macOS mode, clamp bottom edge above the dock */
+    if (_macMode) {
+      const dockH = _macDockH();
+      if (dockH > 0) {
+        const maxBottom = window.innerHeight - dockH;
+        if (y + h > maxBottom) h = Math.max(MV_MIN_H, maxBottom - y);
+      }
     }
     win.style.width  = w + 'px';
     win.style.height = h + 'px';
@@ -7354,6 +7423,74 @@ let _dockGenie   = true;
 let _dockIconSize = 52;
 let _dockMaterial = 'silver';
 
+/* ── Dock visibility state & helpers ── */
+let _dockVisible   = true;
+let _dockHideTimer = null;
+
+/* Returns height (px) that the dock occupies from the viewport bottom.
+   Returns 0 when not in macOS mode or the dock is currently hidden. */
+function _macDockH() {
+  if (!_macMode) return 0;
+  const wrap = document.getElementById('mac-dock-wrap');
+  if (!wrap || wrap.classList.contains('dock-hidden')) return 0;
+  const rect = wrap.getBoundingClientRect();
+  return Math.max(0, window.innerHeight - rect.top);
+}
+
+/* Keeps the --mac-dock-h CSS variable in sync (drives maximised-window bottom). */
+function _updateDockCssVar() {
+  document.documentElement.style.setProperty('--mac-dock-h', _macDockH() + 'px');
+}
+
+/* Single source of truth for showing/hiding the dock. */
+function _setDockVisible(v) {
+  _dockVisible = v;
+  const wrap = document.getElementById('mac-dock-wrap');
+  if (wrap) wrap.classList.toggle('dock-hidden', !v);
+  const btn  = document.getElementById('dock-toggle-btn');
+  if (btn)  btn.classList.toggle('dock-collapsed', !v);
+}
+
+/* Desktop auto-hide: hide dock 2 s after cursor leaves the bottom zone. */
+function _initDockAutoHide() {
+  document.addEventListener('mousemove', (e) => {
+    if (!_macMode || _isMobilePortrait() || _isMobileLandscape()) return;
+    const nearBottom = e.clientY >= window.innerHeight - 80;
+    if (nearBottom) {
+      if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
+      if (!_dockVisible) _setDockVisible(true);
+    } else if (_dockVisible && !_dockHideTimer) {
+      _dockHideTimer = setTimeout(() => {
+        _dockHideTimer = null;
+        _setDockVisible(false);
+      }, 2000);
+    }
+  });
+}
+
+/* Mobile toggle button: show/hide based on mode + viewport type. */
+function _initDockToggleBtn() {
+  const btn = document.getElementById('dock-toggle-btn');
+  if (!btn) return;
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    _setDockVisible(!_dockVisible);
+  };
+}
+
+function _updateDockToggleBtn() {
+  const btn = document.getElementById('dock-toggle-btn');
+  if (!btn) return;
+  const isMobile = _isMobilePortrait() || _isMobileLandscape();
+  const show = _macMode && isMobile;
+  btn.style.display = show ? 'flex' : 'none';
+  /* On desktop: always show dock immediately (cancel any pending hide) */
+  if (_macMode && !isMobile) {
+    if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
+    _setDockVisible(true);
+  }
+}
+
 const DOCK_MATERIALS = [
   { id: 'silver', label: 'Silver' },
   { id: 'gold',   label: 'Gold'   },
@@ -7438,6 +7575,11 @@ function setUiMode(mode) {
     if (el) el.classList.toggle('active', _macMode);
   });
   localStorage.setItem('ui-mode', mode);
+  /* Dock visibility reset on mode switch */
+  if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
+  _setDockVisible(true);
+  _updateDockToggleBtn();
+  _updateDockCssVar();
 }
 
 /* ── Dock icon builder ── */
@@ -7927,6 +8069,20 @@ document.addEventListener('click', function(e) {
 
   /* Set UI mode last (needs dock built) */
   if (savedMode === 'macos') setUiMode('macos');
+
+  /* Init dock auto-hide (desktop) and mobile toggle button */
+  _initDockAutoHide();
+  _initDockToggleBtn();
+  _updateDockToggleBtn();
+  _updateDockCssVar();
+
+  /* Update toggle button and CSS var on resize / orientation change */
+  window.addEventListener('resize', () => { _updateDockToggleBtn(); _updateDockCssVar(); });
+  window.addEventListener('orientationchange', () => setTimeout(() => { _updateDockToggleBtn(); _updateDockCssVar(); }, 250));
+
+  /* Sync CSS var after dock slide animation completes */
+  document.getElementById('mac-dock-wrap')
+    ?.addEventListener('transitionend', _updateDockCssVar);
 })();
 </script>
 </body>
