@@ -2767,6 +2767,9 @@
 </div>
 
 <script>
+/* ── Global flags — declared first so no code runs before them ── */
+let _macMode = false;  /* true = macOS skin; false = Windows XP skin */
+
 /* ══════════════════════════════════════════
    APP CONFIGS
 ══════════════════════════════════════════ */
@@ -7093,8 +7096,19 @@ function _applyWpBtnLayout() {
 
 /* ── Shared helper: compute mobile-portrait window rect ── */
 function _mobilePWinRect(ar) {
-  const h = Math.max(120, ar.height - _M_SAFE_T - _M_SAFE_B);
-  return { w: ar.width, h, l: 0, t: _M_SAFE_T };
+  let safeT = _M_SAFE_T;
+  let safeB = _M_SAFE_B;
+  if (_macMode) {
+    /* macOS mode: grow portrait windows ~20% taller (10% per edge).
+       macOS menu bar and dock float at z-index 600 above windows,
+       so bleeding slightly under them is visually safe. */
+    const baseH     = ar.height - _M_SAFE_T - _M_SAFE_B;
+    const halfBoost = Math.round(baseH * 0.10);
+    safeT = Math.max(22,           _M_SAFE_T - halfBoost);
+    safeB = Math.max(_macDockH(),  _M_SAFE_B - halfBoost);
+  }
+  const h = Math.max(120, ar.height - safeT - safeB);
+  return { w: ar.width, h, l: 0, t: safeT };
 }
 
 /* ── Resize all open windows to fit current orientation ── */
@@ -7528,9 +7542,6 @@ async function cpPickFromScreen() {
     applyThemeColor(result.sRGBHex); _closeCpPopup();
   } catch { /* user cancelled */ }
 }
-
-/* Declared early so applyThemeColor (called from startup IIFEs) can safely read it */
-let _macMode = false;
 
 /* Color popup consolidated into dock settings — stubs kept so call-sites don't throw. */
 let _cpOpen = false;
