@@ -2195,7 +2195,7 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 600; /* same layer as dock; windows are 100-490 so toggle is always reachable */
+      z-index: 5; /* below windows; windows are constrained to not cover the bottom 18 px reserve */
       width: 52px; height: 18px;
       border-radius: 10px 10px 0 0;
       background: rgba(255,255,255,.28);
@@ -7492,14 +7492,18 @@ let _dockMaterial = 'silver';
 let _dockVisible   = true;
 let _dockHideTimer = null;
 
-/* Returns height (px) that the dock occupies from the viewport bottom.
-   Returns 0 when not in macOS mode or the dock is currently hidden. */
+/* Height of the dock-toggle tab (reserved bottom gap even when dock is hidden). */
+const _DOCK_TOGGLE_H = 18;
+
+/* Returns height (px) that the dock (or its toggle reserve) occupies from the
+   viewport bottom.  When the dock is visible: full measured dock height.
+   When the dock is hidden: _DOCK_TOGGLE_H so windows never cover the toggle tab. */
 function _macDockH() {
   if (!_macMode) return 0;
   const wrap = document.getElementById('mac-dock-wrap');
-  if (!wrap || wrap.classList.contains('dock-hidden')) return 0;
+  if (!wrap || wrap.classList.contains('dock-hidden')) return _DOCK_TOGGLE_H;
   const rect = wrap.getBoundingClientRect();
-  return Math.max(0, window.innerHeight - rect.top);
+  return Math.max(_DOCK_TOGGLE_H, window.innerHeight - rect.top);
 }
 
 /* Keeps the --mac-dock-h CSS variable in sync (drives maximised-window bottom). */
