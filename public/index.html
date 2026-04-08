@@ -6665,7 +6665,7 @@ function openMediaViewer(idx) {
   let dragging = false, ox = 0, oy = 0;
   const onDragDown = (cx, cy) => {
     dragging = true;
-    _mvBumpZ(win);
+    /* z-index bump is handled by the window-level mousedown/touchstart listener above */
     ox = cx - win.offsetLeft; oy = cy - win.offsetTop;
   };
   const onDragMove = (cx, cy) => {
@@ -6766,8 +6766,6 @@ function openMediaViewer(idx) {
     document.removeEventListener('touchend',    onGlobalUp);
     document.removeEventListener('touchcancel', onGlobalUp);
   };
-
-  win.addEventListener('mousedown', () => { _mvBumpZ(win); });
 
   /* ── Auto-size window to media's natural aspect ratio ─────────────────
      Called once the image/video fires its load event.
@@ -7519,9 +7517,9 @@ function _setDockVisible(v) {
   /* Update the toggle tab arrow: ⌄ = dock visible (click to hide), ⌃ = hidden (click to show) */
   const arrow = document.getElementById('dock-toggle-arrow');
   if (arrow) arrow.textContent = v ? '⌄' : '⌃';
-  /* The toggle tab always sits at the dock's own z-index (600) so it is always
-     reachable to re-open a hidden dock; windows (100–490) sit naturally below it.
-     No z-index change needed here — handled via CSS z-index 600 on the tab. */
+  /* Toggle tab stays at z-index 5 (CSS).  Reachability is ensured by geometry:
+     _macDockH() returns _DOCK_TOGGLE_H (18px) when dock is hidden, so all window
+     spawn/layout calculations leave the bottom 18 px uncovered by windows. */
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
