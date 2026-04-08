@@ -2195,7 +2195,7 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 5; /* below windows so focused windows cover it */
+      z-index: 600; /* same layer as dock; windows are 100-490 so toggle is always reachable */
       width: 52px; height: 18px;
       border-radius: 10px 10px 0 0;
       background: rgba(255,255,255,.28);
@@ -6804,9 +6804,10 @@ function openMediaViewer(idx) {
     win.style.width  = winW + 'px';
     win.style.height = winH + 'px';
     win.style.left   = Math.max(0, Math.round((area.offsetWidth - winW) / 2)) + 'px';
-    /* Center vertically in the available (non-dock) region */
-    const topBase = topGapMV + Math.max(0, Math.round((availH - winH) / 2));
-    win.style.top  = topBase + 'px';
+    /* Position so bottom edge aligns with dock/taskbar top (same rule as regular windows).
+       Cap at topGapMV so window never slides under the menu bar. */
+    const idealTop = topGapMV + availH - winH;
+    win.style.top  = Math.max(topGapMV, Math.round(idealTop)) + 'px';
     _mvFirstShow();
   }
 
@@ -7514,11 +7515,9 @@ function _setDockVisible(v) {
   /* Update the toggle tab arrow: ⌄ = dock visible (click to hide), ⌃ = hidden (click to show) */
   const arrow = document.getElementById('dock-toggle-arrow');
   if (arrow) arrow.textContent = v ? '⌄' : '⌃';
-  /* When dock is hidden the toggle must remain clickable above all windows
-     (z-index 601 = above taskbar 500, dock 600, and all regular windows);
-     when dock is visible it sits behind windows at z-index 5. */
-  const toggleBtn = document.getElementById('dock-toggle-btn');
-  if (toggleBtn) toggleBtn.style.zIndex = v ? '5' : '601';
+  /* The toggle tab always sits at the dock's own z-index (600) so it is always
+     reachable to re-open a hidden dock; windows (100–490) sit naturally below it.
+     No z-index change needed here — handled via CSS z-index 600 on the tab. */
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
