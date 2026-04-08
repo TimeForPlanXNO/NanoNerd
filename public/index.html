@@ -7682,7 +7682,7 @@ function _applyXpMaterial(id) {
 function setUiMode(mode) {
   /* Close any open popup to prevent stale positioning after mode change */
   if (_cpOpen)  { _cpOpen  = false; document.getElementById('cp-popup').classList.remove('open'); const cb = document.getElementById('cp-btn'); if (cb) cb.classList.remove('active'); const mcb = document.getElementById('mac-cp-btn'); if (mcb) mcb.classList.remove('active'); }
-  if (_dspOpen) { _dspOpen = false; document.getElementById('dock-settings-popup').classList.remove('open'); const db = document.getElementById('dock-settings-btn'); if (db) db.classList.remove('active'); }
+  if (_dspOpen) { _dspOpen = false; document.getElementById('dock-settings-popup').classList.remove('open'); const db = document.getElementById('dock-settings-btn'); if (db) db.classList.remove('active'); const xsb = document.getElementById('xp-settings-btn'); if (xsb) xsb.classList.remove('active'); }
   _macMode = (mode === 'macos');
   document.body.classList.toggle('macos', _macMode);
   ['cp-xp-btn','dsp-xp-btn'].forEach(id => {
