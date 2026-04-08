@@ -7093,8 +7093,19 @@ function _applyWpBtnLayout() {
 
 /* ── Shared helper: compute mobile-portrait window rect ── */
 function _mobilePWinRect(ar) {
-  const h = Math.max(120, ar.height - _M_SAFE_T - _M_SAFE_B);
-  return { w: ar.width, h, l: 0, t: _M_SAFE_T };
+  let safeT = _M_SAFE_T;   /* 66 px */
+  let safeB = _M_SAFE_B;   /* 84 px */
+  if (typeof _macMode !== 'undefined' && _macMode) {
+    /* macOS mode: grow the window ~20% taller by eating into both safe zones.
+       macOS chrome (menu bar ≈22 px, dock ≈_macDockH()) floats at z-index 600
+       above windows, so bleeding under them is visually safe. */
+    const baseH     = ar.height - _M_SAFE_T - _M_SAFE_B;
+    const halfBoost = Math.round(baseH * 0.10); /* 10% each side → 20% total */
+    safeT = Math.max(22,           _M_SAFE_T - halfBoost);
+    safeB = Math.max(_macDockH(),  _M_SAFE_B - halfBoost);
+  }
+  const h = Math.max(120, ar.height - safeT - safeB);
+  return { w: ar.width, h, l: 0, t: safeT };
 }
 
 /* ── Resize all open windows to fit current orientation ── */
