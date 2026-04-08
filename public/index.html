@@ -4096,13 +4096,13 @@ const wm = {
     /* Title bar */
     const tb = document.createElement('div');
     tb.className = 'xp-titlebar';
-    const maxTitle = app.type === 'browser' ? 'Open in browser' : 'Maximize / Restore';
+    const maxTitle = app.type === 'browser' ? 'Open in browser' : (_macMode ? 'Zoom' : 'Maximize');
     tb.innerHTML = `
       <div class="xp-win-title">${app.iconHtml}${app.title}</div>
       ${id === 'nanonerd' ? `<button class="xp-lang-btn" id="lang-btn" title="Change language" onclick="toggleLangPicker(event)"><span id="lang-btn-flags" style="letter-spacing:1px">${_langFlagsBtn(currentLang)}</span><span id="lang-btn-label" style="margin-left:3px">${_langCode(currentLang)}</span></button><button class="xp-lang-btn" id="nn-settings-tb-btn" title="Chat settings" onclick="_nnStyleToggle()" style="margin-left:3px;font-size:9px;padding:0 6px;">⚙️</button>` : ''}
       <div class="xp-btns">
         <button class="xp-btn min" title="${_macMode ? 'Minimise' : 'Minimize'}">&#8211;</button>
-        <button class="xp-btn max" title="${_macMode && app.type !== 'browser' ? 'Zoom' : maxTitle}"><span class="max-icon"></span></button>
+        <button class="xp-btn max" title="${maxTitle}"><span class="max-icon"></span></button>
         <button class="xp-btn cls" title="Close">&#10005;</button>
       </div>
     `;
@@ -6645,7 +6645,7 @@ function openMediaViewer(idx) {
       <button class="mv-wp-btn" title="Set as desktop wallpaper">🖼️ Wallpaper</button>
       <div class="mv-btns">
         <button class="mv-min"   title="${_macMode ? 'Minimise (disabled — no dock slot)' : 'Minimize'}">&#8211;</button>
-        <button class="mv-max"   title="${_macMode ? 'Zoom' : 'Maximise'}">□</button>
+        <button class="mv-max"   title="${_macMode ? 'Zoom' : 'Maximize'}">□</button>
         <button class="mv-close" title="Close">✕</button>
       </div>
     </div>
@@ -7775,9 +7775,9 @@ function setUiMode(mode, noAnim) {
 
     /* Update window control button titles to match the new mode */
     document.querySelectorAll('.xp-btn.min').forEach(b => { b.title = _macMode ? 'Minimise' : 'Minimize'; });
-    document.querySelectorAll('.xp-btn.max').forEach(b => { if (b.title !== 'Open in browser') b.title = _macMode ? 'Zoom' : 'Maximize / Restore'; });
+    document.querySelectorAll('.xp-btn.max').forEach(b => { if (b.title !== 'Open in browser') b.title = _macMode ? 'Zoom' : 'Maximize'; });
     document.querySelectorAll('.mv-min').forEach(b   => { b.title = _macMode ? 'Minimise (disabled — no dock slot)' : 'Minimize'; });
-    document.querySelectorAll('.mv-max').forEach(b   => { b.title = _macMode ? 'Zoom' : 'Maximise'; });
+    document.querySelectorAll('.mv-max').forEach(b   => { b.title = _macMode ? 'Zoom' : 'Maximize'; });
   }
 
   if (noAnim) {
