@@ -3964,15 +3964,21 @@ const wm = {
         win.style.top    = topGapML2 + 'px';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
-      } else {
-        const topGap2 = _macMode ? 4 : 0;
-        const botOff2 = _macMode ? _macDockH() : 34;
-        const h2      = Math.max(200, ar2.height - botOff2 - topGap2);
-        const w2      = _macMode ? ar2.width : Math.round(ar2.width * 0.67);
-        win.style.width  = w2 + 'px';
+      } else if (_macMode) {
+        const botOff2 = _macDockH();
+        const h2      = Math.max(200, ar2.height - botOff2 + 16);
+        win.style.width  = ar2.width + 'px';
         win.style.height = h2 + 'px';
-        win.style.left   = _macMode ? '0' : Math.round((ar2.width - w2) / 2) + 'px';
-        win.style.top    = topGap2 + 'px';
+        win.style.left   = '0';
+        win.style.top    = '-8px';
+        win.style.right  = 'auto';
+        win.style.bottom = 'auto';
+      } else {
+        const w2 = Math.round(ar2.width * 0.67);
+        win.style.width  = w2 + 'px';
+        win.style.height = Math.max(200, ar2.height - 34) + 'px';
+        win.style.left   = Math.round((ar2.width - w2) / 2) + 'px';
+        win.style.top    = '0';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       }
@@ -4180,18 +4186,28 @@ const wm = {
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
       /* Desktop / large tablet.
-         macOS: full available width + full height (menu-bar gap → dock top).
+         macOS: full width, slightly extended past menu-bar (top=-8) and dock (bottom+8)
+                so the window bleeds under the chrome on both edges — menu-bar/dock sit
+                on top (z-index 600) giving the "tucked behind" appearance.
          XP:    67% width, centred, full height above taskbar. */
-      const topGap = _macMode ? 4 : 0;
-      const botOff = _macMode ? _macDockH() : 34;
-      const h      = Math.max(200, ar.height - botOff - topGap);
-      const w      = _macMode ? ar.width : Math.round(ar.width * 0.67);
-      win.style.width  = w + 'px';
-      win.style.height = h + 'px';
-      win.style.left   = _macMode ? '0' : Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = topGap + 'px';
-      win.style.right  = 'auto';
-      win.style.bottom = 'auto';
+      if (_macMode) {
+        const botOff = _macDockH();
+        const h      = Math.max(200, ar.height - botOff + 16); /* +8 top + +8 bottom bleed */
+        win.style.width  = ar.width + 'px';
+        win.style.height = h + 'px';
+        win.style.left   = '0';
+        win.style.top    = '-8px';
+        win.style.right  = 'auto';
+        win.style.bottom = 'auto';
+      } else {
+        const w = Math.round(ar.width * 0.67);
+        win.style.width  = w + 'px';
+        win.style.height = Math.max(200, ar.height - 34) + 'px';
+        win.style.left   = Math.round((ar.width - w) / 2) + 'px';
+        win.style.top    = '0';
+        win.style.right  = 'auto';
+        win.style.bottom = 'auto';
+      }
     }
   },
 
@@ -5753,15 +5769,6 @@ const drag = {
     const { win } = wm.els[this.id];
     let newLeft = this.startLeft + (cx - this.startCX);
     let newTop  = this.startTop  + (cy - this.startCY);
-    if (_macMode) {
-      const dockH = _macDockH();
-      if (dockH > 0) {
-        const winH   = win.offsetHeight;
-        const areaH  = window.innerHeight - 28; /* win-area height (28 = menubar) */
-        const maxTop = areaH - dockH - winH;
-        if (newTop > maxTop) newTop = Math.max(0, maxTop);
-      }
-    }
     win.style.left = newLeft + 'px';
     win.style.top  = newTop  + 'px';
   },
@@ -6671,16 +6678,8 @@ function openMediaViewer(idx) {
   };
   const onDragMove = (cx, cy) => {
     if (!dragging) return;
-    let newTop = cy - oy;
-    if (_macMode) {
-      const dockH = _macDockH();
-      if (dockH > 0) {
-        const maxTop = window.innerHeight - dockH - win.offsetHeight;
-        if (newTop > maxTop) newTop = Math.max(28, maxTop);
-      }
-    }
     win.style.left = (cx - ox) + 'px';
-    win.style.top  = newTop + 'px';
+    win.style.top  = (cy - oy) + 'px';
   };
   const onDragUp = () => { dragging = false; };
 
@@ -7021,15 +7020,21 @@ function _applyWindowsLayout() {
       win.style.top    = topGapAL + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
-    } else {
-      const topGapL = _macMode ? 4 : 0;
-      const botOffL = _macMode ? _macDockH() : 34;
-      const hL      = Math.max(200, ar.height - botOffL - topGapL);
-      const wL      = _macMode ? ar.width : Math.round(ar.width * 0.67);
-      win.style.width  = wL + 'px';
+    } else if (_macMode) {
+      const botOffL = _macDockH();
+      const hL      = Math.max(200, ar.height - botOffL + 16);
+      win.style.width  = ar.width + 'px';
       win.style.height = hL + 'px';
-      win.style.left   = _macMode ? '0' : Math.round((ar.width - wL) / 2) + 'px';
-      win.style.top    = topGapL + 'px';
+      win.style.left   = '0';
+      win.style.top    = '-8px';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
+    } else {
+      const wL = Math.round(ar.width * 0.67);
+      win.style.width  = wL + 'px';
+      win.style.height = Math.max(200, ar.height - 34) + 'px';
+      win.style.left   = Math.round((ar.width - wL) / 2) + 'px';
+      win.style.top    = '0';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
