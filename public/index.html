@@ -1876,8 +1876,8 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
     body.macos .icon-col       { display: none !important; }
-    /* wallpaper btn sits below the menu bar in macOS mode */
-    body.macos .wp-btn         { top: 36px; z-index: 601; }
+    /* wallpaper btn sits below the menu bar in macOS mode — behind open windows */
+    body.macos .wp-btn         { top: 36px; z-index: 2; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
     /* Maximised regular windows stop at the dock (CSS var set by JS) */
@@ -2189,27 +2189,48 @@
       transform: translateY(calc(100% + 16px));
       pointer-events: none !important;
     }
+    /* Dock toggle — printed on the dock as a dock icon (mobile macOS mode only) */
     .dock-toggle-btn {
-      display: none;
-      position: fixed;
-      bottom: 16px;
-      left: 10px;
-      z-index: 601;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.22);
-      border: 1px solid rgba(255,255,255,.40);
-      color: rgba(255,255,255,.90);
-      font-size: 14px;
+      display: none;               /* shown by JS in macOS+mobile mode only */
+      width: var(--dksz, 52px); height: var(--dksz, 52px);
+      border-radius: 12px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.28);
+      box-shadow: 0 2px 8px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.35);
+      color: rgba(255,255,255,.88);
+      font-size: 18px;
       cursor: pointer;
       align-items: center; justify-content: center;
+      flex-shrink: 0;
       transition: transform .35s cubic-bezier(.4,0,.2,1), background .12s;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 0;
-      line-height: 1;
+      padding: 0; line-height: 1;
+      z-index: 600;
+    }
+    /* When extracted from dock and fixed to viewport bottom (dock is hidden) */
+    .dock-toggle-btn--floating {
+      position: fixed;
+      bottom: 8px;
+      z-index: 600;
+      backdrop-filter: blur(24px) saturate(200%);
+      -webkit-backdrop-filter: blur(24px) saturate(200%);
+      background: rgba(255,255,255,.26) !important;
+      border: 1px solid rgba(255,255,255,.52) !important;
+      box-shadow: 0 4px 28px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.65) !important;
     }
     .dock-toggle-btn.dock-collapsed { transform: rotate(180deg); }
+    /* Visual separator after the toggle button when it lives inside .mac-dock */
+    .mac-dock .dock-toggle-btn {
+      position: relative;
+      margin-right: 4px;
+    }
+    .mac-dock .dock-toggle-btn::after {
+      content: '';
+      position: absolute;
+      right: -5px; top: 15%; height: 70%;
+      width: 1px;
+      background: rgba(255,255,255,.38);
+      pointer-events: none;
+    }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
       padding: 6px 10px;
@@ -4132,30 +4153,40 @@ const wm = {
     /* Initial window size based on layout mode */
     const ar = area.getBoundingClientRect();
     if (_isMobilePortrait()) {
-      /* Mobile portrait: full width, fills space between top and bottom icon rows, centered */
-      const r = _mobilePWinRect(ar);
+      /* Mobile portrait: full width, fills between top and bottom safe areas.
+         In macOS mode the dock replaces the icon row at the bottom. */
+      let r;
+      if (_macMode) {
+        const dockH = _macDockHEstimate();
+        const safeB = Math.max(_M_SAFE_B, dockH);
+        r = { w: ar.width, h: Math.max(120, ar.height - _M_SAFE_T - safeB), l: 0, t: _M_SAFE_T };
+      } else {
+        r = _mobilePWinRect(ar);
+      }
       win.style.width  = r.w + 'px';
       win.style.height = r.h + 'px';
-      win.style.left   = r.l + 'px';   /* full-width = inherently centered */
-      win.style.top    = r.t + 'px';   /* below wallpaper btn + recycle bin */
+      win.style.left   = r.l + 'px';
+      win.style.top    = r.t + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
       /* Mobile landscape: leave icon-column gaps on both sides
          (left = icon column, right = recycle-bin column) */
+      const topOff = _macMode ? 4 : 0;
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = (_macMode ? _macWinH(ar.height) : ar.height) + 'px';
       win.style.left   = _M_LAND_L + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / large tablet: 67% width, full height, horizontally centered */
+      /* Desktop / large tablet: 67% width, fills to dock in macOS mode */
+      const topOff = _macMode ? 4 : 0;
       const w = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = (_macMode ? _macWinH(ar.height) : ar.height) + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -5717,17 +5748,8 @@ const drag = {
   move(cx, cy) {
     if (!this.active) return;
     const { win } = wm.els[this.id];
-    let newLeft = this.startLeft + (cx - this.startCX);
-    let newTop  = this.startTop  + (cy - this.startCY);
-    if (_macMode) {
-      const dockH = _macDockH();
-      if (dockH > 0) {
-        const winH   = win.offsetHeight;
-        const areaH  = window.innerHeight - 28; /* win-area height (28 = menubar) */
-        const maxTop = areaH - dockH - winH;
-        if (newTop > maxTop) newTop = Math.max(0, maxTop);
-      }
-    }
+    const newLeft = this.startLeft + (cx - this.startCX);
+    const newTop  = this.startTop  + (cy - this.startCY);
     win.style.left = newLeft + 'px';
     win.style.top  = newTop  + 'px';
   },
@@ -5788,15 +5810,6 @@ const resizer = {
     if (d.includes('s')) { h = Math.max(MIN_H, h + dy); }
     if (d.includes('w')) { const nw = Math.max(MIN_W, w - dx); left += w - nw; w = nw; }
     if (d.includes('n')) { const nh = Math.max(MIN_H, h - dy); top  += h - nh; h = nh; }
-    /* In macOS mode, clamp bottom edge above the dock */
-    if (_macMode) {
-      const dockH = _macDockH();
-      if (dockH > 0) {
-        const areaH   = window.innerHeight - 28; /* win-area height */
-        const maxH    = Math.max(MIN_H, areaH - top - dockH);
-        if (h > maxH) h = maxH;
-      }
-    }
     win.style.left   = left + 'px';
     win.style.top    = top  + 'px';
     win.style.width  = w    + 'px';
@@ -6618,16 +6631,8 @@ function openMediaViewer(idx) {
   };
   const onDragMove = (cx, cy) => {
     if (!dragging) return;
-    let newTop = cy - oy;
-    if (_macMode) {
-      const dockH = _macDockH();
-      if (dockH > 0) {
-        const maxTop = window.innerHeight - dockH - win.offsetHeight;
-        if (newTop > maxTop) newTop = Math.max(28, maxTop);
-      }
-    }
     win.style.left = (cx - ox) + 'px';
-    win.style.top  = newTop + 'px';
+    win.style.top  = (cy - oy) + 'px';
   };
   const onDragUp = () => { dragging = false; };
 
@@ -6672,14 +6677,6 @@ function openMediaViewer(idx) {
       if (rDir.includes('s')) h = Math.max(MV_MIN_H, rH0 + dy);
       if (rDir.includes('w')) { const nw = Math.max(MV_MIN_W, rW0 - dx); x = rX0 + (rW0 - nw); w = nw; }
       if (rDir.includes('n')) { const nh = Math.max(MV_MIN_H, rH0 - dy); y = rY0 + (rH0 - nh); h = nh; }
-    }
-    /* In macOS mode, clamp bottom edge above the dock */
-    if (_macMode) {
-      const dockH = _macDockH();
-      if (dockH > 0) {
-        const maxBottom = window.innerHeight - dockH;
-        if (y + h > maxBottom) h = Math.max(MV_MIN_H, maxBottom - y);
-      }
     }
     win.style.width  = w + 'px';
     win.style.height = h + 'px';
@@ -6946,7 +6943,14 @@ function _applyWindowsLayout() {
       return;
     }
     if (mobile) {
-      const r = _mobilePWinRect(ar);
+      let r;
+      if (_macMode) {
+        const dockH = _macDockHEstimate();
+        const safeB = Math.max(_M_SAFE_B, dockH);
+        r = { w: ar.width, h: Math.max(120, ar.height - _M_SAFE_T - safeB), l: 0, t: _M_SAFE_T };
+      } else {
+        r = _mobilePWinRect(ar);
+      }
       win.style.width  = r.w + 'px';
       win.style.height = r.h + 'px';
       win.style.left   = r.l + 'px';
@@ -6954,18 +6958,20 @@ function _applyWindowsLayout() {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (_isMobileLandscape()) {
+      const topOff = _macMode ? 4 : 0;
       win.style.width  = (ar.width - _M_LAND_L - _M_LAND_R) + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = (_macMode ? _macWinH(ar.height) : ar.height) + 'px';
       win.style.left   = _M_LAND_L + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
+      const topOff = _macMode ? 4 : 0;
       const w = Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
-      win.style.height = ar.height + 'px';
+      win.style.height = (_macMode ? _macWinH(ar.height) : ar.height) + 'px';
       win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-      win.style.top    = '0';
+      win.style.top    = topOff + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     }
@@ -7437,6 +7443,50 @@ function _macDockH() {
   return Math.max(0, window.innerHeight - rect.top);
 }
 
+/* Returns a dock-height estimate even before the dock has been measured.
+   Uses the live measurement if available; falls back to icon-size heuristic. */
+function _macDockHEstimate() {
+  if (!_macMode) return 0;
+  const h = _macDockH();
+  if (h > 0) return h;
+  return _dockIconSize + 30; /* icon + dock padding + 8 px bottom gap */
+}
+
+/* Compute default non-maximised window height in macOS mode.
+   Fills from 4 px below win-area top to the dock's top edge. */
+function _macWinH(arHeight) {
+  if (!_macMode) return arHeight;
+  return Math.max(200, arHeight - _macDockHEstimate() - 4);
+}
+
+/* ── Dock toggle button DOM helpers ────────────────────────────────────── */
+
+/* Move the toggle button inside #mac-dock as its first child.
+   Removes fixed-position overrides set by _dockBtnToBody(). */
+function _dockBtnToDock() {
+  const btn  = document.getElementById('dock-toggle-btn');
+  const dock = document.getElementById('mac-dock');
+  if (!btn || !dock || btn.parentElement === dock) return;
+  btn.classList.remove('dock-toggle-btn--floating');
+  btn.style.position = '';
+  btn.style.bottom   = '';
+  btn.style.left     = '';
+  dock.insertBefore(btn, dock.firstChild);
+}
+
+/* Extract the toggle button from the dock to document.body as a fixed
+   viewport-bottom element (shown when the dock is hidden on mobile). */
+function _dockBtnToBody() {
+  const btn = document.getElementById('dock-toggle-btn');
+  if (!btn || btn.classList.contains('dock-toggle-btn--floating')) return;
+  const rect = btn.getBoundingClientRect();
+  btn.classList.add('dock-toggle-btn--floating');
+  btn.style.position = 'fixed';
+  btn.style.bottom   = '8px';
+  btn.style.left     = Math.max(8, rect.left) + 'px';
+  document.body.appendChild(btn);
+}
+
 /* Keeps the --mac-dock-h CSS variable in sync (drives maximised-window bottom). */
 function _updateDockCssVar() {
   document.documentElement.style.setProperty('--mac-dock-h', _macDockH() + 'px');
@@ -7447,8 +7497,15 @@ function _setDockVisible(v) {
   _dockVisible = v;
   const wrap = document.getElementById('mac-dock-wrap');
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
-  const btn  = document.getElementById('dock-toggle-btn');
-  if (btn)  btn.classList.toggle('dock-collapsed', !v);
+  const btn = document.getElementById('dock-toggle-btn');
+  if (btn) {
+    btn.classList.toggle('dock-collapsed', !v);
+    /* On mobile: swap button between dock interior and viewport-bottom float */
+    if (_isMobilePortrait() || _isMobileLandscape()) {
+      if (!v) _dockBtnToBody();
+      else    _dockBtnToDock();
+    }
+  }
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
@@ -7493,6 +7550,20 @@ function _updateDockToggleBtn() {
   const isMobile = _isMobilePortrait() || _isMobileLandscape();
   const show = _macMode && isMobile;
   btn.style.display = show ? 'flex' : 'none';
+  if (show) {
+    /* Place button inside the dock (or keep floating if dock is hidden) */
+    if (_dockVisible) _dockBtnToDock();
+    else              _dockBtnToBody();
+  } else {
+    /* Not mobile or not macOS: ensure button is back in body (no floating) */
+    if (btn.parentElement !== document.body) {
+      btn.classList.remove('dock-toggle-btn--floating');
+      btn.style.position = '';
+      btn.style.bottom   = '';
+      btn.style.left     = '';
+      document.body.appendChild(btn);
+    }
+  }
   /* On desktop: always show dock immediately (cancel any pending hide) */
   if (_macMode && !isMobile) {
     if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
@@ -7597,6 +7668,10 @@ const DOCK_APP_ORDER = ['nanonerd','nano_org','nano_gpt','nano_hub','media_folde
 function _buildMacDock() {
   const dock = document.getElementById('mac-dock');
   if (!dock) return;
+  /* If the toggle button is currently inside the dock, rescue it first so the
+     innerHTML clear doesn't detach it from the document. */
+  const savedBtn = document.getElementById('dock-toggle-btn');
+  if (savedBtn && savedBtn.parentElement === dock) document.body.appendChild(savedBtn);
   dock.innerHTML = '';
 
   DOCK_APP_ORDER.forEach(id => {
@@ -7623,6 +7698,8 @@ function _buildMacDock() {
   dock.appendChild(sb);
 
   _applyDockIconSize(_dockIconSize);
+  /* Re-place the toggle button (inside dock or floating) after a rebuild */
+  _updateDockToggleBtn();
 }
 
 function _makeDockIconWrap(id, app) {
