@@ -2449,15 +2449,19 @@
     body:not(.macos) .dsp-macos-only { display: none !important; }
     body.macos .dsp-xp-only          { display: none !important; }
 
-    /* ── Mode-switch overlay animation ── */
-    @keyframes _modeFadeIn  { from { opacity:0 } to { opacity:.38 } }
-    @keyframes _modeFadeOut { from { opacity:.38 } to { opacity:0 } }
-    #mode-fade-overlay {
-      position: fixed; inset: 0; background: #000;
-      z-index: 999999; pointer-events: none;
-      animation: _modeFadeIn .12s ease forwards;
+    /* ── Mode-switch slide transition ── */
+    @keyframes _slideInFromRight { from { transform:translateX(100%)  } to { transform:translateX(0) } }
+    @keyframes _slideInFromLeft  { from { transform:translateX(-100%) } to { transform:translateX(0) } }
+    @keyframes _slideOutToLeft   { from { transform:translateX(0) } to { transform:translateX(-100%)  } }
+    @keyframes _slideOutToRight  { from { transform:translateX(0) } to { transform:translateX(100%)   } }
+    #mode-slide-panel {
+      position: fixed; inset: 0; z-index: 999999; pointer-events: all;
+      background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 50%, #0d1f3c 100%);
     }
-    #mode-fade-overlay.out { animation: _modeFadeOut .18s ease forwards; }
+    #mode-slide-panel.from-right { animation: _slideInFromRight .28s cubic-bezier(.55,0,.1,1) forwards; }
+    #mode-slide-panel.from-left  { animation: _slideInFromLeft  .28s cubic-bezier(.55,0,.1,1) forwards; }
+    #mode-slide-panel.to-left    { animation: _slideOutToLeft   .28s cubic-bezier(.9,0,.55,1) forwards; }
+    #mode-slide-panel.to-right   { animation: _slideOutToRight  .28s cubic-bezier(.9,0,.55,1) forwards; }
 
     /* ── UI Style section inside XP colour picker ── */
     .cp-ui-style-row { display: flex; gap: 6px; }
@@ -7775,16 +7779,19 @@ function setUiMode(mode, noAnim) {
     /* Direct swap with no animation (used by startup restore) */
     _doSwap();
   } else {
-    /* Smooth fade-through overlay */
+    /* Slide-curtain — direction matches conceptual left(XP) / right(macOS) layout */
+    const toMac = (mode === 'macos');
     const ov = document.createElement('div');
-    ov.id = 'mode-fade-overlay';
+    ov.id = 'mode-slide-panel';
+    ov.classList.add(toMac ? 'from-right' : 'from-left');
     document.body.appendChild(ov);
-    /* Swap at peak opacity, then fade out */
+    /* Swap while panel covers 100% of viewport, then slide it away */
     setTimeout(() => {
       _doSwap();
-      ov.classList.add('out');
-      setTimeout(() => ov.remove(), 200);
-    }, 120);
+      ov.classList.remove(toMac ? 'from-right' : 'from-left');
+      ov.classList.add(toMac ? 'to-left' : 'to-right');
+      setTimeout(() => ov.remove(), 300);
+    }, 280);
   }
 }
 
