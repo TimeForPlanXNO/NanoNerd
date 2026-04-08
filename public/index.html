@@ -971,6 +971,42 @@
       color: #1a3c8a; text-decoration: underline; font-weight: 700;
     }
     .folder-ad-link:hover { color: #002288; }
+    /* Games folder */
+    .games-grid {
+      flex: 1; overflow-y: auto; padding: 10px; display: flex;
+      flex-direction: column; gap: 7px; background: #f6f8fc;
+    }
+    .games-item {
+      display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 1.5px solid #cde6f5; border-radius: 8px;
+      padding: 8px 10px; cursor: pointer; text-decoration: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .games-item:hover { border-color: #209cee; box-shadow: 0 2px 8px rgba(32,156,238,.15); }
+    .games-item-icon {
+      width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0;
+      object-fit: contain; background: #e8f4fd;
+    }
+    .games-item-icon-fallback {
+      width: 32px; height: 32px; border-radius: 6px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; background: #e8f4fd;
+    }
+    .games-item-info { flex: 1; min-width: 0; }
+    .games-item-name {
+      font-size: 12px; font-weight: 700; color: #1a2b4b;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .games-item-desc {
+      font-size: 10px; color: #5a6e8a; line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .games-visit-btn {
+      flex-shrink: 0; padding: 3px 10px; border: 1.5px solid #209cee;
+      color: #209cee; border-radius: 12px; font-size: 10px; font-weight: 600;
+      text-decoration: none; font-family: Tahoma, sans-serif; white-space: nowrap;
+    }
+    .games-visit-btn:hover { background: #209cee; color: #fff; }
     .folder-body {
       display: flex; flex: 1; overflow: hidden;
     }
@@ -2562,6 +2598,17 @@
         </div>
         <span class="label">Nano videos<br>and memes</span>
       </div>
+      <div class="desk-icon" data-icon-id="games-folder" data-app="games_folder">
+        <div class="di-emoji" style="position:relative;display:inline-flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5));">
+          <svg width="38" height="32" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="1.5"/>
+            <path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#388E3C" stroke="#2E7D32" stroke-width="1.5"/>
+            <path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/>
+          </svg>
+          <span style="position:absolute;font-size:14px;line-height:1;top:54%;left:50%;transform:translate(-50%,-50%);">🎮</span>
+        </div>
+        <span class="label">Games</span>
+      </div>
       <div class="desk-icon" data-icon-id="matrix-viz" data-app="matrix_viz">
         <img class="di-img" src="/matrix.gif" alt="Live XNO Matrix" style="border-radius:3px;"/>
         <span class="label">Live XNO<br>Matrix</span>
@@ -2836,6 +2883,12 @@ const APPS = {
     iconHtml: '<span class="xp-folder-icon"><svg width="16" height="14" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></span>',
     tbIconHtml: '<span class="xp-folder-icon"><svg width="14" height="12" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></span>',
     type: 'folder',
+  },
+  games_folder: {
+    id: 'games_folder', title: 'Games',
+    iconHtml: '<span style="margin-right:4px;font-size:14px;line-height:1;">🎮</span>',
+    tbIconHtml: '<span style="margin-right:3px;font-size:12px;line-height:1;">🎮</span>',
+    type: 'games',
   },
   matrix_viz: {
     id: 'matrix_viz', title: 'Live XNO Matrix',
@@ -4132,6 +4185,7 @@ const wm = {
     let bodyEl;
     if (app.type === 'chat')            bodyEl = this._buildChat();
     else if (app.type === 'folder')     bodyEl = this._buildFolder();
+    else if (app.type === 'games')      bodyEl = this._buildGamesFolder();
     else if (app.type === 'recycle_bin') bodyEl = this._buildRecycleBin();
     else if (app.type === 'matrix')     bodyEl = this._buildMatrix();
     else                                bodyEl = this._buildBrowser(app);
@@ -5556,6 +5610,97 @@ const wm = {
     return shell;
   },
 
+  _buildGamesFolder() {
+    const GAMES = [
+      { name: 'Nanogotchi',          url: 'https://nanogotchi.com/',                                    domain: 'nanogotchi.com',       emoji: '🌱', desc: 'Grow your Nanogotchi & earn XNO by leveling up' },
+      { name: 'CryptoVision',        url: 'https://cryptovision.live/',                                 domain: 'cryptovision.live',    emoji: '📺', desc: 'Video streaming faucet with nano payouts' },
+      { name: 'NanDash',             url: 'https://nandash.com/',                                       domain: 'nandash.com',          emoji: '🎯', desc: 'Host minigame lobbies & giveaway Nano to winners' },
+      { name: 'Raesonic',            url: 'https://raesonic.world/',                                    domain: 'raesonic.world',       emoji: '🏎️', desc: 'Multiplayer racing with nano-powered in-game items' },
+      { name: 'JC2RP Faucet',        url: 'https://jc2rp.fandom.com/',                                  domain: 'jc2rp.fandom.com',     emoji: '🎖️', desc: 'Earn nano in Just Cause 2 Multiplayer faction wars' },
+      { name: 'Nano SkyRun',         url: 'https://deanobones.github.io/Skyrun/',                       domain: 'deanobones.github.io', emoji: '☁️', desc: 'Play Skyrun for free and earn Nano (Windows)' },
+      { name: 'Nano Cards',          url: 'https://github.com/Joohansson/nanocards',                    domain: 'github.com',           emoji: '🃏', desc: 'Free printable card game — pay & win with nano' },
+      { name: 'Adventures of Nano',  url: 'https://prohyon.itch.io/the-adventures-of-nano-demo',        domain: 'prohyon.itch.io',      emoji: '⚔️', desc: 'Play for nano and defeat fiat — Demo' },
+      { name: 'Jack of Space',       url: 'https://gamehub.wodo.io/',                                   domain: 'gamehub.wodo.io',      emoji: '🚀', desc: '2D arcade space shooter by Wodo Gaming' },
+      { name: 'Legion Gordion',      url: 'https://gamehub.wodo.io/',                                   domain: 'gamehub.wodo.io',      emoji: '🔫', desc: 'First-person shooter in a military camp — Wodo Gaming' },
+      { name: 'Cash Chase',          url: 'https://gamehub.wodo.io/',                                   domain: 'gamehub.wodo.io',      emoji: '💰', desc: 'Rob banks, outsmart rivals & claim the loot — Wodo Gaming' },
+    ];
+    const shell = document.createElement('div');
+    shell.className = 'folder-shell';
+    shell.innerHTML = `
+      <div class="folder-toolbar">
+        <span style="font-size:11px;color:#555;white-space:nowrap;">Address:</span>
+        <div class="folder-addr">🎮 Nano Games · hub.nano.org/gaming</div>
+      </div>
+      <div class="folder-body">
+        <div class="folder-sidebar">
+          <div class="folder-sidebar-title">
+            <span style="font-size:14px;vertical-align:middle;margin-right:3px;">🎮</span>This Folder
+          </div>
+          <div style="margin-bottom:8px;line-height:1.6;">
+            <div style="color:#003080;font-weight:bold;">${GAMES.length} games</div>
+            <div style="color:#555;font-size:10px;">hub.nano.org/gaming</div>
+          </div>
+          <div class="folder-sidebar-title" style="margin-top:8px;">
+            <svg width="15" height="13" viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:3px;flex-shrink:0;">
+              <path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="1.5"/>
+              <path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#388E3C" stroke="#2E7D32" stroke-width="1.5"/>
+              <path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/>
+            </svg>Details
+          </div>
+          <div style="color:#444;line-height:1.5;">XNO-powered games &amp; faucets</div>
+        </div>
+        <div class="games-grid" id="games-grid-inner"></div>
+      </div>
+      <div class="folder-status">
+        <span>${GAMES.length} games</span>
+        <span>Source: hub.nano.org/gaming</span>
+      </div>
+      <div class="folder-ad-bar">
+        📢 Advertise your brand here:&nbsp;<a href="mailto:timeforplanx@gmail.com" class="folder-ad-link">timeforplanx@gmail.com</a>
+      </div>
+    `;
+    requestAnimationFrame(() => {
+      const grid = shell.querySelector('#games-grid-inner');
+      if (!grid) return;
+      GAMES.forEach(game => {
+        const a = document.createElement('a');
+        a.className = 'games-item';
+        a.href = game.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.title = game.name;
+        const img = document.createElement('img');
+        img.className = 'games-item-icon';
+        img.src = `https://www.google.com/s2/favicons?domain=${game.domain}&sz=64`;
+        img.alt = game.name;
+        img.onerror = function() {
+          const fb = document.createElement('div');
+          fb.className = 'games-item-icon-fallback';
+          fb.textContent = game.emoji;
+          this.parentNode.replaceChild(fb, this);
+        };
+        const info = document.createElement('div');
+        info.className = 'games-item-info';
+        const name = document.createElement('div');
+        name.className = 'games-item-name';
+        name.textContent = game.name;
+        const desc = document.createElement('div');
+        desc.className = 'games-item-desc';
+        desc.textContent = game.desc;
+        info.appendChild(name);
+        info.appendChild(desc);
+        const btn = document.createElement('span');
+        btn.className = 'games-visit-btn';
+        btn.textContent = 'Visit →';
+        a.appendChild(img);
+        a.appendChild(info);
+        a.appendChild(btn);
+        grid.appendChild(a);
+      });
+    });
+    return shell;
+  },
+
   _buildFolder() {
     const shell = document.createElement('div');
     shell.className = 'folder-shell';
@@ -6866,7 +7011,8 @@ const _ICON_DEFAULTS = { /* desktop col: x, y  |  anchor:'bottom-right' = dynami
      y: 330 is off-screen on phone landscape (~340 px desktop height) so we
      use a per-mode fallback checked in _applyIconLayout. */
   'media-folder' : { x: 6, y: 330, mobileLandscape: { x: 86, y: 6 } },
-  'matrix-viz'   : { x: 6, y: 410, mobileLandscape: { x: 86, y: 86 } },
+  'games-folder' : { x: 6, y: 410, mobileLandscape: { x: 86, y: 86 } },
+  'matrix-viz'   : { x: 6, y: 490, mobileLandscape: { x: 86, y: 166 } },
   'recycle-bin'  : { anchor: 'bottom-right', margin: 6 },
 };
 
@@ -7728,7 +7874,7 @@ function setUiMode(mode) {
 }
 
 /* ── Dock icon builder ── */
-const DOCK_APP_ORDER = ['nanonerd','nano_org','nano_gpt','nano_hub','media_folder','matrix_viz'];
+const DOCK_APP_ORDER = ['nanonerd','nano_org','nano_gpt','nano_hub','media_folder','games_folder','matrix_viz'];
 
 function _buildMacDock() {
   const dock = document.getElementById('mac-dock');
@@ -7776,6 +7922,8 @@ function _makeDockIconWrap(id, app) {
     icon.innerHTML = '<div class="di-nn-inner" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:38px;line-height:1;">🧠<span class="xno-gold di-nn-xno" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:24px;">Ӿ</span></div>';
   } else if (id === 'media_folder') {
     icon.innerHTML = '<div style="width:88%;height:88%;display:flex;align-items:center;justify-content:center;padding:6%;"><svg viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></div>';
+  } else if (id === 'games_folder') {
+    icon.innerHTML = '<div style="width:88%;height:88%;position:relative;display:flex;align-items:center;justify-content:center;padding:6%;"><svg viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#4CAF50" stroke="#2E7D32" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#388E3C" stroke="#2E7D32" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg><span style="position:absolute;font-size:calc(var(--dksz,52px)*0.3);line-height:1;top:55%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">🎮</span></div>';
   } else if (id === 'matrix_viz') {
     icon.innerHTML = '<img src="/matrix.gif" style="width:100%;height:100%;object-fit:cover;">';
   } else if (id === 'recycle_bin') {
