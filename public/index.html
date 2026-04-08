@@ -2616,14 +2616,13 @@
       <button class="cp-ui-btn"        id="cp-mac-btn" onclick="setUiMode('macos')">🍎 macOS</button>
     </div>
     <hr class="cp-sep">
-    <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset XP Blue</button>
+    <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true); _closeCpPopup()">↺ Reset XP Blue</button>
   </div>
 
   <!-- Taskbar -->
   <div class="taskbar">
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
-    <button class="wifi-btn" id="xp-settings-btn" onclick="toggleDockSettings()" title="Taskbar Settings">⚙️</button>
     <button class="wifi-btn" id="cp-btn" onclick="toggleCpPopup()" title="Theme color">🎨</button>
     <button class="wifi-btn" id="refresh-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">🔄</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
@@ -7429,7 +7428,7 @@ async function cpPickFromScreen() {
   if (!window.EyeDropper) { alert('Screen colour picker not supported in this browser.'); return; }
   try {
     const result = await new EyeDropper().open();
-    applyThemeColor(result.sRGBHex);
+    applyThemeColor(result.sRGBHex); _closeCpPopup();
   } catch { /* user cancelled */ }
 }
 
@@ -7445,23 +7444,12 @@ function toggleCpPopup() {
   if (xpBtn)  xpBtn.classList.toggle('active', _cpOpen);
   if (macBtn) macBtn.classList.toggle('active', _cpOpen);
   if (_cpOpen) {
-    /* Anchor to whichever trigger button is visible in the current mode */
-    const anchorId = _macMode ? 'mac-cp-btn' : 'cp-btn';
-    const btn = document.getElementById(anchorId);
-    const br  = btn.getBoundingClientRect();
-    if (_macMode) {
-      /* macOS: popup drops DOWN from menubar */
-      popup.style.top    = (br.bottom + 4) + 'px';
-      popup.style.right  = Math.max(4, window.innerWidth - br.right) + 'px';
-      popup.style.bottom = 'auto';
-      popup.style.left   = 'auto';
-    } else {
-      /* XP: popup rises UP from taskbar */
-      popup.style.bottom = (window.innerHeight - br.top + 4) + 'px';
-      popup.style.right  = Math.max(4, window.innerWidth - br.right) + 'px';
-      popup.style.top    = 'auto';
-      popup.style.left   = 'auto';
-    }
+    /* Always anchor to bottom-right corner, above taskbar in XP, near edge in macOS */
+    const botGap = _macMode ? 8 : 42;   /* 42 = 34px taskbar + 8px gap */
+    popup.style.bottom = botGap + 'px';
+    popup.style.right  = '12px';
+    popup.style.top    = 'auto';
+    popup.style.left   = 'auto';
   }
 }
 
@@ -7477,6 +7465,17 @@ document.addEventListener('click', function(e) {
   }
 });
 
+/* Close cp-popup programmatically (used by discrete-choice handlers) */
+function _closeCpPopup() {
+  if (!_cpOpen) return;
+  _cpOpen = false;
+  document.getElementById('cp-popup').classList.remove('open');
+  const xpBtn  = document.getElementById('cp-btn');
+  const macBtn = document.getElementById('mac-cp-btn');
+  if (xpBtn)  xpBtn.classList.remove('active');
+  if (macBtn) macBtn.classList.remove('active');
+}
+
 /* Build preset swatches */
 (function _cpBuildPresets() {
   const container = document.getElementById('cp-presets');
@@ -7486,7 +7485,7 @@ document.addEventListener('click', function(e) {
     sw.dataset.hex = hex;
     sw.title = label;
     sw.style.background = hex;
-    sw.onclick = () => applyThemeColor(hex);
+    sw.onclick = () => { applyThemeColor(hex); _closeCpPopup(); };
     container.appendChild(sw);
   });
 })();
@@ -7674,7 +7673,7 @@ function _applyXpMaterial(id) {
     lbl.textContent = label;
     sw.appendChild(thumb);
     sw.appendChild(lbl);
-    sw.onclick = () => _applyXpMaterial(id);
+    sw.onclick = () => { _applyXpMaterial(id); _closeCpPopup(); };
     container.appendChild(sw);
   });
   /* Restore saved XP material on startup */
@@ -7686,7 +7685,7 @@ function _applyXpMaterial(id) {
 function setUiMode(mode) {
   /* Close any open popup to prevent stale positioning after mode change */
   if (_cpOpen)  { _cpOpen  = false; document.getElementById('cp-popup').classList.remove('open'); const cb = document.getElementById('cp-btn'); if (cb) cb.classList.remove('active'); const mcb = document.getElementById('mac-cp-btn'); if (mcb) mcb.classList.remove('active'); }
-  if (_dspOpen) { _dspOpen = false; document.getElementById('dock-settings-popup').classList.remove('open'); const db = document.getElementById('dock-settings-btn'); if (db) db.classList.remove('active'); const xsb = document.getElementById('xp-settings-btn'); if (xsb) xsb.classList.remove('active'); }
+  if (_dspOpen) { _dspOpen = false; document.getElementById('dock-settings-popup').classList.remove('open'); const db = document.getElementById('dock-settings-btn'); if (db) db.classList.remove('active'); }
   _macMode = (mode === 'macos');
   document.body.classList.toggle('macos', _macMode);
   ['cp-xp-btn','dsp-xp-btn'].forEach(id => {
@@ -7890,42 +7889,22 @@ function toggleDockSettings() {
   _dspOpen = !_dspOpen;
   const popup = document.getElementById('dock-settings-popup');
   const macDockBtn = document.getElementById('dock-settings-btn');
-  const xpBtn      = document.getElementById('xp-settings-btn');
   popup.classList.toggle('open', _dspOpen);
   if (macDockBtn) macDockBtn.classList.toggle('active', _dspOpen);
-  if (xpBtn)      xpBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
-    if (_macMode) {
-      /* macOS: position above the dock */
-      const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-      const fromBot = window.innerHeight - dockR.top + 6;
-      const maxH    = dockR.top - 10;
-      popup.style.bottom    = fromBot + 'px';
-      popup.style.maxHeight = Math.max(160, maxH) + 'px';
-      popup.style.top       = 'auto';
-      if (window.innerWidth <= 480) {
-        popup.style.left  = '14px';
-        popup.style.right = '14px';
-      } else {
-        popup.style.left  = 'auto';
-        popup.style.right = '14px';
-      }
+    /* Position above the dock */
+    const dockR   = document.getElementById('mac-dock-wrap').getBoundingClientRect();
+    const fromBot = window.innerHeight - dockR.top + 6;
+    const maxH    = dockR.top - 10;
+    popup.style.bottom    = fromBot + 'px';
+    popup.style.maxHeight = Math.max(160, maxH) + 'px';
+    popup.style.top       = 'auto';
+    if (window.innerWidth <= 480) {
+      popup.style.left  = '14px';
+      popup.style.right = '14px';
     } else {
-      /* XP: position above the taskbar, anchored to #xp-settings-btn */
-      const tbBtn   = document.getElementById('xp-settings-btn');
-      const br      = tbBtn ? tbBtn.getBoundingClientRect() : { top: window.innerHeight - 34, right: window.innerWidth - 8 };
-      const fromBot = window.innerHeight - br.top + 4;
-      const maxH    = br.top - 10;
-      popup.style.bottom    = fromBot + 'px';
-      popup.style.maxHeight = Math.max(160, maxH) + 'px';
-      popup.style.top       = 'auto';
-      if (window.innerWidth <= 480) {
-        popup.style.left  = '14px';
-        popup.style.right = '14px';
-      } else {
-        popup.style.left  = 'auto';
-        popup.style.right = Math.max(4, window.innerWidth - br.right) + 'px';
-      }
+      popup.style.left  = 'auto';
+      popup.style.right = '14px';
     }
   }
 }
@@ -7933,14 +7912,11 @@ function toggleDockSettings() {
 document.addEventListener('click', function(e) {
   if (_dspOpen &&
       !e.target.closest('#dock-settings-popup') &&
-      !e.target.closest('#dock-settings-btn') &&
-      !e.target.closest('#xp-settings-btn')) {
+      !e.target.closest('#dock-settings-btn')) {
     _dspOpen = false;
     document.getElementById('dock-settings-popup').classList.remove('open');
     const macDockBtn = document.getElementById('dock-settings-btn');
-    const xpBtn      = document.getElementById('xp-settings-btn');
     if (macDockBtn) macDockBtn.classList.remove('active');
-    if (xpBtn)      xpBtn.classList.remove('active');
   }
 });
 
