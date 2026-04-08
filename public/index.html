@@ -2195,9 +2195,9 @@
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 5; /* below windows; windows are constrained to not cover the bottom 18 px reserve */
-      width: 52px; height: 18px;
-      border-radius: 10px 10px 0 0;
+      z-index: 5; /* below windows; windows are constrained to not cover the bottom 32 px reserve */
+      width: 94px; height: 32px;
+      border-radius: 12px 12px 0 0;
       background: rgba(255,255,255,.28);
       backdrop-filter: blur(24px) saturate(200%);
       -webkit-backdrop-filter: blur(24px) saturate(200%);
@@ -2205,7 +2205,7 @@
       border-bottom: none;
       box-shadow: 0 -2px 10px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.55);
       color: rgba(255,255,255,.90);
-      font-size: 11px;
+      font-size: 16px;
       cursor: pointer;
       align-items: center; justify-content: center;
       transition: background .12s;
@@ -3965,13 +3965,13 @@ const wm = {
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       } else {
-        const w2      = Math.round(ar2.width * 0.67);
         const topGap2 = _macMode ? 4 : 0;
         const botOff2 = _macMode ? _macDockH() : 34;
         const h2      = Math.max(200, ar2.height - botOff2 - topGap2);
+        const w2      = _macMode ? ar2.width : Math.round(ar2.width * 0.67);
         win.style.width  = w2 + 'px';
         win.style.height = h2 + 'px';
-        win.style.left   = Math.round((ar2.width - w2) / 2) + 'px';
+        win.style.left   = _macMode ? '0' : Math.round((ar2.width - w2) / 2) + 'px';
         win.style.top    = topGap2 + 'px';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
@@ -4179,15 +4179,16 @@ const wm = {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / large tablet: 67% width, horizontally centered.
-         Bottom edge aligns with taskbar/dock top; small gap at top in macOS. */
-      const w       = Math.round(ar.width * 0.67);
-      const topGap  = _macMode ? 4 : 0;
-      const botOff  = _macMode ? _macDockH() : 34; /* dock height or taskbar height */
-      const h       = Math.max(200, ar.height - botOff - topGap);
+      /* Desktop / large tablet.
+         macOS: full available width + full height (menu-bar gap → dock top).
+         XP:    67% width, centred, full height above taskbar. */
+      const topGap = _macMode ? 4 : 0;
+      const botOff = _macMode ? _macDockH() : 34;
+      const h      = Math.max(200, ar.height - botOff - topGap);
+      const w      = _macMode ? ar.width : Math.round(ar.width * 0.67);
       win.style.width  = w + 'px';
       win.style.height = h + 'px';
-      win.style.left   = Math.round((ar.width - w) / 2) + 'px';
+      win.style.left   = _macMode ? '0' : Math.round((ar.width - w) / 2) + 'px';
       win.style.top    = topGap + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
@@ -7021,13 +7022,13 @@ function _applyWindowsLayout() {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
-      const wL      = Math.round(ar.width * 0.67);
       const topGapL = _macMode ? 4 : 0;
       const botOffL = _macMode ? _macDockH() : 34;
       const hL      = Math.max(200, ar.height - botOffL - topGapL);
+      const wL      = _macMode ? ar.width : Math.round(ar.width * 0.67);
       win.style.width  = wL + 'px';
       win.style.height = hL + 'px';
-      win.style.left   = Math.round((ar.width - wL) / 2) + 'px';
+      win.style.left   = _macMode ? '0' : Math.round((ar.width - wL) / 2) + 'px';
       win.style.top    = topGapL + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
@@ -7491,7 +7492,7 @@ let _dockVisible   = true;
 let _dockHideTimer = null;
 
 /* Height of the dock-toggle tab (reserved bottom gap even when dock is hidden). */
-const _DOCK_TOGGLE_H = 18;
+const _DOCK_TOGGLE_H = 32;
 
 /* Returns height (px) that the dock (or its toggle reserve) occupies from the
    viewport bottom.  When the dock is visible: full measured dock height.
@@ -7518,8 +7519,8 @@ function _setDockVisible(v) {
   const arrow = document.getElementById('dock-toggle-arrow');
   if (arrow) arrow.textContent = v ? '⌄' : '⌃';
   /* Toggle tab stays at z-index 5 (CSS).  Reachability is ensured by geometry:
-     _macDockH() returns _DOCK_TOGGLE_H (18px) when dock is hidden, so all window
-     spawn/layout calculations leave the bottom 18 px uncovered by windows. */
+     _macDockH() returns _DOCK_TOGGLE_H (32px) when dock is hidden, so all window
+     spawn/layout calculations leave the bottom 32 px uncovered by windows. */
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
