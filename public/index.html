@@ -7449,12 +7449,21 @@ function _setDockVisible(v) {
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
   const btn  = document.getElementById('dock-toggle-btn');
   if (btn)  btn.classList.toggle('dock-collapsed', !v);
+  if (!v) {
+    /* Hiding: CSS var to 0 immediately so windows relax right away */
+    _updateDockCssVar();
+  } else {
+    /* Showing: measure after the browser has painted the revealed dock */
+    requestAnimationFrame(() => requestAnimationFrame(_updateDockCssVar));
+  }
 }
 
-/* Desktop auto-hide: hide dock 2 s after cursor leaves the bottom zone. */
+/* Desktop auto-hide: hide dock 2 s after cursor leaves the bottom zone.
+   Only fires on real pointer/mouse devices (no-touch + non-mobile viewport). */
 function _initDockAutoHide() {
   document.addEventListener('mousemove', (e) => {
     if (!_macMode || _isMobilePortrait() || _isMobileLandscape()) return;
+    if (navigator.maxTouchPoints > 0) return; /* skip on large touch devices */
     const nearBottom = e.clientY >= window.innerHeight - 80;
     if (nearBottom) {
       if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
