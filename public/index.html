@@ -1876,8 +1876,8 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
     body.macos .icon-col       { display: none !important; }
-    /* wallpaper btn sits below the menu bar in macOS mode — behind open windows */
-    body.macos .wp-btn         { top: 36px; z-index: 3; }
+    /* wallpaper btn: 4 px below 28 px menubar, behind all open windows */
+    body.macos .wp-btn         { top: 32px; z-index: 2; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
     /* Maximised regular windows stop at the dock (CSS var set by JS) */
@@ -2215,6 +2215,17 @@
       opacity: 1;
       box-shadow: 0 4px 28px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.7),
                   0 0 0 2px rgba(255,255,255,.18);
+    }
+    /* When toggle button is visually joined to dock pill left edge */
+    .dock-toggle-btn.adjacent {
+      border-radius: 12px 0 0 12px;
+      border-right: none;
+      margin-right: -1px;
+    }
+    /* Dock pill — flatten left edge when toggle is adjacent */
+    .mac-dock.toggle-adjacent {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
     }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
@@ -7515,9 +7526,13 @@ function _setDockVisible(v) {
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
+    _positionDockToggleBtn();
   } else {
     /* Showing: measure after the browser has painted the revealed dock */
-    requestAnimationFrame(() => requestAnimationFrame(_updateDockCssVar));
+    requestAnimationFrame(() => {
+      requestAnimationFrame(_updateDockCssVar);
+      requestAnimationFrame(_positionDockToggleBtn);
+    });
   }
 }
 
@@ -7561,6 +7576,33 @@ function _updateDockToggleBtn() {
     if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
     _setDockVisible(true);
   }
+  if (show) requestAnimationFrame(_positionDockToggleBtn);
+}
+
+/* Dynamically position the toggle button to look like a left-edge appendage of the
+   dock pill when the dock is visible; fall back to a standalone pill when dock hides. */
+function _positionDockToggleBtn() {
+  const btn  = document.getElementById('dock-toggle-btn');
+  const dock = document.querySelector('.mac-dock');
+  if (!btn || btn.style.display === 'none') return;
+
+  if (!_dockVisible || !dock) {
+    /* Dock hidden: standalone pill, bottom-left of viewport */
+    btn.style.left   = '8px';
+    btn.style.height = '';
+    btn.classList.remove('adjacent');
+    if (dock) dock.classList.remove('toggle-adjacent');
+    return;
+  }
+
+  /* Dock visible: attach to dock's left edge */
+  const dockRect = dock.getBoundingClientRect();
+  const btnW     = btn.offsetWidth || 32;
+  const newLeft  = Math.max(4, dockRect.left - btnW);
+  btn.style.left   = newLeft + 'px';
+  btn.style.height = dockRect.height + 'px';   /* match dock pill height */
+  btn.classList.add('adjacent');
+  dock.classList.add('toggle-adjacent');
 }
 
 const DOCK_MATERIALS = [
@@ -8149,8 +8191,8 @@ document.addEventListener('click', function(e) {
   _updateDockCssVar();
 
   /* Update toggle button and CSS var on resize / orientation change */
-  window.addEventListener('resize', () => { _updateDockToggleBtn(); _updateDockCssVar(); });
-  window.addEventListener('orientationchange', () => setTimeout(() => { _updateDockToggleBtn(); _updateDockCssVar(); }, 250));
+  window.addEventListener('resize', () => { _updateDockToggleBtn(); _updateDockCssVar(); requestAnimationFrame(_positionDockToggleBtn); });
+  window.addEventListener('orientationchange', () => setTimeout(() => { _updateDockToggleBtn(); _updateDockCssVar(); requestAnimationFrame(_positionDockToggleBtn); }, 250));
 
   /* Sync CSS var after dock slide animation completes */
   document.getElementById('mac-dock-wrap')
