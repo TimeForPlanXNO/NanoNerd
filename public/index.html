@@ -962,6 +962,15 @@
       padding: 2px 8px; font-size: 10px; color: #555; flex-shrink: 0;
       display: flex; justify-content: space-between;
     }
+    .folder-ad-bar {
+      background: #ffe033; border-top: 1px solid #c8a800;
+      padding: 3px 10px; font-size: 10px; color: #4a3800; flex-shrink: 0;
+      text-align: center; font-weight: 600; letter-spacing: .01em;
+    }
+    .folder-ad-link {
+      color: #1a3c8a; text-decoration: underline; font-weight: 700;
+    }
+    .folder-ad-link:hover { color: #002288; }
     .folder-body {
       display: flex; flex: 1; overflow: hidden;
     }
@@ -5585,6 +5594,9 @@ const wm = {
       <div class="folder-status">
         <span>${total} objects</span>
         <span>${imageFiles.length} images · ${videoFiles.length} videos</span>
+      </div>
+      <div class="folder-ad-bar">
+        📢 Advertise your brand here:&nbsp;<a href="mailto:timeforplanx@gmail.com" class="folder-ad-link">timeforplanx@gmail.com</a>
       </div>
     `;
     /* Populate grid after DOM attached (requestAnimationFrame) */
