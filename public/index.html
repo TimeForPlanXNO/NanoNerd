@@ -1871,6 +1871,10 @@
     /* ═══════════════════════════════════════════════════
        macOS MODE
     ═══════════════════════════════════════════════════ */
+    /* Hide macOS-only popup sections in XP mode */
+    body:not(.macos) .dsp-macos-only { display: none !important; }
+    /* Hide XP-only popup sections in macOS mode */
+    body.macos .cp-xp-only { display: none !important; }
     body.macos .taskbar        { display: none !important; }
     body.macos .mac-dock-wrap  { display: flex !important; }
     body.macos .macos-menubar  { display: flex !important; }
@@ -2601,9 +2605,11 @@
     </div>
     <div class="cp-presets" id="cp-presets"></div>
     <hr class="cp-sep">
-    <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">Window Material</div>
-    <div class="cp-mat-grid" id="cp-xp-materials"></div>
-    <hr class="cp-sep">
+    <div class="cp-xp-only">
+      <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">Window Material</div>
+      <div class="cp-mat-grid" id="cp-xp-materials"></div>
+      <hr class="cp-sep">
+    </div>
     <div style="font-size:10px;font-weight:700;color:#6a7a9a;text-transform:uppercase;letter-spacing:.08em;">UI Style</div>
     <div class="cp-ui-style-row">
       <button class="cp-ui-btn active" id="cp-xp-btn"  onclick="setUiMode('xp')">🪟 Windows XP</button>
@@ -2728,11 +2734,11 @@
           <span>L</span>
         </div>
       </div>
-      <div class="dsp-toggle-row">
+      <div class="dsp-toggle-row dsp-macos-only">
         <span class="dsp-toggle-label">Magnification</span>
         <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
       </div>
-      <div class="dsp-toggle-row">
+      <div class="dsp-toggle-row dsp-macos-only">
         <span class="dsp-toggle-label">Genie Effect</span>
         <button class="dsp-pill on" id="dsp-genie-pill" onclick="toggleDockGenie()"></button>
       </div>
@@ -8169,7 +8175,7 @@ document.addEventListener('click', function(e) {
   }
 
   /* Set UI mode last (needs dock built) */
-  if (savedMode === 'macos') setUiMode('macos');
+  setUiMode(savedMode === 'macos' ? 'macos' : 'xp');
 
   /* Init dock auto-hide (desktop) and mobile toggle button */
   _initDockAutoHide();
