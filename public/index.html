@@ -7608,9 +7608,9 @@ let _dockHideTimer = null;
 /* Bottom reserve when dock is hidden (0 = no standalone toggle; bottom-edge tap restores dock). */
 const _DOCK_TOGGLE_H = 0;
 
-/* Returns height (px) that the dock (or its toggle reserve) occupies from the
-   viewport bottom.  When the dock is visible: full measured dock height.
-   When the dock is hidden: _DOCK_TOGGLE_H so windows never cover the toggle tab. */
+/* Returns height (px) that the dock occupies from the viewport bottom.
+   When the dock is visible: full measured dock height.
+   When the dock is hidden: _DOCK_TOGGLE_H (0) — no standalone element reserves space. */
 function _macDockH() {
   if (!_macMode) return 0;
   const wrap = document.getElementById('mac-dock-wrap');
@@ -7629,12 +7629,9 @@ function _setDockVisible(v) {
   _dockVisible = v;
   const wrap  = document.getElementById('mac-dock-wrap');
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
-  /* Update the toggle tab arrow: ⌄ = dock visible (click to hide), ⌃ = hidden (click to show) */
+  /* Update the button arrow: ⌄ = dock visible (tap to hide), ⌃ = hidden (tap bottom edge to show) */
   const arrow = document.getElementById('dock-toggle-arrow');
   if (arrow) arrow.textContent = v ? '⌄' : '⌃';
-  /* Toggle tab stays at z-index 5 (CSS).  Reachability is ensured by geometry:
-     _macDockH() returns _DOCK_TOGGLE_H (32px) when dock is hidden, so all window
-     spawn/layout calculations leave the bottom 32 px uncovered by windows. */
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
