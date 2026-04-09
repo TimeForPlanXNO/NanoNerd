@@ -611,19 +611,25 @@
 
     #scroll-arrow {
       position: absolute; right: 10px; bottom: 58px;
-      background: none; border: none; padding: 0;
-      font-size: 26px; line-height: 1;
+      /* Liquid Glass circular pill */
+      width: 36px; height: 36px; padding: 0;
+      border-radius: 50%;
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(14px) saturate(160%);
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
+      border: 1px solid rgba(255,255,255,.28);
+      box-shadow: 0 2px 10px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.20);
+      font-size: 18px; line-height: 1;
       cursor: pointer; z-index: 50;
       display: none; align-items: center; justify-content: center;
       color: #00C9FF;
-      filter: drop-shadow(0 1px 4px rgba(0,0,0,.55));
-      transition: transform .15s, opacity .2s;
+      transition: transform .15s, opacity .2s, background .15s;
       opacity: 0;
     }
 
     #scroll-arrow.visible   { display: flex; opacity: 1; }
     #scroll-arrow.streaming { animation: arrow-pulse .75s ease infinite; }
-    #scroll-arrow:hover     { transform: scale(1.18) translateY(2px); }
+    #scroll-arrow:hover     { transform: scale(1.12) translateY(2px); background: rgba(255,255,255,.26); }
     #scroll-arrow:active    { transform: scale(.9); }
 
     .chat-msgs {
@@ -1598,6 +1604,25 @@
     }
     .wp-btn:hover  { filter: brightness(1.25); }
     .wp-btn:active { filter: brightness(.85); }
+
+    /* ── ICON RESET BUTTON (XP mode only, desktop top-right) ── */
+    #icon-reset-btn {
+      position: absolute; top: 8px; right: 42px;
+      z-index: 5;
+      width: 26px; height: 26px; box-sizing: border-box;
+      padding: 0; border-radius: 5px;
+      background: rgba(255,255,255,.12);
+      backdrop-filter: blur(12px) saturate(150%);
+      -webkit-backdrop-filter: blur(12px) saturate(150%);
+      border: 1px solid rgba(255,255,255,.30);
+      box-shadow: 0 2px 6px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
+      cursor: pointer; display: none; align-items: center; justify-content: center;
+      font-size: 13px; line-height: 1;
+      transition: filter .12s, background .12s;
+    }
+    #icon-reset-btn:hover  { background: rgba(255,255,255,.22); filter: brightness(1.15); }
+    #icon-reset-btn:active { filter: brightness(.85); }
+    body.macos #icon-reset-btn { display: none !important; }
 
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
@@ -2656,7 +2681,8 @@
     <div class="win-area" id="win-area"></div>
   </div>
 
-  <!-- Wallpaper Button -->
+  <!-- Wallpaper Button + Icon-reset Button (XP only, hidden until icon moved) -->
+  <button id="icon-reset-btn" onclick="_resetIconPositions()" title="Reset icon positions" style="display:none;">🔄</button>
   <button class="wp-btn" id="wp-btn" onclick="toggleWpPicker(event)" title="Change wallpaper">🖼️</button>
 
   <!-- Wallpaper Picker Dialog -->
@@ -2697,7 +2723,6 @@
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
     <button class="wifi-btn" id="cp-btn" onclick="toggleDockSettings()" title="Settings">🎨</button>
-    <button class="wifi-btn" id="refresh-btn" onclick="resetAll()" title="Reset chat &amp; icon positions">🔄</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
     <button class="tb-clock" id="clock" onclick="toggleStatsPopup()">00:00</button>
   </div>
@@ -6533,6 +6558,26 @@ function resetAll() {
   localStorage.removeItem(_ICON_POS_KEY);
   localStorage.removeItem(_ICON_POS_P_KEY);
   _applyIconLayout();
+  _hideIconResetBtn();
+}
+
+/* ── Icon-position-only reset (XP desktop button — does NOT touch chat) ── */
+function _resetIconPositions() {
+  localStorage.removeItem(_ICON_POS_KEY);
+  localStorage.removeItem(_ICON_POS_P_KEY);
+  _applyIconLayout();
+  _hideIconResetBtn();
+}
+
+function _showIconResetBtn() {
+  if (_macMode) return;   /* XP mode only */
+  const btn = document.getElementById('icon-reset-btn');
+  if (btn) btn.style.display = 'flex';
+}
+
+function _hideIconResetBtn() {
+  const btn = document.getElementById('icon-reset-btn');
+  if (btn) btn.style.display = 'none';
 }
 
 function addMsg(role, text, noScroll) {
@@ -7208,6 +7253,10 @@ function _applyIconLayout() {
       el.style.width = '';   /* clear any portrait inline width on orientation change */
     }
   });
+  /* Show/hide icon reset button based on whether any custom positions exist */
+  const _hasCustomPos = Object.keys(saved).length > 0;
+  if (_hasCustomPos) _showIconResetBtn();
+  else               _hideIconResetBtn();
 }
 
 /* ── Safe-area constants for mobile portrait icon rows ── */
@@ -7390,6 +7439,7 @@ function _initIconDrag() {
         all[_cur.id] = { x: _cur.el.offsetLeft, y: _cur.el.offsetTop };
         _saveIconPos(all);
       }
+      _showIconResetBtn(); /* reveal XP reset button after any icon is moved */
     } else {
       wm.open(_cur.app);
     }
