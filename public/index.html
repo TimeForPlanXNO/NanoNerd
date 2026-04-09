@@ -3440,7 +3440,7 @@ function _buildMatrixWpTile(grid) {
   img.loading = 'lazy';
   const lbl = document.createElement('div');
   lbl.className = 'wp-thumb-label';
-  lbl.textContent = 'Live Matrix';
+  lbl.textContent = 'Live XNO Matrix';
   item.appendChild(img);
   item.appendChild(lbl);
   item.onclick = () => { _applyMatrixWallpaper(); };
@@ -3510,6 +3510,7 @@ function toggleWpPicker(e) {
     closeWpPicker();
   } else {
     _buildWpGrid4k();   /* build 4K tab (default active) */
+    _buildWpGridXp();   /* pre-build XP tab so switching is instant */
     dlg.classList.add('open');
     _wpPickerOpen = true;
   }
