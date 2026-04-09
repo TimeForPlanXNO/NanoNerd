@@ -1902,8 +1902,8 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
     body.macos .icon-col       { display: none !important; }
-    /* wallpaper btn sits below the menu bar in macOS mode — no z-index override, stays at 5 so windows cover it */
-    body.macos .wp-btn         { top: 36px; }
+    /* wallpaper btn sits just below the menu bar in macOS mode — no z-index override, stays at 5 so windows cover it */
+    body.macos .wp-btn         { top: 32px; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
     /* Maximised regular windows stop at the dock (CSS var set by JS) */
@@ -4225,17 +4225,16 @@ const wm = {
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
       /* Desktop / large tablet.
-         macOS: full width, slightly extended past menu-bar (top=-8) and dock (bottom+8)
-                so the window bleeds under the chrome on both edges — menu-bar/dock sit
-                on top (z-index 600) giving the "tucked behind" appearance.
+         macOS: full width, 8px below menu-bar top and flush with dock bottom —
+                shows a sliver of desktop wallpaper above the window title bar.
          XP:    67% width, centred, full height above taskbar. */
       if (_macMode) {
         const botOff = _macDockH();
-        const h      = Math.max(200, ar.height - botOff + 16); /* +8 top + +8 bottom bleed */
+        const h      = Math.max(200, ar.height - botOff - 8); /* 8px top gap + flush dock bottom */
         win.style.width  = ar.width + 'px';
         win.style.height = h + 'px';
         win.style.left   = '0';
-        win.style.top    = '-8px';
+        win.style.top    = '8px';
         win.style.right  = 'auto';
         win.style.bottom = 'auto';
       } else {
@@ -7123,12 +7122,11 @@ function _mobilePWinRect(ar) {
   let safeT = _M_SAFE_T;
   let safeB = _M_SAFE_B;
   if (_macMode) {
-    /* macOS mode: grow portrait windows ~20% taller (10% per edge).
-       macOS menu bar and dock float at z-index 600 above windows,
-       so bleeding slightly under them is visually safe. */
+    /* macOS mode: keep safeT at baseline so desktop wallpaper is visible above
+       the window. Only extend the bottom toward the dock for extra height. */
     const baseH     = ar.height - _M_SAFE_T - _M_SAFE_B;
     const halfBoost = Math.round(baseH * 0.10);
-    safeT = Math.max(22,           _M_SAFE_T - halfBoost);
+    /* safeT unchanged — window starts at _M_SAFE_T from area top */
     safeB = Math.max(_macDockH(),  _M_SAFE_B - halfBoost);
   }
   const h = Math.max(120, ar.height - safeT - safeB);
@@ -7167,11 +7165,11 @@ function _applyWindowsLayout() {
       win.style.bottom = 'auto';
     } else if (_macMode) {
       const botOffL = _macDockH();
-      const hL      = Math.max(200, ar.height - botOffL + 8);
+      const hL      = Math.max(200, ar.height - botOffL - 8);
       win.style.width  = ar.width + 'px';
       win.style.height = hL + 'px';
       win.style.left   = '0';
-      win.style.top    = '-8px';
+      win.style.top    = '8px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
