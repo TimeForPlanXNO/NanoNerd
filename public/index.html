@@ -2205,7 +2205,7 @@
     /* ── macOS Dock ── */
     .mac-dock-wrap {
       display: none;
-      position: fixed; bottom: 8px; left: 0; right: 0;
+      position: fixed; bottom: max(8px, env(safe-area-inset-bottom)); left: 0; right: 0;
       justify-content: center; align-items: flex-end;
       z-index: 600; pointer-events: none;
       transition: transform .35s cubic-bezier(.4, 0, .2, 1);
@@ -2218,7 +2218,7 @@
     /* ── Dock restore button: bottom-left corner, shown when dock is hidden on mobile ── */
     .dock-restore-btn {
       display: none;
-      position: fixed; bottom: 12px; left: 12px;
+      position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); left: max(12px, env(safe-area-inset-left));
       width: 36px; height: 36px;
       border-radius: 10px;
       background: rgba(255,255,255,.10);
@@ -2244,26 +2244,21 @@
       flex-shrink: 0;
       align-items: center;
       justify-content: center;
-      cursor: grab;
+      cursor: pointer;
       pointer-events: all;
       border-right: 1px solid rgba(255,255,255,.25);
       margin-right: 4px;
       padding: 0 3px;
     }
-    .dock-drag-handle:active { cursor: grabbing; }
-    /* 2×3 dot grid rendered with box-shadow (the ": : :" pattern) */
-    .dock-drag-dots {
+    .dock-drag-handle:active { opacity: .6; }
+    /* Downward arrow indicator */
+    .dock-drag-arrow {
       display: block;
-      width: 4px; height: 4px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.75);
-      box-shadow:
-        8px  0px rgba(255,255,255,.75),
-        0px  7px rgba(255,255,255,.75),
-        8px  7px rgba(255,255,255,.75),
-        0px 14px rgba(255,255,255,.75),
-        8px 14px rgba(255,255,255,.75);
-      flex-shrink: 0;
+      font-size: 18px;
+      line-height: 1;
+      color: rgba(255,255,255,.82);
+      user-select: none;
+      pointer-events: none;
     }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
@@ -7656,11 +7651,16 @@ function _setDockVisible(v) {
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
   _syncDockRestoreBtn();
   if (!v) {
-    /* Hiding: CSS var to 0 immediately so windows relax right away */
+    /* Hiding: CSS var to 0 immediately, then relayout all windows */
     _updateDockCssVar();
+    _applyWindowsLayout();
   } else {
-    /* Showing: measure after the browser has painted the revealed dock */
-    requestAnimationFrame(() => requestAnimationFrame(_updateDockCssVar));
+    /* Showing: wait for dock slide animation (~350ms) then measure + relayout */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      _updateDockCssVar();
+      _fitDockToScreen();
+      _applyWindowsLayout();
+    }));
   }
 }
 
@@ -7738,6 +7738,7 @@ function _updateDockDragHandle() {
     _setDockVisible(true);
   }
   _syncDockRestoreBtn();
+  _fitDockToScreen();
 }
 
 const DOCK_MATERIALS = [
@@ -7862,10 +7863,11 @@ function _buildMacDock() {
   const handle = document.createElement('div');
   handle.id        = 'dock-drag-handle';
   handle.className = 'dock-drag-handle';
-  handle.title     = 'Drag down to hide \u00b7 Drag up to show';
-  const dots = document.createElement('span');
-  dots.className = 'dock-drag-dots';
-  handle.appendChild(dots);
+  handle.title     = 'Hide dock';
+  const arrow = document.createElement('span');
+  arrow.className  = 'dock-drag-arrow';
+  arrow.textContent = '\u25be';   /* ▾ downward-pointing small triangle */
+  handle.appendChild(arrow);
   dock.appendChild(handle);
   /* Re-attach pointer listeners (needed because the element was recreated) */
   _bindDockDragHandle(handle);
@@ -8360,7 +8362,7 @@ document.addEventListener('click', function(e) {
   }
 
   /* Fit dock within viewport (mobile / portrait) */
-  setTimeout(_fitDockToScreen, 100);
+  setTimeout(_fitDockToScreen, 200);
 
   /* Restore slider value + gradient fill */
   const slider = document.getElementById('dsp-size-slider');
