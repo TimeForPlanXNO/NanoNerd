@@ -7695,12 +7695,6 @@ function _bindDockDragHandle(handle) {
   });
 }
 
-/* Called once at init — handle already created inside _buildMacDock(). */
-function _initDockDragHandle() {
-  /* Listeners are bound per-element inside _buildMacDock() → _bindDockDragHandle().
-     Nothing extra needed here at startup. */
-}
-
 function _updateDockDragHandle() {
   const handle = document.getElementById('dock-drag-handle');
   if (!handle) return;
@@ -8347,9 +8341,8 @@ document.addEventListener('click', function(e) {
   /* Set UI mode last (needs dock built) */
   setUiMode(savedMode === 'macos' ? 'macos' : 'xp', true); /* noAnim on startup */
 
-  /* Init dock auto-hide (desktop) and mobile drag handle */
+  /* Init dock auto-hide (desktop); handle listeners bound inside _buildMacDock() */
   _initDockAutoHide();
-  _initDockDragHandle();
   _updateDockDragHandle();
   _updateDockCssVar();
 
