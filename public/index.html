@@ -2719,10 +2719,7 @@
   <!-- macOS Dock -->
   <div class="mac-dock-wrap" id="mac-dock-wrap">
     <div class="mac-dock" id="mac-dock">
-      <div id="dock-drag-handle" class="dock-drag-handle" title="Drag down to hide · Drag up to show">
-        <span class="dock-drag-dots"></span>
-      </div>
-      <!-- Built dynamically by _buildMacDock() -->
+      <!-- Built dynamically by _buildMacDock() — handle injected first by that function -->
     </div>
   </div>
 
@@ -7663,11 +7660,9 @@ function _initDockAutoHide() {
   });
 }
 
-/* Mobile drag handle: drag down to hide, drag up (on peek) to restore, tap to toggle. */
-function _initDockDragHandle() {
-  const handle = document.getElementById('dock-drag-handle');
-  if (!handle) return;
-
+/* Binds drag pointer listeners to a given handle element.
+   Called by _buildMacDock() each time it recreates the handle (innerHTML wipe). */
+function _bindDockDragHandle(handle) {
   let _dragStartY = 0;
   let _dragging   = false;
 
@@ -7698,6 +7693,12 @@ function _initDockDragHandle() {
     /* Short tap (< 10 px movement) = toggle */
     if (Math.abs(dy) < 10) _setDockVisible(!_dockVisible);
   });
+}
+
+/* Called once at init — handle already created inside _buildMacDock(). */
+function _initDockDragHandle() {
+  /* Listeners are bound per-element inside _buildMacDock() → _bindDockDragHandle().
+     Nothing extra needed here at startup. */
 }
 
 function _updateDockDragHandle() {
@@ -7830,6 +7831,18 @@ function _buildMacDock() {
   const dock = document.getElementById('mac-dock');
   if (!dock) return;
   dock.innerHTML = '';
+
+  /* Re-insert the drag handle as the first child (it was wiped by innerHTML = '') */
+  const handle = document.createElement('div');
+  handle.id        = 'dock-drag-handle';
+  handle.className = 'dock-drag-handle';
+  handle.title     = 'Drag down to hide \u00b7 Drag up to show';
+  const dots = document.createElement('span');
+  dots.className = 'dock-drag-dots';
+  handle.appendChild(dots);
+  dock.appendChild(handle);
+  /* Re-attach pointer listeners (needed because the element was recreated) */
+  _bindDockDragHandle(handle);
 
   DOCK_APP_ORDER.forEach(id => {
     const app = APPS[id];
