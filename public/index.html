@@ -2212,32 +2212,38 @@
       transform-origin: bottom center;
     }
     .mac-dock-wrap.dock-hidden {
-      transform: translateY(calc(100% + 16px));
+      transform: translateY(calc(100% - 32px));
       pointer-events: none !important;
     }
-    /* ── Dock group: hide-button + icons centred together ── */
-    .mac-dock-group {
-      display: inline-flex; align-items: flex-end; gap: 6px;
-    }
-    .dock-toggle-btn {
+    /* ── Dock drag handle (⠿) — leftmost item inside the dock pill ── */
+    .dock-drag-handle {
       display: none;
-      width: 36px; height: 36px;
+      align-self: stretch;
+      width: 22px;
       flex-shrink: 0;
-      border-radius: 50%;
-      background: rgba(255,255,255,.28);
-      backdrop-filter: blur(24px) saturate(200%);
-      -webkit-backdrop-filter: blur(24px) saturate(200%);
-      border: 1px solid rgba(255,255,255,.55);
-      box-shadow: 0 4px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);
-      color: rgba(255,255,255,.90);
-      font-size: 14px;
-      cursor: pointer;
-      align-items: center; justify-content: center;
-      transition: background .12s;
-      padding: 0; line-height: 1;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
       pointer-events: all;
+      border-right: 1px solid rgba(255,255,255,.25);
+      margin-right: 4px;
+      padding: 0 3px;
     }
-    .dock-toggle-btn:hover { background: rgba(255,255,255,.42); }
+    .dock-drag-handle:active { cursor: grabbing; }
+    /* 2×3 dot grid rendered with box-shadow (the ": : :" pattern) */
+    .dock-drag-dots {
+      display: block;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.75);
+      box-shadow:
+        8px  0px rgba(255,255,255,.75),
+        0px  7px rgba(255,255,255,.75),
+        8px  7px rgba(255,255,255,.75),
+        0px 14px rgba(255,255,255,.75),
+        8px 14px rgba(255,255,255,.75);
+      flex-shrink: 0;
+    }
     .mac-dock {
       display: flex; align-items: flex-end; gap: 6px;
       padding: 6px 10px;
@@ -2712,11 +2718,11 @@
 
   <!-- macOS Dock -->
   <div class="mac-dock-wrap" id="mac-dock-wrap">
-    <div class="mac-dock-group" id="mac-dock-group">
-      <button id="dock-toggle-btn" class="dock-toggle-btn" title="Toggle dock"><span id="dock-toggle-arrow">⌄</span></button>
-      <div class="mac-dock" id="mac-dock">
-        <!-- Built dynamically by _buildMacDock() -->
+    <div class="mac-dock" id="mac-dock">
+      <div id="dock-drag-handle" class="dock-drag-handle" title="Drag down to hide · Drag up to show">
+        <span class="dock-drag-dots"></span>
       </div>
+      <!-- Built dynamically by _buildMacDock() -->
     </div>
   </div>
 
@@ -7605,12 +7611,12 @@ let _dockMaterial = 'silver';
 let _dockVisible   = true;
 let _dockHideTimer = null;
 
-/* Bottom reserve when dock is hidden (0 = no standalone toggle; bottom-edge tap restores dock). */
-const _DOCK_TOGGLE_H = 0;
+/* Bottom reserve when dock is hidden: dock peeks 32px above the 8px bottom gap ≈ 40px total. */
+const _DOCK_TOGGLE_H = 40;
 
 /* Returns height (px) that the dock occupies from the viewport bottom.
    When the dock is visible: full measured dock height.
-   When the dock is hidden: _DOCK_TOGGLE_H (0) — no standalone element reserves space. */
+   When the dock is hidden: _DOCK_TOGGLE_H (40) — reserves space for the 32px peek strip. */
 function _macDockH() {
   if (!_macMode) return 0;
   const wrap = document.getElementById('mac-dock-wrap');
@@ -7629,9 +7635,6 @@ function _setDockVisible(v) {
   _dockVisible = v;
   const wrap  = document.getElementById('mac-dock-wrap');
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
-  /* Update the button arrow: ⌄ = dock visible (tap to hide), ⌃ = hidden (tap bottom edge to show) */
-  const arrow = document.getElementById('dock-toggle-arrow');
-  if (arrow) arrow.textContent = v ? '⌄' : '⌃';
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
@@ -7660,28 +7663,50 @@ function _initDockAutoHide() {
   });
 }
 
-/* Mobile toggle button: show/hide based on mode + viewport type. */
-function _initDockToggleBtn() {
-  const btn = document.getElementById('dock-toggle-btn');
-  if (!btn) return;
-  btn.onclick = (e) => {
+/* Mobile drag handle: drag down to hide, drag up (on peek) to restore, tap to toggle. */
+function _initDockDragHandle() {
+  const handle = document.getElementById('dock-drag-handle');
+  if (!handle) return;
+
+  let _dragStartY = 0;
+  let _dragging   = false;
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (!_macMode) return;
+    _dragStartY = e.clientY;
+    _dragging   = true;
+    handle.setPointerCapture(e.pointerId);
     e.stopPropagation();
-    _setDockVisible(!_dockVisible);
-  };
-  /* Restore dock by tapping the bottom edge when it is hidden */
-  document.addEventListener('pointerdown', (e) => {
-    if (!_macMode || !_dockAutoHide || _dockVisible) return;
-    if (e.clientY >= window.innerHeight - 48) _setDockVisible(true);
+  }, { passive: false });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!_dragging || !_macMode) return;
+    const dy = e.clientY - _dragStartY;
+    if (_dockVisible && dy > 40) {
+      _dragging = false;
+      _setDockVisible(false);
+    } else if (!_dockVisible && dy < -30) {
+      _dragging = false;
+      _setDockVisible(true);
+    }
   }, { passive: true });
+
+  handle.addEventListener('pointerup', (e) => {
+    if (!_dragging) return;
+    const dy = e.clientY - _dragStartY;
+    _dragging = false;
+    /* Short tap (< 10 px movement) = toggle */
+    if (Math.abs(dy) < 10) _setDockVisible(!_dockVisible);
+  });
 }
 
-function _updateDockToggleBtn() {
-  const btn = document.getElementById('dock-toggle-btn');
-  if (!btn) return;
+function _updateDockDragHandle() {
+  const handle = document.getElementById('dock-drag-handle');
+  if (!handle) return;
   const isMobile = _isMobilePortrait() || _isMobileLandscape();
   const show = _macMode && isMobile && _dockAutoHide;
-  btn.style.display = show ? 'flex' : 'none';
-  /* On desktop: always show dock immediately (cancel any pending hide) */
+  handle.style.display = show ? 'flex' : 'none';
+  /* On desktop: always show dock immediately (cancel any pending hide timer) */
   if (_macMode && !isMobile) {
     if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
     _setDockVisible(true);
@@ -7764,7 +7789,7 @@ function setUiMode(mode, noAnim) {
     /* Dock visibility reset on mode switch */
     if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
     _setDockVisible(true);
-    _updateDockToggleBtn();
+    _updateDockDragHandle();
     _updateDockCssVar();
 
     /* Update mode-dependent labels instantly */
@@ -8074,7 +8099,7 @@ function toggleDockAutoHide() {
     if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
     _setDockVisible(true);
   }
-  _updateDockToggleBtn();
+  _updateDockDragHandle();
   localStorage.setItem('dock-auto-hide', _dockAutoHide ? '1' : '0');
 }
 
@@ -8309,15 +8334,15 @@ document.addEventListener('click', function(e) {
   /* Set UI mode last (needs dock built) */
   setUiMode(savedMode === 'macos' ? 'macos' : 'xp', true); /* noAnim on startup */
 
-  /* Init dock auto-hide (desktop) and mobile toggle button */
+  /* Init dock auto-hide (desktop) and mobile drag handle */
   _initDockAutoHide();
-  _initDockToggleBtn();
-  _updateDockToggleBtn();
+  _initDockDragHandle();
+  _updateDockDragHandle();
   _updateDockCssVar();
 
-  /* Update toggle button and CSS var on resize / orientation change */
-  window.addEventListener('resize', () => { _updateDockToggleBtn(); _updateDockCssVar(); });
-  window.addEventListener('orientationchange', () => setTimeout(() => { _updateDockToggleBtn(); _updateDockCssVar(); }, 250));
+  /* Update drag handle visibility and CSS var on resize / orientation change */
+  window.addEventListener('resize', () => { _updateDockDragHandle(); _updateDockCssVar(); });
+  window.addEventListener('orientationchange', () => setTimeout(() => { _updateDockDragHandle(); _updateDockCssVar(); }, 250));
 
   /* Sync CSS var after dock slide animation completes */
   document.getElementById('mac-dock-wrap')
