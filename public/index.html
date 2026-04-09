@@ -2218,20 +2218,18 @@
     .dock-toggle-btn {
       display: none;
       position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 5; /* below windows; windows are constrained to not cover the bottom 32 px reserve */
-      width: 94px; height: 32px;
-      border-radius: 12px 12px 0 0;
+      bottom: 12px;
+      left: 12px;
+      z-index: 601;   /* above dock (600) — always reachable even when dock slides away */
+      width: 36px; height: 36px;
+      border-radius: 50%;
       background: rgba(255,255,255,.28);
       backdrop-filter: blur(24px) saturate(200%);
       -webkit-backdrop-filter: blur(24px) saturate(200%);
       border: 1px solid rgba(255,255,255,.55);
-      border-bottom: none;
-      box-shadow: 0 -2px 10px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.55);
+      box-shadow: 0 2px 12px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.55);
       color: rgba(255,255,255,.90);
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       align-items: center; justify-content: center;
       transition: background .12s;
@@ -2762,6 +2760,10 @@
         <div class="dsp-toggle-row" style="margin-top:4px;">
           <span class="dsp-toggle-label">Genie Effect</span>
           <button class="dsp-pill on" id="dsp-genie-pill" onclick="toggleDockGenie()"></button>
+        </div>
+        <div class="dsp-toggle-row" style="margin-top:4px;">
+          <span class="dsp-toggle-label">Auto-hide Dock</span>
+          <button class="dsp-pill on" id="dsp-autohide-pill" onclick="toggleDockAutoHide()"></button>
         </div>
       </div>
       <button class="cp-reset" id="cp-reset-btn" onclick="applyThemeColor(_CP_DEFAULT, true)">↺ Reset</button>
@@ -7595,8 +7597,9 @@ function _closeCpPopup()  { _closeDockSettings(); }
    macOS MODE
 ══════════════════════════════════════════ */
 
-let _dockMagnify = true;
-let _dockGenie   = true;
+let _dockMagnify  = true;
+let _dockGenie    = true;
+let _dockAutoHide = true;   /* true = hide button shown on mobile; false = dock always visible */
 let _dockIconSize = 52;
 let _dockMaterial = 'silver';
 
@@ -7676,7 +7679,7 @@ function _updateDockToggleBtn() {
   const btn = document.getElementById('dock-toggle-btn');
   if (!btn) return;
   const isMobile = _isMobilePortrait() || _isMobileLandscape();
-  const show = _macMode && isMobile;
+  const show = _macMode && isMobile && _dockAutoHide;
   btn.style.display = show ? 'flex' : 'none';
   /* On desktop: always show dock immediately (cancel any pending hide) */
   if (_macMode && !isMobile) {
@@ -8069,6 +8072,18 @@ function toggleDockGenie() {
   localStorage.setItem('dock-genie', _dockGenie ? '1' : '0');
 }
 
+function toggleDockAutoHide() {
+  _dockAutoHide = !_dockAutoHide;
+  document.getElementById('dsp-autohide-pill').classList.toggle('on', _dockAutoHide);
+  if (!_dockAutoHide) {
+    /* Auto-hide turned OFF: restore dock to fully visible */
+    if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
+    _setDockVisible(true);
+  }
+  _updateDockToggleBtn();
+  localStorage.setItem('dock-auto-hide', _dockAutoHide ? '1' : '0');
+}
+
 /* Material swatches */
 function _buildDockMaterials() {
   const container = document.getElementById('dsp-materials');
@@ -8258,21 +8273,25 @@ document.addEventListener('click', function(e) {
   /* Restore settings */
   const savedMode    = localStorage.getItem('ui-mode') || 'xp';
   const savedSize    = localStorage.getItem('dock-icon-size');
-  const savedMagnify = localStorage.getItem('dock-magnify');
-  const savedGenie   = localStorage.getItem('dock-genie');
-  const savedMat     = localStorage.getItem('dock-material');
+  const savedMagnify  = localStorage.getItem('dock-magnify');
+  const savedGenie    = localStorage.getItem('dock-genie');
+  const savedAutoHide = localStorage.getItem('dock-auto-hide');
+  const savedMat      = localStorage.getItem('dock-material');
   const savedCustom  = localStorage.getItem('dock-custom-color');
 
   if (savedSize)                _dockIconSize = +savedSize;
-  if (savedMagnify !== null)    _dockMagnify  = savedMagnify !== '0';
-  if (savedGenie   !== null)    _dockGenie    = savedGenie   !== '0';
+  if (savedMagnify  !== null)   _dockMagnify  = savedMagnify  !== '0';
+  if (savedGenie    !== null)   _dockGenie    = savedGenie    !== '0';
+  if (savedAutoHide !== null)   _dockAutoHide = savedAutoHide !== '0';
   if (savedMat)                 _dockMaterial = savedMat;
 
   /* Sync pill initial states */
-  const mpill = document.getElementById('dsp-magnify-pill');
-  const gpill = document.getElementById('dsp-genie-pill');
-  if (mpill) mpill.classList.toggle('on', _dockMagnify);
-  if (gpill) gpill.classList.toggle('on', _dockGenie);
+  const mpill  = document.getElementById('dsp-magnify-pill');
+  const gpill  = document.getElementById('dsp-genie-pill');
+  const ahpill = document.getElementById('dsp-autohide-pill');
+  if (mpill)  mpill.classList.toggle('on', _dockMagnify);
+  if (gpill)  gpill.classList.toggle('on', _dockGenie);
+  if (ahpill) ahpill.classList.toggle('on', _dockAutoHide);
 
   /* Build dock and materials */
   _buildMacDock();
