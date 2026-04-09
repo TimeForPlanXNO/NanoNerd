@@ -7070,8 +7070,9 @@ function _applyIconLayout() {
       } else {
         pos = def;
       }
-      el.style.left = pos.x + 'px';
-      el.style.top  = pos.y + 'px';
+      el.style.left  = pos.x + 'px';
+      el.style.top   = pos.y + 'px';
+      el.style.width = '';   /* clear any portrait inline width on orientation change */
     }
   });
 }
