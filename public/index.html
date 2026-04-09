@@ -2215,26 +2215,27 @@
       transform: translateY(calc(100% + 16px));
       pointer-events: none !important;
     }
+    /* ── Dock group: hide-button + icons centred together ── */
+    .mac-dock-group {
+      display: inline-flex; align-items: flex-end; gap: 6px;
+    }
     .dock-toggle-btn {
       display: none;
-      position: fixed;
-      bottom: 12px;
-      left: 12px;
-      z-index: 601;   /* above dock (600) — always reachable even when dock slides away */
       width: 36px; height: 36px;
+      flex-shrink: 0;
       border-radius: 50%;
       background: rgba(255,255,255,.28);
       backdrop-filter: blur(24px) saturate(200%);
       -webkit-backdrop-filter: blur(24px) saturate(200%);
       border: 1px solid rgba(255,255,255,.55);
-      box-shadow: 0 2px 12px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.55);
+      box-shadow: 0 4px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);
       color: rgba(255,255,255,.90);
       font-size: 14px;
       cursor: pointer;
       align-items: center; justify-content: center;
       transition: background .12s;
-      padding: 0;
-      line-height: 1;
+      padding: 0; line-height: 1;
+      pointer-events: all;
     }
     .dock-toggle-btn:hover { background: rgba(255,255,255,.42); }
     .mac-dock {
@@ -2711,12 +2712,13 @@
 
   <!-- macOS Dock -->
   <div class="mac-dock-wrap" id="mac-dock-wrap">
-    <div class="mac-dock" id="mac-dock">
-      <!-- Built dynamically by _buildMacDock() -->
+    <div class="mac-dock-group" id="mac-dock-group">
+      <button id="dock-toggle-btn" class="dock-toggle-btn" title="Toggle dock"><span id="dock-toggle-arrow">⌄</span></button>
+      <div class="mac-dock" id="mac-dock">
+        <!-- Built dynamically by _buildMacDock() -->
+      </div>
     </div>
   </div>
-  <!-- Dock toggle tab (shown only in macOS + mobile mode) pinned at bottom edge -->
-  <button id="dock-toggle-btn" class="dock-toggle-btn" title="Toggle dock"><span id="dock-toggle-arrow">⌄</span></button>
 
   <!-- Dock Settings Panel -->
   <div class="dock-settings-popup" id="dock-settings-popup">
@@ -2756,10 +2758,6 @@
         <div class="dsp-toggle-row" style="margin-top:8px;">
           <span class="dsp-toggle-label">Magnification</span>
           <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
-        </div>
-        <div class="dsp-toggle-row" style="margin-top:4px;">
-          <span class="dsp-toggle-label">Genie Effect</span>
-          <button class="dsp-pill on" id="dsp-genie-pill" onclick="toggleDockGenie()"></button>
         </div>
         <div class="dsp-toggle-row" style="margin-top:4px;">
           <span class="dsp-toggle-label">Auto-hide Dock</span>
@@ -7607,8 +7605,8 @@ let _dockMaterial = 'silver';
 let _dockVisible   = true;
 let _dockHideTimer = null;
 
-/* Height of the dock-toggle tab (reserved bottom gap even when dock is hidden). */
-const _DOCK_TOGGLE_H = 32;
+/* Bottom reserve when dock is hidden (0 = no standalone toggle; bottom-edge tap restores dock). */
+const _DOCK_TOGGLE_H = 0;
 
 /* Returns height (px) that the dock (or its toggle reserve) occupies from the
    viewport bottom.  When the dock is visible: full measured dock height.
@@ -7673,6 +7671,11 @@ function _initDockToggleBtn() {
     e.stopPropagation();
     _setDockVisible(!_dockVisible);
   };
+  /* Restore dock by tapping the bottom edge when it is hidden */
+  document.addEventListener('pointerdown', (e) => {
+    if (!_macMode || !_dockAutoHide || _dockVisible) return;
+    if (e.clientY >= window.innerHeight - 48) _setDockVisible(true);
+  }, { passive: true });
 }
 
 function _updateDockToggleBtn() {
@@ -8066,12 +8069,6 @@ function toggleDockMagnify() {
   localStorage.setItem('dock-magnify', _dockMagnify ? '1' : '0');
 }
 
-function toggleDockGenie() {
-  _dockGenie = !_dockGenie;
-  document.getElementById('dsp-genie-pill').classList.toggle('on', _dockGenie);
-  localStorage.setItem('dock-genie', _dockGenie ? '1' : '0');
-}
-
 function toggleDockAutoHide() {
   _dockAutoHide = !_dockAutoHide;
   document.getElementById('dsp-autohide-pill').classList.toggle('on', _dockAutoHide);
@@ -8274,23 +8271,19 @@ document.addEventListener('click', function(e) {
   const savedMode    = localStorage.getItem('ui-mode') || 'xp';
   const savedSize    = localStorage.getItem('dock-icon-size');
   const savedMagnify  = localStorage.getItem('dock-magnify');
-  const savedGenie    = localStorage.getItem('dock-genie');
   const savedAutoHide = localStorage.getItem('dock-auto-hide');
   const savedMat      = localStorage.getItem('dock-material');
   const savedCustom  = localStorage.getItem('dock-custom-color');
 
   if (savedSize)                _dockIconSize = +savedSize;
   if (savedMagnify  !== null)   _dockMagnify  = savedMagnify  !== '0';
-  if (savedGenie    !== null)   _dockGenie    = savedGenie    !== '0';
   if (savedAutoHide !== null)   _dockAutoHide = savedAutoHide !== '0';
   if (savedMat)                 _dockMaterial = savedMat;
 
   /* Sync pill initial states */
   const mpill  = document.getElementById('dsp-magnify-pill');
-  const gpill  = document.getElementById('dsp-genie-pill');
   const ahpill = document.getElementById('dsp-autohide-pill');
   if (mpill)  mpill.classList.toggle('on', _dockMagnify);
-  if (gpill)  gpill.classList.toggle('on', _dockGenie);
   if (ahpill) ahpill.classList.toggle('on', _dockAutoHide);
 
   /* Build dock and materials */
