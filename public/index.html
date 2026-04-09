@@ -7015,15 +7015,19 @@ function _applyIconLayout() {
   const dh     = desktop.offsetHeight;
   const mobile = _isMobilePortrait();
   const saved  = mobile ? _loadIconPosP() : _loadIconPos();
-  const IW = 72, IH = 76, M = 6; /* icon w/h, edge margin */
+  const IH = 76, M = 6, IW_FIXED = 72; /* icon h, edge margin, standard icon width */
 
-  /* Portrait bottom row: nano-org, nano-gpt, nano-hub, media-folder, matrix-viz (5 icons).
-     Gap is computed dynamically so the row fits any phone width without overflow. */
-  const BOTTOM_N  = 5;
-  const availW    = dw - 2 * M;                                    /* usable width */
-  const G         = Math.max(2, Math.floor((availW - BOTTOM_N * IW) / (BOTTOM_N - 1)));
-  const rowW      = BOTTOM_N * IW + (BOTTOM_N - 1) * G;
-  const rowStartX = Math.max(M, Math.round((dw - rowW) / 2));     /* centred, min 6 px */
+  /* Portrait bottom row: all icons except nanonerd and recycle-bin.
+     Count and icon width (IW_P) are computed dynamically so any number of icons
+     always self-fit on any phone width without overflow. */
+  const allIcons    = Array.from(document.querySelectorAll('.desk-icon'));
+  const bottomIcons = allIcons.filter(el => el.dataset.iconId !== 'nanonerd' && el.dataset.iconId !== 'recycle-bin');
+  const BOTTOM_N    = bottomIcons.length;                           /* dynamic count  */
+  const availW      = dw - 2 * M;                                  /* usable width   */
+  const IW_P        = Math.min(IW_FIXED, Math.floor((availW - (BOTTOM_N - 1) * 2) / BOTTOM_N));
+  const G           = Math.max(2, Math.floor((availW - BOTTOM_N * IW_P) / Math.max(1, BOTTOM_N - 1)));
+  const rowW        = BOTTOM_N * IW_P + (BOTTOM_N - 1) * G;
+  const rowStartX   = Math.max(M, Math.round((dw - rowW) / 2));   /* centred, min 6px */
   let col = 0; /* column counter for bottom-row icons */
 
   document.querySelectorAll('.desk-icon').forEach(el => {
@@ -7032,18 +7036,20 @@ function _applyIconLayout() {
     if (mobile) {
       if (id === 'recycle-bin') {
         /* Recycle Bin: always anchored upper-right — never moved */
-        el.style.left = Math.max(0, dw - IW - M) + 'px';
-        el.style.top  = M + 'px';
+        el.style.left  = Math.max(0, dw - IW_FIXED - M) + 'px';
+        el.style.top   = M + 'px';
+        el.style.width = '';   /* restore default CSS width */
       } else if (id === 'nanonerd') {
         /* NanoNerd: always anchored upper-left — never moved (companion to Recycle Bin) */
-        el.style.left = M + 'px';
-        el.style.top  = M + 'px';
+        el.style.left  = M + 'px';
+        el.style.top   = M + 'px';
+        el.style.width = '';   /* restore default CSS width */
       } else {
-        /* Bottom row (centred): nano-org, nano-gpt, nano-hub, media-folder, matrix-viz.
-           Always use the computed grid — no saved positions — so the col counter
-           is never skipped and every icon lands at the correct slot. */
-        el.style.left = (rowStartX + col * (IW + G)) + 'px';
-        el.style.top  = Math.max(0, dh - IH - M) + 'px';
+        /* Bottom row (centred): all remaining icons.
+           IW_P is auto-scaled to fit any count on any screen width. */
+        el.style.width = IW_P + 'px';
+        el.style.left  = (rowStartX + col * (IW_P + G)) + 'px';
+        el.style.top   = Math.max(0, dh - IH - M) + 'px';
         col++;
       }
     } else {
@@ -7051,13 +7057,13 @@ function _applyIconLayout() {
          A saved position is accepted only if it fits fully on the current screen —
          this rejects stale desktop coordinates that would be off-screen in mobile
          landscape (e.g. media-folder saved at y=330 on a 341 px-tall phone). */
-      const _onScreen = (p) => p && p.x >= 0 && p.y >= 0 && p.x + IW <= dw && p.y + IH <= dh;
+      const _onScreen = (p) => p && p.x >= 0 && p.y >= 0 && p.x + IW_FIXED <= dw && p.y + IH <= dh;
       const mobileLandscape = _isMobileLandscape();
       let pos;
       if (_onScreen(saved[id])) {
         pos = saved[id];
       } else if (def.anchor === 'bottom-right') {
-        pos = { x: Math.max(0, dw - IW - M), y: Math.max(0, dh - IH - M) };
+        pos = { x: Math.max(0, dw - IW_FIXED - M), y: Math.max(0, dh - IH - M) };
       } else if (mobileLandscape && def.mobileLandscape) {
         /* Mobile-landscape override: e.g. media-folder moves right of NanoNerd */
         pos = def.mobileLandscape;
@@ -7853,7 +7859,7 @@ function setUiMode(mode, noAnim) {
 }
 
 /* ── Dock icon builder ── */
-const DOCK_APP_ORDER = ['nanonerd','nano_org','nano_gpt','nano_hub','media_folder','games_folder','matrix_viz'];
+const DOCK_APP_ORDER = ['nanonerd','matrix_viz','nano_org','nano_gpt','nano_hub','media_folder','games_folder'];
 
 function _buildMacDock() {
   const dock = document.getElementById('mac-dock');
