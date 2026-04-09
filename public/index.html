@@ -611,25 +611,24 @@
 
     #scroll-arrow {
       position: absolute; right: 10px; bottom: 58px;
-      /* Liquid Glass circular pill */
-      width: 36px; height: 36px; padding: 0;
-      border-radius: 50%;
-      background: rgba(255,255,255,.15);
-      backdrop-filter: blur(14px) saturate(160%);
-      -webkit-backdrop-filter: blur(14px) saturate(160%);
-      border: 1px solid rgba(255,255,255,.28);
-      box-shadow: 0 2px 10px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.20);
-      font-size: 18px; line-height: 1;
+      /* Liquid — no pill, no circle, pure floating arrow */
+      width: auto; height: auto; padding: 4px 6px;
+      border-radius: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      font-size: 20px; line-height: 1;
       cursor: pointer; z-index: 50;
       display: none; align-items: center; justify-content: center;
-      color: #00C9FF;
-      transition: transform .15s, opacity .2s, background .15s;
+      color: rgba(0,201,255,.72);
+      text-shadow: 0 0 10px rgba(0,201,255,.65), 0 0 22px rgba(0,201,255,.30);
+      transition: transform .15s, opacity .2s, color .15s, text-shadow .15s;
       opacity: 0;
     }
 
     #scroll-arrow.visible   { display: flex; opacity: 1; }
     #scroll-arrow.streaming { animation: arrow-pulse .75s ease infinite; }
-    #scroll-arrow:hover     { transform: scale(1.12) translateY(2px); background: rgba(255,255,255,.26); }
+    #scroll-arrow:hover     { transform: scale(1.15) translateY(2px); color: rgba(0,201,255,1); text-shadow: 0 0 14px rgba(0,201,255,.9), 0 0 28px rgba(0,201,255,.45); }
     #scroll-arrow:active    { transform: scale(.9); }
 
     .chat-msgs {
@@ -7277,15 +7276,25 @@ const _M_LAND_R  = 90;                         /* 90 px — icon-column safe gap
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
-  const btn = document.getElementById('wp-btn');
-  const dlg = document.getElementById('wp-dialog');
+  const btn     = document.getElementById('wp-btn');
+  const dlg     = document.getElementById('wp-dialog');
+  const resetBtn = document.getElementById('icon-reset-btn');
   if (!btn) return;
   const mobile = _isMobilePortrait();
   if (mobile) {
-    /* Centre horizontally at top of screen */
+    /* Centre wallpaper button horizontally at top of screen */
     btn.style.left      = '50%';
     btn.style.right     = '';
     btn.style.transform = 'translateX(-50%)';
+    /* Reset button: sits immediately to the right of the centred wp-btn.
+       wp-btn is 26px wide, centred at 50%.  Place reset btn at calc(50% + 17px).
+       Only reposition if not macOS (macOS already forces display:none via CSS). */
+    if (resetBtn && !_macMode) {
+      resetBtn.style.left      = 'calc(50% + 17px)';
+      resetBtn.style.right     = '';
+      resetBtn.style.transform = '';
+      resetBtn.style.top       = '8px';
+    }
     if (dlg) {
       dlg.style.left      = '50%';
       dlg.style.right     = '';
@@ -7293,10 +7302,16 @@ function _applyWpBtnLayout() {
       dlg.style.top       = '42px';
     }
   } else {
-    /* Desktop / landscape: anchor to right edge */
+    /* Desktop / landscape: anchor both buttons to the right edge */
     btn.style.left      = '';
     btn.style.right     = '10px';
     btn.style.transform = '';
+    if (resetBtn) {
+      resetBtn.style.left      = '';
+      resetBtn.style.right     = '42px';
+      resetBtn.style.transform = '';
+      resetBtn.style.top       = '8px';
+    }
     if (dlg) {
       dlg.style.left      = '';
       dlg.style.right     = '10px';
