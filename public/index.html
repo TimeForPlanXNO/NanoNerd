@@ -2212,9 +2212,30 @@
       transform-origin: bottom center;
     }
     .mac-dock-wrap.dock-hidden {
-      transform: translateY(calc(100% - 32px));
+      transform: translateY(calc(100% + 16px));
       pointer-events: none !important;
     }
+    /* ── Dock restore button: bottom-left corner, shown when dock is hidden on mobile ── */
+    .dock-restore-btn {
+      display: none;
+      position: fixed; bottom: 12px; left: 12px;
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,.10);
+      backdrop-filter: blur(10px) saturate(160%);
+      -webkit-backdrop-filter: blur(10px) saturate(160%);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 2px 12px rgba(0,0,0,.25);
+      color: rgba(255,255,255,.80);
+      font-size: 16px;
+      cursor: pointer;
+      align-items: center; justify-content: center;
+      z-index: 601;
+      pointer-events: all;
+      transition: background .12s;
+      padding: 0; line-height: 1;
+    }
+    .dock-restore-btn:hover { background: rgba(255,255,255,.22); }
     /* ── Dock drag handle (⠿) — leftmost item inside the dock pill ── */
     .dock-drag-handle {
       display: none;
@@ -2722,6 +2743,7 @@
       <!-- Built dynamically by _buildMacDock() — handle injected first by that function -->
     </div>
   </div>
+  <button id="dock-restore-btn" class="dock-restore-btn" title="Show Dock">⌃</button>
 
   <!-- Dock Settings Panel -->
   <div class="dock-settings-popup" id="dock-settings-popup">
@@ -7608,12 +7630,12 @@ let _dockMaterial = 'silver';
 let _dockVisible   = true;
 let _dockHideTimer = null;
 
-/* Bottom reserve when dock is hidden: dock peeks 32px above the 8px bottom gap ≈ 40px total. */
-const _DOCK_TOGGLE_H = 40;
+/* Bottom reserve when dock is hidden: 0 — dock fully off-screen, restore button is separate. */
+const _DOCK_TOGGLE_H = 0;
 
 /* Returns height (px) that the dock occupies from the viewport bottom.
    When the dock is visible: full measured dock height.
-   When the dock is hidden: _DOCK_TOGGLE_H (40) — reserves space for the 32px peek strip. */
+   When the dock is hidden: _DOCK_TOGGLE_H (0) — dock is fully off-screen. */
 function _macDockH() {
   if (!_macMode) return 0;
   const wrap = document.getElementById('mac-dock-wrap');
@@ -7632,6 +7654,7 @@ function _setDockVisible(v) {
   _dockVisible = v;
   const wrap  = document.getElementById('mac-dock-wrap');
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
+  _syncDockRestoreBtn();
   if (!v) {
     /* Hiding: CSS var to 0 immediately so windows relax right away */
     _updateDockCssVar();
@@ -7639,6 +7662,14 @@ function _setDockVisible(v) {
     /* Showing: measure after the browser has painted the revealed dock */
     requestAnimationFrame(() => requestAnimationFrame(_updateDockCssVar));
   }
+}
+
+/* Show/hide the bottom-left restore button based on current state. */
+function _syncDockRestoreBtn() {
+  const btn = document.getElementById('dock-restore-btn');
+  if (!btn) return;
+  const isMobile = _isMobilePortrait() || _isMobileLandscape();
+  btn.style.display = (_macMode && isMobile && _dockAutoHide && !_dockVisible) ? 'flex' : 'none';
 }
 
 /* Desktop auto-hide: hide dock 2 s after cursor leaves the bottom zone.
@@ -7706,6 +7737,7 @@ function _updateDockDragHandle() {
     if (_dockHideTimer) { clearTimeout(_dockHideTimer); _dockHideTimer = null; }
     _setDockVisible(true);
   }
+  _syncDockRestoreBtn();
 }
 
 const DOCK_MATERIALS = [
@@ -8345,6 +8377,10 @@ document.addEventListener('click', function(e) {
   _initDockAutoHide();
   _updateDockDragHandle();
   _updateDockCssVar();
+
+  /* Restore button: tapping it shows the dock */
+  const _dockRestoreBtn = document.getElementById('dock-restore-btn');
+  if (_dockRestoreBtn) _dockRestoreBtn.addEventListener('click', () => _setDockVisible(true));
 
   /* Update drag handle visibility and CSS var on resize / orientation change */
   window.addEventListener('resize', () => { _updateDockDragHandle(); _updateDockCssVar(); });
