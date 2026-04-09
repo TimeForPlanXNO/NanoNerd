@@ -1641,6 +1641,29 @@
       font-size: 9px; color: #333; text-align: center;
       line-height: 1.2; word-break: break-word; font-family: "Tahoma", sans-serif;
     }
+    /* ── Wallpaper picker tabs ── */
+    .wp-tabs-bar {
+      display: flex; flex-shrink: 0; gap: 0;
+      background: #c8c4b8; border-bottom: 2px solid #888070;
+      padding: 4px 8px 0;
+    }
+    .wp-tab-btn {
+      padding: 3px 14px 4px; font-size: 11px; font-family: "Tahoma", sans-serif;
+      font-weight: bold; cursor: pointer;
+      background: linear-gradient(180deg, #e0ddd0 0%, #cac7b8 100%);
+      border: 1px solid #888070; border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      color: #333; position: relative; top: 1px;
+      transition: background .1s;
+    }
+    .wp-tab-btn.active {
+      background: linear-gradient(180deg, #ece9d8 0%, #d4d0c8 100%);
+      border-color: #888070; border-bottom: 2px solid #d4d0c8;
+      color: #000; z-index: 1;
+    }
+    .wp-pane { display: none; }
+    .wp-pane.active { display: block; }
+
     .wp-dialog-foot {
       padding: 6px 10px; border-top: 1px solid #b0aa98; flex-shrink: 0;
       display: flex; justify-content: flex-end; gap: 6px;
@@ -1977,6 +2000,24 @@
       font-family: -apple-system,"Segoe UI",sans-serif; font-size: 12px; padding: 4px 18px;
     }
     body.macos .wp-foot-btn:hover { filter: none; background: rgba(255,255,255,.24); }
+    /* Tabs — macOS overrides */
+    body.macos .wp-tabs-bar {
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      padding: 6px 10px 0;
+    }
+    body.macos .wp-tab-btn {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.13); border-bottom: none;
+      color: rgba(255,255,255,.55);
+      font-family: -apple-system,"Segoe UI",sans-serif;
+    }
+    body.macos .wp-tab-btn.active {
+      background: rgba(255,255,255,.13);
+      border-color: rgba(255,255,255,.20);
+      border-bottom: 1px solid rgba(28,28,34,.96);
+      color: rgba(255,255,255,.92);
+    }
 
     /* ── macOS popup overrides (stats + wifi) ── */
     body.macos .stats-popup,
@@ -2628,8 +2669,17 @@
       </div>
       <span class="wp-dialog-title">🖼️ Display Properties — Wallpaper</span>
     </div>
+    <div class="wp-tabs-bar">
+      <button class="wp-tab-btn active" id="wp-tab-4k"  onclick="_wpPickerTab('4k')">4K</button>
+      <button class="wp-tab-btn"        id="wp-tab-xp"  onclick="_wpPickerTab('xp')">Windows XP</button>
+    </div>
     <div class="wp-dialog-body">
-      <div class="wp-grid" id="wp-grid"></div>
+      <div class="wp-pane active" id="wp-pane-4k">
+        <div class="wp-grid" id="wp-grid-4k"></div>
+      </div>
+      <div class="wp-pane" id="wp-pane-xp">
+        <div class="wp-grid" id="wp-grid-xp"></div>
+      </div>
     </div>
     <div class="wp-dialog-foot">
       <button class="wp-foot-btn" onclick="closeWpPicker()">Close</button>
@@ -2900,6 +2950,23 @@ const WALLPAPERS = [
   { name: 'Wind',             src: '/wallpapers/Wind.jpg' },
 ];
 
+/* ── 4K Wallpapers (high-res macOS-era images) ── */
+const WALLPAPERS_4K = [
+  { name: 'Aurora Blue',     src: '/wallpapers/4k/IMG_4244_1775774012300.jpeg' },
+  { name: 'Aurora Pink',     src: '/wallpapers/4k/IMG_4245_1775774012300.png'  },
+  { name: 'Nebula Blue',     src: '/wallpapers/4k/IMG_4246_1775774012300.jpeg' },
+  { name: 'Nebula Purple',   src: '/wallpapers/4k/IMG_4247_1775774012300.png'  },
+  { name: 'Andromeda',       src: '/wallpapers/4k/IMG_4248_1775774012300.png'  },
+  { name: 'NGC 253',         src: '/wallpapers/4k/IMG_4249_1775774012300.jpeg' },
+  { name: 'Mavericks Wave', src: '/wallpapers/4k/IMG_4250_1775774012300.jpeg' },
+  { name: 'Half Dome',       src: '/wallpapers/4k/IMG_4252_1775774012300.jpeg' },
+  { name: 'El Capitan',      src: '/wallpapers/4k/IMG_4253_1775774012300.jpeg' },
+  { name: 'Sierra',          src: '/wallpapers/4k/IMG_4254_1775774012300.jpeg' },
+];
+
+/* GIF icon used as the Matrix tile preview in both tabs */
+const _WP_MATRIX_GIF = '/wallpapers/IMG_4209_1775447322507.gif';
+
 /* ── 10 AI-designed gradient wallpapers (Settings ⚙️ panel) ── */
 /* Build a repeating Ӿ-stamp SVG pattern over a gradient — used by _COLOR_WALLPAPERS */
 function _xnoSvgBg(grad, stampHex, opacity, sz) {
@@ -3027,6 +3094,10 @@ function _applyMatrixWallpaper() {
   }
   window.addEventListener('resize', onResize);
   _matrixWpController._cleanupResize = () => window.removeEventListener('resize', onResize);
+  /* Refresh active state in wallpaper picker grids */
+  document.querySelectorAll('.wp-thumb').forEach(el => {
+    el.classList.toggle('active', el.dataset.src === '_matrix_');
+  });
   showCopyToast('🟩 Matrix wallpaper active');
 }
 
@@ -3358,17 +3429,78 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
   };
 }
 
-function _buildWpGrid() {
-  const grid = document.getElementById('wp-grid');
+/* Helper — build one Matrix "Live XNO Matrix" tile and append it to a grid */
+function _buildMatrixWpTile(grid) {
+  const item = document.createElement('div');
+  item.className = 'wp-thumb' + (_currentWallpaperType === 'matrix' ? ' active' : '');
+  item.dataset.src = '_matrix_';
+  const img = document.createElement('img');
+  img.src = _WP_MATRIX_GIF;
+  img.alt = 'Live XNO Matrix';
+  img.loading = 'lazy';
+  const lbl = document.createElement('div');
+  lbl.className = 'wp-thumb-label';
+  lbl.textContent = 'Live Matrix';
+  item.appendChild(img);
+  item.appendChild(lbl);
+  item.onclick = () => { _applyMatrixWallpaper(); };
+  grid.appendChild(item);
+}
+
+/* Build the 4K wallpaper grid (lazy, one-time) */
+function _buildWpGrid4k() {
+  const grid = document.getElementById('wp-grid-4k');
   if (!grid || grid.children.length > 0) return;
+  _buildMatrixWpTile(grid);
+  WALLPAPERS_4K.forEach(wp => {
+    const item = document.createElement('div');
+    item.className = 'wp-thumb' + (wp.src === _currentWallpaper ? ' active' : '');
+    item.dataset.src = wp.src;
+    const img = document.createElement('img');
+    img.src = wp.src; img.alt = wp.name; img.loading = 'lazy';
+    const lbl = document.createElement('div');
+    lbl.className = 'wp-thumb-label';
+    lbl.textContent = wp.name;
+    item.appendChild(img);
+    item.appendChild(lbl);
+    item.onclick = () => _applyWallpaper(wp.src);
+    grid.appendChild(item);
+  });
+}
+
+/* Build the Windows XP wallpaper grid (lazy, one-time) */
+function _buildWpGridXp() {
+  const grid = document.getElementById('wp-grid-xp');
+  if (!grid || grid.children.length > 0) return;
+  _buildMatrixWpTile(grid);
   WALLPAPERS.forEach(wp => {
     const item = document.createElement('div');
     item.className = 'wp-thumb' + (wp.src === _currentWallpaper ? ' active' : '');
     item.dataset.src = wp.src;
-    item.innerHTML = `<img src="${wp.src}" alt="${wp.name}" loading="lazy"><div class="wp-thumb-label">${wp.name}</div>`;
+    const img = document.createElement('img');
+    img.src = wp.src; img.alt = wp.name; img.loading = 'lazy';
+    const lbl = document.createElement('div');
+    lbl.className = 'wp-thumb-label';
+    lbl.textContent = wp.name;
+    item.appendChild(img);
+    item.appendChild(lbl);
     item.onclick = () => _applyWallpaper(wp.src);
     grid.appendChild(item);
   });
+}
+
+/* Backwards-compat stub (still called by old code paths) */
+function _buildWpGrid() { _buildWpGrid4k(); _buildWpGridXp(); }
+
+/* Switch the active tab in the wallpaper picker */
+function _wpPickerTab(id) {
+  ['4k','xp'].forEach(t => {
+    document.getElementById('wp-tab-' + t)?.classList.toggle('active', t === id);
+    document.getElementById('wp-pane-' + t)?.classList.toggle('active', t === id);
+  });
+  /* Lazy-build the pane being revealed */
+  if (id === '4k') _buildWpGrid4k();
+  else              _buildWpGridXp();
 }
 
 function toggleWpPicker(e) {
@@ -3377,7 +3509,7 @@ function toggleWpPicker(e) {
   if (_wpPickerOpen) {
     closeWpPicker();
   } else {
-    _buildWpGrid();
+    _buildWpGrid4k();   /* build 4K tab (default active) */
     dlg.classList.add('open');
     _wpPickerOpen = true;
   }
