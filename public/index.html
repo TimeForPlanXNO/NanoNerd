@@ -7167,7 +7167,7 @@ function _applyWindowsLayout() {
       win.style.bottom = 'auto';
     } else if (_macMode) {
       const botOffL = _macDockH();
-      const hL      = Math.max(200, ar.height - botOffL + 16);
+      const hL      = Math.max(200, ar.height - botOffL + 8);
       win.style.width  = ar.width + 'px';
       win.style.height = hL + 'px';
       win.style.left   = '0';
@@ -7655,12 +7655,12 @@ function _setDockVisible(v) {
     _updateDockCssVar();
     _applyWindowsLayout();
   } else {
-    /* Showing: wait for dock slide animation (~350ms) then measure + relayout */
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    /* Showing: wait for dock slide animation (350ms) to fully complete, then measure + relayout */
+    setTimeout(() => {
       _updateDockCssVar();
       _fitDockToScreen();
       _applyWindowsLayout();
-    }));
+    }, 360);
   }
 }
 
