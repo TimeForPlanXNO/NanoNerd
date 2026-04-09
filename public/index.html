@@ -7122,12 +7122,15 @@ function _mobilePWinRect(ar) {
   let safeT = _M_SAFE_T;
   let safeB = _M_SAFE_B;
   if (_macMode) {
-    /* macOS mode: keep safeT at baseline so desktop wallpaper is visible above
-       the window. Only extend the bottom toward the dock for extra height. */
+    /* macOS mode: align window top to wp-btn bottom so the window is flush
+       with the wallpaper button. Fall back to _M_SAFE_T if btn not found. */
+    const wpBtn = document.getElementById('wp-btn');
+    if (wpBtn) {
+      safeT = Math.max(4, Math.ceil(wpBtn.getBoundingClientRect().bottom - ar.top));
+    }
     const baseH     = ar.height - _M_SAFE_T - _M_SAFE_B;
     const halfBoost = Math.round(baseH * 0.10);
-    /* safeT unchanged — window starts at _M_SAFE_T from area top */
-    safeB = Math.max(_macDockH(),  _M_SAFE_B - halfBoost);
+    safeB = Math.max(_macDockH(), _M_SAFE_B - halfBoost);
   }
   const h = Math.max(120, ar.height - safeT - safeB);
   return { w: ar.width, h, l: 0, t: safeT };
