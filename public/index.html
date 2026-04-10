@@ -6,10 +6,10 @@
   <title>NanoNerd 🧠</title>
   <style>
     :root {
-      --dock-glass-alpha: 0.20;
-      --win-glass-alpha:  0.20;
-      --menu-glass-alpha: 0.20;
-      --mat-alpha: 0.80;
+      --dock-glass-alpha: 0.14;
+      --win-glass-alpha:  0.14;
+      --menu-glass-alpha: 0.14;
+      --mat-alpha: 1;
       --dock-glass-r: 255;
       --dock-glass-g: 255;
       --dock-glass-b: 255;
@@ -8264,6 +8264,8 @@ function _injectXpMetallic(id) {
     `body:not(.macos) .mv-titlebar { background: ${m.titlebar} !important; }`,
     `body:not(.macos) .mv-min, body:not(.macos) .mv-max { background: ${m.minmax} !important; border-color: ${m.border} !important; }`,
     `body:not(.macos) .mv-wp-btn { background: ${m.minmax} !important; border-color: ${m.border} !important; }`,
+    `.tb-btn { background: ${m.minmax} !important; border-color: ${m.border} !important; }`,
+    `.tb-btn.active { background: ${m.taskbar} !important; }`,
   ].join('\n');
 }
 
