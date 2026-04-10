@@ -2536,7 +2536,7 @@
     body.macos .dsp-xp-only          { display: none !important; }
 
     /* ── Mode-switch cross-dissolve: fade body opacity, swap at midpoint ── */
-    body.mode-transitioning { transition: opacity 0.3s ease !important; }
+    body.mode-transitioning { transition: opacity 0.16s ease !important; }
 
     /* ── UI Style section inside XP colour picker ── */
     .cp-ui-style-row { display: flex; gap: 6px; }
@@ -8030,8 +8030,8 @@ function setUiMode(mode, noAnim) {
     /* Direct swap with no animation (used by startup restore) */
     _doSwap();
   } else {
-    /* Cross-dissolve — fade body to transparent, swap at midpoint, fade back in.
-       html { background: #0a1628 } ensures the transparent gap shows dark, not white. */
+    /* Cross-dissolve: 160ms fade-out → swap at midpoint → 160ms fade-in = 320ms total.
+       html { background: #0a1628 } ensures transparent gap shows dark, not white. */
     document.body.classList.add('mode-transitioning');
     document.body.style.opacity = '0';
     setTimeout(() => {
@@ -8040,7 +8040,7 @@ function setUiMode(mode, noAnim) {
       setTimeout(() => {
         document.body.classList.remove('mode-transitioning');
         document.body.style.opacity = '';
-      }, 320);
+      }, 170);
     }, 160);
   }
 }
