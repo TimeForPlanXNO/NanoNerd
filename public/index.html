@@ -2464,6 +2464,41 @@
       opacity: 0; transition: opacity .2s; flex-shrink: 0;
     }
     .dock-icon-wrap.is-open .dock-icon-dot { opacity: 1; }
+
+    /* ── Dock icon tooltip (dialogue balloon) ── */
+    .dock-tooltip {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,20,20,.88);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 500;
+      font-family: -apple-system, "Helvetica Neue", "Tahoma", sans-serif;
+      padding: 4px 9px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .12s ease;
+      z-index: 99999;
+      box-shadow: 0 2px 8px rgba(0,0,0,.45);
+      letter-spacing: .01em;
+    }
+    .dock-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(20,20,20,.88);
+    }
+    .dock-icon-wrap.tooltip-visible .dock-tooltip { opacity: 1; }
+
     .dock-sep {
       width: 1px; align-self: stretch; margin: 4px 3px;
       background: rgba(255,255,255,.35); flex-shrink: 0;
@@ -8288,7 +8323,12 @@ function _makeDockIconWrap(id, app) {
   const s = wm.state[id];
   if (s === 'open' || s === 'minimized') wrap.classList.add('is-open');
 
+  const tooltip = document.createElement('div');
+  tooltip.className = 'dock-tooltip';
+  tooltip.textContent = app.title;
+
   wrap.appendChild(icon);
+  wrap.appendChild(tooltip);
   wrap.appendChild(dot);
   wrap.addEventListener('click', () => wm.clickTb(id));
   return wrap;
@@ -8367,7 +8407,8 @@ function _updateDockDot(id) {
   if (!dock) return;
 
   dock.addEventListener('mousemove', function(e) {
-    if (!_dockMagnify || window.matchMedia('(pointer:coarse)').matches) return;
+    const isCoarse = window.matchMedia('(pointer:coarse)').matches;
+    if (isCoarse) return;
     const wraps = dock.querySelectorAll('.dock-icon-wrap');
     const BASE  = _dockIconSize;
     const PEAK  = BASE * 1.65;
@@ -8376,13 +8417,43 @@ function _updateDockDot(id) {
       const r  = wrap.getBoundingClientRect();
       const cx = r.left + r.width / 2;
       const d  = Math.abs(e.clientX - cx);
-      const sc = d < RANGE ? 1 + (PEAK / BASE - 1) * Math.max(0, 1 - d / RANGE) : 1;
-      wrap.style.transform = `scale(${sc.toFixed(3)})`;
+      /* Magnification — only when enabled */
+      if (_dockMagnify) {
+        const sc = d < RANGE ? 1 + (PEAK / BASE - 1) * Math.max(0, 1 - d / RANGE) : 1;
+        wrap.style.transform = `scale(${sc.toFixed(3)})`;
+      }
+      /* Tooltip — always on non-coarse pointer */
+      if (d < RANGE / 2) wrap.classList.add('tooltip-visible');
+      else               wrap.classList.remove('tooltip-visible');
     });
   });
 
   dock.addEventListener('mouseleave', function() {
-    dock.querySelectorAll('.dock-icon-wrap').forEach(w => { w.style.transform = ''; });
+    dock.querySelectorAll('.dock-icon-wrap').forEach(w => {
+      w.style.transform = '';
+      w.classList.remove('tooltip-visible');
+    });
+  });
+})();
+
+/* ── Dock tooltip on tap/click (touch devices & click-to-preview) ── */
+(function _initDockTooltipTouch() {
+  const dock = document.getElementById('mac-dock');
+  if (!dock) return;
+  let _ttTimer = null;
+  function _showTouchTooltip(wrap) {
+    dock.querySelectorAll('.dock-icon-wrap').forEach(w => w.classList.remove('tooltip-visible'));
+    wrap.classList.add('tooltip-visible');
+    clearTimeout(_ttTimer);
+    _ttTimer = setTimeout(() => wrap.classList.remove('tooltip-visible'), 1500);
+  }
+  dock.addEventListener('touchstart', function(e) {
+    const wrap = e.target.closest('.dock-icon-wrap');
+    if (wrap) _showTouchTooltip(wrap);
+  }, { passive: true });
+  dock.addEventListener('click', function(e) {
+    const wrap = e.target.closest('.dock-icon-wrap');
+    if (wrap) _showTouchTooltip(wrap);
   });
 })();
 
