@@ -2105,11 +2105,18 @@
     /* ── Wallet Popup ── */
     #wallet-popup-overlay {
       display: none; position: fixed; inset: 0; z-index: 9500;
-      background: rgba(0,0,0,.60);
+      background: rgba(255,255,255,.06);
       backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
       align-items: center; justify-content: center;
     }
-    #wallet-popup-overlay.open { display: flex; }
+    #wallet-popup-overlay.open {
+      display: flex;
+      animation: wallet-overlay-in .35s ease forwards;
+    }
+    @keyframes wallet-overlay-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
     #wallet-popup {
       background: rgba(22,22,30,.92);
       backdrop-filter: blur(40px) saturate(180%);
@@ -2121,11 +2128,11 @@
       width: min(380px, 88vw);
       max-height: 82vh; overflow-y: auto;
       font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
-      animation: wallet-pop-in .18s cubic-bezier(.34,1.3,.64,1);
+      animation: wallet-pop-in .42s cubic-bezier(0.22,1,0.36,1);
     }
     @keyframes wallet-pop-in {
-      from { opacity: 0; transform: scale(.88) translateY(16px); }
-      to   { opacity: 1; transform: scale(1)   translateY(0); }
+      from { opacity: 0; transform: scale(.55); }
+      to   { opacity: 1; transform: scale(1); }
     }
     .wallet-popup-header { text-align: center; margin-bottom: 14px; }
     .wallet-popup-title  { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .15px; }
