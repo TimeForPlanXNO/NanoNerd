@@ -909,13 +909,13 @@
 
     .stats-popup {
       display: none; position: fixed; bottom: 38px; right: 4px;
-      width: 260px;
+      width: 260px; max-height: calc(100vh - 44px);
       background: #ece9d8; border: 1px solid #0055e5;
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
       border-radius: 4px 4px 0 0; z-index: 100000;
       font-family: "Tahoma", sans-serif; font-size: 11px;
       animation: wifipop-in .15s ease;
-      flex-direction: column; overflow: hidden;
+      flex-direction: column; overflow-y: auto;
     }
     .stats-popup.open { display: flex; }
     .stats-popup-head {
@@ -1238,7 +1238,7 @@
 
     .wifi-popup {
       display: none; position: fixed; bottom: 38px; right: 48px;
-      width: 320px; max-height: 420px;
+      width: 320px; max-height: calc(100vh - 44px);
       background: #ece9d8; border: 1px solid #0055e5;
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
       border-radius: 4px 4px 0 0; z-index: 100000;
@@ -1263,7 +1263,7 @@
     }
     .wifi-popup-list {
       overflow-y: auto; flex: 1;
-      max-height: 360px;
+      max-height: calc(100vh - 80px);
     }
     .wifi-popup-list::-webkit-scrollbar { width: 8px; }
     .wifi-popup-list::-webkit-scrollbar-track { background: #ece9d8; }
@@ -1634,7 +1634,7 @@
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
       position: absolute; top: 38px; right: 10px; z-index: 201;
-      width: 320px; max-height: 420px;
+      width: 320px; max-height: calc(100vh - 50px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -1948,6 +1948,24 @@
         padding-left:  max(4px, env(safe-area-inset-left));
         padding-right: max(4px, env(safe-area-inset-right));
       }
+      /* ── Popup menus: fit inside the short landscape viewport ── */
+      .stats-popup {
+        max-height: calc(100vh - 38px);
+        width: min(240px, calc(100vw - 20px));
+      }
+      .wifi-popup {
+        max-height: calc(100vh - 38px);
+        width: min(280px, calc(100vw - 60px));
+      }
+      .wifi-popup-list { max-height: calc(100vh - 76px); }
+      .wp-dialog {
+        max-height: calc(100vh - 50px);
+        width: min(290px, calc(100vw - 20px));
+      }
+      /* macOS variants anchored from top — same height budget */
+      body.macos .stats-popup,
+      body.macos .wifi-popup { max-height: calc(100vh - 36px); }
+      body.macos .wp-dialog  { max-height: calc(100vh - 70px); }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -1988,7 +2006,7 @@
 
     /* Dialog shell */
     body.macos .wp-dialog {
-      top: 66px;
+      top: 66px; max-height: calc(100vh - 70px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -2056,6 +2074,7 @@
     body.macos .stats-popup,
     body.macos .wifi-popup {
       top: 32px; bottom: auto !important; right: 4px !important;
+      max-height: calc(100vh - 36px); overflow-y: auto;
       background: rgba(30,30,32,.92);
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
