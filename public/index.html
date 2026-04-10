@@ -2651,7 +2651,7 @@
     <div class="mac-mb-right">
       <button class="mac-mb-btn" id="mac-reset-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
       <button class="mac-mb-btn" id="mac-wallet-btn" onclick="openWalletPopup()" title="Nano Wallets">
-        <img src="/wallet-icon.jpeg" style="width:16px;height:16px;border-radius:3px;vertical-align:middle;display:block;" alt="wallets">
+        <img src="/wallet-icon.png" style="width:16px;height:16px;border-radius:3px;vertical-align:middle;display:block;" alt="wallets">
       </button>
       <button class="mac-mb-btn" id="mac-wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Reps">
         <img src="/wifi-icon.png" style="width:13px;height:13px;filter:grayscale(1);vertical-align:middle;" alt="wifi">
@@ -2780,7 +2780,7 @@
   <div class="taskbar">
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
-    <button class="wifi-btn" id="xp-wallet-btn" onclick="openWalletPopup()" title="Nano Wallets" style="padding:0 5px;"><img src="/wallet-icon.jpeg" style="width:20px;height:20px;border-radius:5px;display:block;" alt="wallets"></button>
+    <button class="wifi-btn" id="xp-wallet-btn" onclick="openWalletPopup()" title="Nano Wallets" style="padding:0 5px;"><img src="/wallet-icon.png" style="width:20px;height:20px;border-radius:5px;display:block;" alt="wallets"></button>
     <button class="wifi-btn" id="cp-btn" onclick="toggleDockSettings()" title="Settings">🎨</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
     <button class="tb-clock" id="clock" onclick="toggleStatsPopup()">00:00</button>
@@ -6428,7 +6428,7 @@ async function _loadWallets() {
       const safeName = w.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       return `<a class="wallet-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer" title="${safeName}">
         <div class="wallet-icon-wrap">
-          <img src="${favicon}" alt="${safeName}" loading="lazy" onerror="this.src='/wallet-icon.jpeg'">
+          <img src="${favicon}" alt="${safeName}" loading="lazy" onerror="this.src='/wallet-icon.png'">
         </div>
         <div class="wallet-card-name">${safeName}</div>
       </a>`;
