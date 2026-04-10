@@ -2134,6 +2134,21 @@
       from { opacity: 0; transform: scale(.55); }
       to   { opacity: 1; transform: scale(1); }
     }
+    #wallet-popup-overlay.closing {
+      animation: wallet-overlay-out .32s ease forwards;
+      pointer-events: none;
+    }
+    #wallet-popup-overlay.closing #wallet-popup {
+      animation: wallet-pop-out .32s cubic-bezier(0.55,0,0.45,1) forwards;
+    }
+    @keyframes wallet-overlay-out {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+    @keyframes wallet-pop-out {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(.55); }
+    }
     .wallet-popup-header { text-align: center; margin-bottom: 14px; }
     .wallet-popup-title  { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .15px; }
     .wallet-popup-sub    { font-size: 11px; color: rgba(255,255,255,.42); margin-top: 3px; }
@@ -6473,7 +6488,10 @@ function openWalletPopup() {
 function closeWalletPopup(e) {
   /* close only when clicking the backdrop, not the popup card itself */
   if (e && e.target !== document.getElementById('wallet-popup-overlay')) return;
-  document.getElementById('wallet-popup-overlay').classList.remove('open');
+  const ov = document.getElementById('wallet-popup-overlay');
+  if (!ov.classList.contains('open')) return;
+  ov.classList.add('closing');
+  setTimeout(() => { ov.classList.remove('open', 'closing'); }, 320);
 }
 
 function _closeWalletPopupForce() {
