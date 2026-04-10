@@ -8517,7 +8517,19 @@ document.addEventListener('click', function(e) {
 });
 
 /* Dock size slider */
+function _maxFittingDockSize() {
+  const dock = document.getElementById('mac-dock');
+  if (!dock) return 80;
+  const n = dock.querySelectorAll('.dock-icon-wrap').length;
+  if (!n) return 80;
+  const gap = 6, padH = 20;
+  const available = window.innerWidth - 16;
+  const max = Math.floor((available - gap * (n - 1) - padH) / n);
+  return Math.max(36, Math.min(80, max));
+}
+
 function setDockIconSize(px) {
+  px = Math.min(px, _maxFittingDockSize());
   _dockIconSize = px;
   _applyDockIconSize(px);
   localStorage.setItem('dock-icon-size', px);
@@ -8716,6 +8728,18 @@ function _resetDockCustomColor() {
 function _fitDockToScreen() {
   const dock = document.getElementById('mac-dock');
   if (!dock) return;
+  /* Update slider max to match what actually fits on this viewport */
+  const maxFit = _maxFittingDockSize();
+  const slider = document.getElementById('dsp-size-slider');
+  if (slider && +slider.max !== maxFit) slider.max = maxFit;
+  /* Clamp stored size when the screen shrinks (e.g. orientation change) */
+  if (_dockIconSize > maxFit) {
+    _dockIconSize = maxFit;
+    _applyDockIconSize(_dockIconSize);       /* updates icons + slider fill */
+    localStorage.setItem('dock-icon-size', _dockIconSize);
+    return;                                  /* _applyDockIconSize re-enters _fitDockToScreen */
+  }
+  /* Safety-net scale — should rarely trigger after clamping above */
   dock.style.transform = '';               /* reset first to get natural width */
   const available = window.innerWidth - 16;
   const natural   = dock.scrollWidth;
