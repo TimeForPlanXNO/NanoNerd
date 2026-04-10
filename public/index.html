@@ -7827,8 +7827,9 @@ let _dockIconSize = 52;
 let _dockMaterial = 'silver';
 
 /* ── Dock visibility state & helpers ── */
-let _dockVisible   = true;
-let _dockHideTimer = null;
+let _dockVisible    = true;
+let _dockHideTimer  = null;
+let _modeSwitching  = false; /* true during setUiMode animation; suppresses delayed layout in _setDockVisible */
 
 /* Bottom reserve when dock is hidden: 0 — dock fully off-screen, restore button is separate. */
 const _DOCK_TOGGLE_H = 0;
@@ -7860,12 +7861,19 @@ function _setDockVisible(v) {
     _updateDockCssVar();
     _applyWindowsLayout();
   } else {
-    /* Showing: wait for dock slide animation (350ms) to fully complete, then measure + relayout */
-    setTimeout(() => {
+    /* Showing: wait for dock slide animation to fully complete, then measure + relayout.
+       During a mode switch (_modeSwitching), dock transition is suppressed, so run immediately. */
+    if (_modeSwitching) {
       _updateDockCssVar();
       _fitDockToScreen();
       _applyWindowsLayout();
-    }, 360);
+    } else {
+      setTimeout(() => {
+        _updateDockCssVar();
+        _fitDockToScreen();
+        _applyWindowsLayout();
+      }, 360);
+    }
   }
 }
 
@@ -8047,17 +8055,21 @@ function setUiMode(mode, noAnim) {
     ov.classList.add('fade-in');
     document.body.appendChild(ov);
     setTimeout(() => {
-      /* Freeze dock transition so its slide doesn't bleed through the fade-out */
+      /* Freeze dock transition + layout delay so nothing bleeds through the fade-out */
+      _modeSwitching = true;
       const dockWrap = document.getElementById('mac-dock-wrap');
       if (dockWrap) dockWrap.classList.add('dock-no-transition');
       _doSwap();
-      /* Re-enable dock transition on the next animation frame */
+      /* Re-enable dock transition on next frame; clear mode-switch flag after overlay is gone */
       requestAnimationFrame(() => {
         if (dockWrap) dockWrap.classList.remove('dock-no-transition');
       });
       ov.classList.remove('fade-in');
       ov.classList.add('fade-out');
-      setTimeout(() => ov.remove(), 290);
+      setTimeout(() => {
+        ov.remove();
+        _modeSwitching = false;
+      }, 290);
     }, 205);
   }
 }
