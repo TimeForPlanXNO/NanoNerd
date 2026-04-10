@@ -1307,7 +1307,8 @@
       border-radius: 8px 8px 0 0;
       box-shadow: 3px -2px 12px rgba(0,0,0,.45);
       z-index: 100001;
-      overflow: hidden;
+      overflow-y: auto;
+      max-height: calc(100vh - 38px);
       display: none;
       flex-direction: column;
       transform-origin: bottom left;
@@ -1731,9 +1732,10 @@
     .nn-dlg {
       position: absolute; top: 44px; right: 4px; z-index: 30;
       width: 292px;
+      max-height: calc(100vh - 54px);
       background: #12181f; border: 1px solid #2a3a4a;
       border-radius: 7px; box-shadow: 0 8px 28px rgba(0,0,0,.72);
-      display: flex; flex-direction: column;
+      display: flex; flex-direction: column; overflow: hidden;
       opacity: 0; transform: translateY(-8px) scale(.97);
       transition: opacity .18s ease, transform .18s ease;
       pointer-events: none;
@@ -1949,19 +1951,33 @@
         padding-right: max(4px, env(safe-area-inset-right));
       }
       /* ── Popup menus: fit inside the short landscape viewport ── */
-      /* Stats: hug right edge, cap width so it never leaves the screen */
+      /* Stats: hug right edge, 8px buffer from top */
       .stats-popup {
-        max-height: calc(100vh - 38px);
+        max-height: calc(100vh - 48px);
         width: min(240px, calc(100vw - 20px));
         right: max(4px, env(safe-area-inset-right));
       }
-      /* Reps: also hug right edge (avoid left-overflow on very narrow screens) */
+      /* Reps: also hug right edge, 8px buffer from top */
       .wifi-popup {
-        max-height: calc(100vh - 38px);
+        max-height: calc(100vh - 48px);
         width: min(280px, calc(100vw - 12px));
         right: max(4px, env(safe-area-inset-right));
       }
-      .wifi-popup-list { max-height: calc(100vh - 76px); }
+      .wifi-popup-list { max-height: calc(100vh - 86px); }
+      /* Start / Donate QR menu: compact for short landscape screens */
+      .start-menu {
+        max-height: calc(100vh - 42px);
+      }
+      .sm-header        { padding: 6px 10px; }
+      .sm-header h2     { font-size: 11px; }
+      .sm-header p      { display: none; }
+      .sm-body          { padding: 8px 10px; gap: 7px; }
+      .sm-qr img        { width: 120px !important; height: 120px !important; }
+      .sm-footer        { padding: 4px 8px; }
+      .sm-footer img    { width: 32px !important; height: 32px !important; }
+      /* NanoNerd settings dialog: tighter pane height so it stays within window */
+      .nn-dlg           { max-height: calc(100vh - 60px); }
+      .nn-pane          { max-height: calc(100vh - 140px); }
       /* Wallpaper: use wide landscape layout */
       .wp-dialog {
         max-height: calc(100vh - 50px);
