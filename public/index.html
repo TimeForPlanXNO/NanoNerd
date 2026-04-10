@@ -8033,6 +8033,7 @@ function setUiMode(mode, noAnim) {
     /* Cross-dissolve: 160ms fade-out → swap at midpoint → 160ms fade-in = 320ms total.
        html { background: #0a1628 } ensures transparent gap shows dark, not white. */
     document.body.classList.add('mode-transitioning');
+    void document.body.offsetHeight; /* force reflow so browser commits initial opacity:1 + transition before animating */
     document.body.style.opacity = '0';
     setTimeout(() => {
       _doSwap();
