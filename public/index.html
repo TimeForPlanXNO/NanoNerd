@@ -2534,19 +2534,16 @@
     body:not(.macos) .dsp-macos-only { display: none !important; }
     body.macos .dsp-xp-only          { display: none !important; }
 
-    /* ── Mode-switch slide transition ── */
-    @keyframes _slideInFromRight { from { transform:translateX(100%)  } to { transform:translateX(0) } }
-    @keyframes _slideInFromLeft  { from { transform:translateX(-100%) } to { transform:translateX(0) } }
-    @keyframes _slideOutToLeft   { from { transform:translateX(0) } to { transform:translateX(-100%)  } }
-    @keyframes _slideOutToRight  { from { transform:translateX(0) } to { transform:translateX(100%)   } }
+    /* ── Mode-switch fade transition ── */
+    @keyframes _modeFadeIn  { from { opacity: 0 } to { opacity: 1 } }
+    @keyframes _modeFadeOut { from { opacity: 1 } to { opacity: 0 } }
     #mode-slide-panel {
       position: fixed; inset: 0; z-index: 999999; pointer-events: all;
       background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 50%, #0d1f3c 100%);
+      opacity: 0;
     }
-    #mode-slide-panel.from-right { animation: _slideInFromRight .28s cubic-bezier(.55,0,.1,1) forwards; }
-    #mode-slide-panel.from-left  { animation: _slideInFromLeft  .28s cubic-bezier(.55,0,.1,1) forwards; }
-    #mode-slide-panel.to-left    { animation: _slideOutToLeft   .28s cubic-bezier(.9,0,.55,1) forwards; }
-    #mode-slide-panel.to-right   { animation: _slideOutToRight  .28s cubic-bezier(.9,0,.55,1) forwards; }
+    #mode-slide-panel.fade-in  { animation: _modeFadeIn  .25s ease forwards; }
+    #mode-slide-panel.fade-out { animation: _modeFadeOut .32s ease forwards; }
 
     /* ── UI Style section inside XP colour picker ── */
     .cp-ui-style-row { display: flex; gap: 6px; }
@@ -8040,19 +8037,18 @@ function setUiMode(mode, noAnim) {
     /* Direct swap with no animation (used by startup restore) */
     _doSwap();
   } else {
-    /* Slide-curtain — direction matches conceptual left(XP) / right(macOS) layout */
-    const toMac = (mode === 'macos');
+    /* Fade-curtain — fades to dark, swaps UI underneath, then fades back */
     const ov = document.createElement('div');
     ov.id = 'mode-slide-panel';
-    ov.classList.add(toMac ? 'from-right' : 'from-left');
+    ov.classList.add('fade-in');
     document.body.appendChild(ov);
-    /* Swap while panel covers 100% of viewport, then slide it away */
+    /* Swap while panel is fully opaque, then fade it out */
     setTimeout(() => {
       _doSwap();
-      ov.classList.remove(toMac ? 'from-right' : 'from-left');
-      ov.classList.add(toMac ? 'to-left' : 'to-right');
-      setTimeout(() => ov.remove(), 300);
-    }, 280);
+      ov.classList.remove('fade-in');
+      ov.classList.add('fade-out');
+      setTimeout(() => ov.remove(), 330);
+    }, 260);
   }
 }
 
