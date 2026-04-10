@@ -8422,7 +8422,8 @@ function _updateDockDot(id) {
         const sc = d < RANGE ? 1 + (PEAK / BASE - 1) * Math.max(0, 1 - d / RANGE) : 1;
         wrap.style.transform = `scale(${sc.toFixed(3)})`;
       }
-      /* Tooltip — always on non-coarse pointer */
+      /* Tooltip — always on non-coarse pointer regardless of _dockMagnify state,
+         so labels remain accessible even when magnification is disabled. */
       if (d < RANGE / 2) wrap.classList.add('tooltip-visible');
       else               wrap.classList.remove('tooltip-visible');
     });
