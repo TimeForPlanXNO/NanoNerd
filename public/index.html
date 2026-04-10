@@ -1949,24 +1949,38 @@
         padding-right: max(4px, env(safe-area-inset-right));
       }
       /* ── Popup menus: fit inside the short landscape viewport ── */
+      /* Stats: hug right edge, cap width so it never leaves the screen */
       .stats-popup {
         max-height: calc(100vh - 38px);
         width: min(240px, calc(100vw - 20px));
+        right: max(4px, env(safe-area-inset-right));
       }
+      /* Reps: also hug right edge (avoid left-overflow on very narrow screens) */
       .wifi-popup {
         max-height: calc(100vh - 38px);
-        width: min(280px, calc(100vw - 60px));
+        width: min(280px, calc(100vw - 12px));
+        right: max(4px, env(safe-area-inset-right));
       }
       .wifi-popup-list { max-height: calc(100vh - 76px); }
+      /* Wallpaper: use wide landscape layout */
       .wp-dialog {
         max-height: calc(100vh - 50px);
-        width: min(290px, calc(100vw - 20px));
+        width: min(460px, calc(100vw - 16px));
+        right: max(8px, env(safe-area-inset-right));
       }
+      .wp-grid { grid-template-columns: repeat(5, 1fr); }
+      .wp-dialog-foot { justify-content: space-between; }
+      .wp-foot-btn    { flex: 1; text-align: center; padding: 5px 8px; }
       /* macOS variants anchored from top — same height budget */
       body.macos .stats-popup,
       body.macos .wifi-popup { max-height: calc(100vh - 36px); }
-      body.macos .wp-dialog  { max-height: calc(100vh - 70px); }
-      /* Compact inner padding for all three menus in landscape */
+      body.macos .wp-dialog  {
+        max-height: calc(100vh - 70px);
+        width: min(460px, calc(100vw - 16px));
+        right: max(8px, env(safe-area-inset-right));
+      }
+      body.macos .wp-grid     { grid-template-columns: repeat(5, 1fr); }
+      /* Compact inner padding for all menus in landscape */
       .stats-popup-head       { padding: 4px 7px; }
       .stats-section          { padding: 5px 8px 4px; }
       .stats-footer           { padding: 3px 8px; }
@@ -1975,6 +1989,17 @@
       .wp-dialog-head         { padding: 5px 8px; }
       .wp-dialog-body         { padding: 6px 8px; }
       .wp-dialog-foot         { padding: 5px 8px; }
+      /* Donate popup: compact on short landscape screens */
+      .mac-donate-popup {
+        width: min(262px, calc(100vw - 12px));
+        max-height: calc(100vh - 34px);
+        top: max(30px, env(safe-area-inset-top));
+      }
+      .mdp-header             { padding: 6px 10px; gap: 2px; }
+      .mdp-header h3          { font-size: 11px; }
+      .mdp-body               { padding: 6px 10px; gap: 5px; }
+      .mdp-qr img             { width: 110px; height: 110px; }
+      .mdp-credits            { padding: 5px 10px; }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -2342,7 +2367,8 @@
       border: 1px solid rgba(0,0,0,.18);
       border-radius: 10px;
       box-shadow: 0 8px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.15);
-      z-index: 100000; flex-direction: column; overflow: hidden;
+      z-index: 100000; flex-direction: column; overflow-y: auto;
+      max-height: calc(100vh - 34px);
       font-family: -apple-system, "Segoe UI", sans-serif;
       animation: mac-popup-in .15s ease;
     }
