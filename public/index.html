@@ -6458,8 +6458,8 @@ async function _loadWallets() {
     grid.innerHTML = wallets.map(w => {
       let domain = w.url;
       try { domain = new URL(w.url).hostname; } catch { /**/ }
-      const favicon  = domain === 'natrium.io'
-        ? '/natrium-icon.png'
+      const favicon  = domain === 'natrium.io' ? '/natrium-icon.png'
+        : domain === 'xnap.xyz'    ? '/xnap-icon.png'
         : `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
       const safeUrl  = w.url.replace(/"/g, '');
       const safeName = w.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
