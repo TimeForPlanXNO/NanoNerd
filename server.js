@@ -341,6 +341,55 @@ app.get("/api/nano-reps", (req, res) => {
   }).on("error", err => res.status(502).json({ error: err.message }));
 });
 
+/* ── Nano Wallets (scraped from hub.nano.org/wallets) ── */
+const _WALLET_FALLBACK = [
+  { name: 'Nault',                url: 'https://nault.cc/' },
+  { name: 'Natrium',              url: 'https://natrium.io/' },
+  { name: 'Nautilus',             url: 'https://nautilus.io' },
+  { name: 'WeNano',               url: 'https://wenano.net/' },
+  { name: 'NanChat',              url: 'https://nanchat.com/' },
+  { name: 'Stack Wallet',         url: 'https://stackwallet.com/' },
+  { name: 'Cake Wallet',          url: 'https://cakewallet.com' },
+  { name: 'Arctic Wallet',        url: 'https://arcticwallet.io/' },
+  { name: 'NOW Wallet',           url: 'https://walletnow.app/' },
+  { name: 'Ledger Hardware Wallet', url: 'https://www.ledger.com/' },
+  { name: 'Nano Paper Wallet',    url: 'https://nanopaperwallet.com/' },
+  { name: 'Xnap',                 url: 'https://xnap.xyz/' },
+  { name: 'TrustWallet',          url: 'https://trustwallet.com/' },
+];
+
+app.get('/api/wallets', (_req, res) => {
+  https.get({
+    hostname: 'hub.nano.org',
+    path: '/wallets',
+    headers: { 'User-Agent': 'NanoNerd/1.0', 'Accept': 'text/html' }
+  }, (upstream) => {
+    const chunks = [];
+    let stream = upstream;
+    const enc = upstream.headers['content-encoding'] || '';
+    if (enc === 'gzip')    stream = upstream.pipe(zlib.createGunzip());
+    else if (enc === 'br') stream = upstream.pipe(zlib.createBrotliDecompress());
+    stream.on('data', c => chunks.push(c));
+    stream.on('end', () => {
+      try {
+        const html = Buffer.concat(chunks).toString('utf8');
+        /* Extract name/url pairs from embedded SvelteKit JSON blobs */
+        const wallets = [];
+        const nameRe  = /"name":"([^"]+)"/g;
+        const urlRe   = /"url":"(https?:\/\/[^"]+)"/g;
+        const names = [...html.matchAll(nameRe)].map(m => m[1]);
+        const urls  = [...html.matchAll(urlRe)].map(m => m[1]);
+        const len   = Math.min(names.length, urls.length);
+        for (let i = 0; i < len; i++) wallets.push({ name: names[i], url: urls[i] });
+        res.json(wallets.length ? wallets : _WALLET_FALLBACK);
+      } catch {
+        res.json(_WALLET_FALLBACK);
+      }
+    });
+    stream.on('error', () => res.json(_WALLET_FALLBACK));
+  }).on('error', () => res.json(_WALLET_FALLBACK));
+});
+
 /* ── Translate suggestions ── */
 app.post("/api/translate-suggestions", async (req, res) => {
   const { lang, suggestions } = req.body;

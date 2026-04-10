@@ -20,6 +20,7 @@ A Windows XP-style desktop single-page application featuring:
 - `public/nanogpt-logo.png` — NanoGPT crystal gem logo (mix-blend-mode:screen)
 - `public/wallpaper.jpg` — Windows XP-style desktop wallpaper
 - `public/nano-logo.jpeg` — Fallback Nano logo
+- `public/wallet-icon.jpeg` — Wallet launcher button icon (XNO wallet pouch image)
 
 ## Running
 ```bash

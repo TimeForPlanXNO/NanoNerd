@@ -2092,6 +2092,63 @@
     body.macos .wifi-rep.copied .wifi-rep-copy { color: #30d158; }
     body.macos .wifi-loading    { color: rgba(255,255,255,.4); }
 
+    /* ── Wallet Popup ── */
+    #wallet-popup-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9500;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      align-items: center; justify-content: center;
+    }
+    #wallet-popup-overlay.open { display: flex; }
+    #wallet-popup {
+      background: rgba(22,22,30,.92);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 22px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.75);
+      padding: 22px 20px 28px;
+      width: min(460px, 94vw);
+      max-height: 82vh; overflow-y: auto;
+      font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
+      animation: wallet-pop-in .18s cubic-bezier(.34,1.3,.64,1);
+    }
+    @keyframes wallet-pop-in {
+      from { opacity: 0; transform: scale(.88) translateY(16px); }
+      to   { opacity: 1; transform: scale(1)   translateY(0); }
+    }
+    .wallet-popup-header { text-align: center; margin-bottom: 20px; }
+    .wallet-popup-title  { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: .15px; }
+    .wallet-popup-sub    { font-size: 12px; color: rgba(255,255,255,.42); margin-top: 3px; }
+    .wallet-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 18px 10px;
+    }
+    @media (max-width: 340px) { .wallet-grid { grid-template-columns: repeat(3, 1fr); } }
+    .wallet-card {
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      cursor: pointer; text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .wallet-card:hover .wallet-icon-wrap { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+    .wallet-icon-wrap {
+      width: 66px; height: 66px;
+      border-radius: 16px; overflow: hidden;
+      background: linear-gradient(145deg, #e8f0fe, #bbdefb);
+      box-shadow: 0 3px 12px rgba(0,0,0,.35);
+      transition: transform .18s ease, box-shadow .18s ease;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wallet-icon-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .wallet-card-name {
+      font-size: 11px; color: rgba(255,255,255,.82); text-align: center;
+      line-height: 1.25; max-width: 72px; word-break: break-word; font-weight: 500;
+    }
+    .wallet-loading-msg {
+      grid-column: 1 / -1; text-align: center;
+      color: rgba(255,255,255,.4); font-size: 13px; padding: 24px;
+    }
+
     /* ── macOS window title bars ── */
     body.macos .xp-win {
       border-radius: 11px 11px 6px 6px;
@@ -2593,6 +2650,9 @@
     </div>
     <div class="mac-mb-right">
       <button class="mac-mb-btn" id="mac-reset-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
+      <button class="mac-mb-btn" id="mac-wallet-btn" onclick="openWalletPopup()" title="Nano Wallets">
+        <img src="/wallet-icon.jpeg" style="width:16px;height:16px;mix-blend-mode:multiply;border-radius:3px;vertical-align:middle;display:block;" alt="wallets">
+      </button>
       <button class="mac-mb-btn" id="mac-wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Reps">
         <img src="/wifi-icon.png" style="width:13px;height:13px;filter:grayscale(1);vertical-align:middle;" alt="wifi">
       </button>
@@ -2720,6 +2780,7 @@
   <div class="taskbar">
     <button class="start-btn" id="start-btn"><span class="start-xno">Ӿ</span><span class="start-text"> start</span></button>
     <div class="taskbar-apps" id="tb-apps"></div>
+    <button class="wifi-btn" id="xp-wallet-btn" onclick="openWalletPopup()" title="Nano Wallets" style="padding:0 5px;"><img src="/wallet-icon.jpeg" style="width:20px;height:20px;border-radius:5px;display:block;" alt="wallets"></button>
     <button class="wifi-btn" id="cp-btn" onclick="toggleDockSettings()" title="Settings">🎨</button>
     <button class="wifi-btn" id="wifi-btn" onclick="toggleWifiPopup()" title="Online Nano Representatives"><img src="/wifi-icon.png" style="width:16px;height:16px;filter:brightness(0) invert(1);display:block;" alt="wifi"></button>
     <button class="tb-clock" id="clock" onclick="toggleStatsPopup()">00:00</button>
@@ -2769,6 +2830,19 @@
     </div>
     <div class="wifi-popup-list" id="wifi-list">
       <div class="wifi-loading">Loading representatives…</div>
+    </div>
+  </div>
+
+  <!-- Wallet Popup Overlay -->
+  <div id="wallet-popup-overlay" onclick="closeWalletPopup(event)">
+    <div id="wallet-popup">
+      <div class="wallet-popup-header">
+        <div class="wallet-popup-title">Nano Wallets</div>
+        <div class="wallet-popup-sub">Store your XNO securely</div>
+      </div>
+      <div class="wallet-grid" id="wallet-grid">
+        <div class="wallet-loading-msg">Loading wallets…</div>
+      </div>
     </div>
   </div>
 
@@ -6317,6 +6391,54 @@ document.addEventListener('click', e => {
 });
 
 /* ══════════════════════════════════════════
+   WALLET POPUP
+══════════════════════════════════════════ */
+let _walletLoaded = false;
+
+function openWalletPopup() {
+  document.getElementById('wallet-popup-overlay').classList.add('open');
+  if (!_walletLoaded) _loadWallets();
+}
+
+function closeWalletPopup(e) {
+  /* close only when clicking the backdrop, not the popup card itself */
+  if (e && e.target !== document.getElementById('wallet-popup-overlay')) return;
+  document.getElementById('wallet-popup-overlay').classList.remove('open');
+}
+
+function _closeWalletPopupForce() {
+  document.getElementById('wallet-popup-overlay').classList.remove('open');
+}
+
+async function _loadWallets() {
+  const grid = document.getElementById('wallet-grid');
+  try {
+    const res     = await fetch('/api/wallets');
+    const wallets = await res.json();
+    _walletLoaded = true;
+    if (!wallets.length) {
+      grid.innerHTML = '<div class="wallet-loading-msg">No wallets found.</div>';
+      return;
+    }
+    grid.innerHTML = wallets.map(w => {
+      let domain = w.url;
+      try { domain = new URL(w.url).hostname; } catch { /**/ }
+      const favicon  = `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
+      const safeUrl  = w.url.replace(/"/g, '');
+      const safeName = w.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<a class="wallet-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer" title="${safeName}">
+        <div class="wallet-icon-wrap">
+          <img src="${favicon}" alt="${safeName}" loading="lazy" onerror="this.src='/wallet-icon.jpeg'">
+        </div>
+        <div class="wallet-card-name">${safeName}</div>
+      </a>`;
+    }).join('');
+  } catch {
+    grid.innerHTML = '<div class="wallet-loading-msg">Could not load wallets.</div>';
+  }
+}
+
+/* ══════════════════════════════════════════
    STATS POPUP (CLOCK)
 ══════════════════════════════════════════ */
 let statsOpen = false;
@@ -6697,6 +6819,9 @@ document.addEventListener('input', e => {
 document.addEventListener('keydown', e => {
   if (e.target?.id==='userInput'&&e.key==='Enter'&&!e.shiftKey) {
     e.preventDefault(); sendMsg(e.target.value);
+  }
+  if (e.key === 'Escape') {
+    _closeWalletPopupForce();
   }
 });
 document.addEventListener('click', e => {
