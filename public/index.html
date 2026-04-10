@@ -8746,7 +8746,12 @@ function _fitDockToScreen() {
   /* Update slider max to match what actually fits on this viewport */
   const maxFit = _maxFittingDockSize();
   const slider = document.getElementById('dsp-size-slider');
-  if (slider && +slider.max !== maxFit) slider.max = maxFit;
+  if (slider && +slider.max !== maxFit) {
+    slider.max = maxFit;
+    /* Recompute fill bar percentage now that max has changed */
+    const pct = ((_dockIconSize - +slider.min) / (maxFit - +slider.min) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--pct', pct);
+  }
   /* Clamp stored size when the screen shrinks (e.g. orientation change) */
   if (_dockIconSize > maxFit) {
     _dockIconSize = maxFit;
