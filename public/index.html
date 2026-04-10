@@ -6479,9 +6479,13 @@ document.addEventListener('click', e => {
    WALLET POPUP
 ══════════════════════════════════════════ */
 let _walletLoaded = false;
+let _walletCloseTimer = null;
 
 function openWalletPopup() {
-  document.getElementById('wallet-popup-overlay').classList.add('open');
+  clearTimeout(_walletCloseTimer);
+  const ov = document.getElementById('wallet-popup-overlay');
+  ov.classList.remove('closing');
+  ov.classList.add('open');
   if (!_walletLoaded) _loadWallets();
 }
 
@@ -6489,13 +6493,16 @@ function closeWalletPopup(e) {
   /* close only when clicking the backdrop, not the popup card itself */
   if (e && e.target !== document.getElementById('wallet-popup-overlay')) return;
   const ov = document.getElementById('wallet-popup-overlay');
-  if (!ov.classList.contains('open')) return;
+  if (!ov.classList.contains('open') || ov.classList.contains('closing')) return;
+  clearTimeout(_walletCloseTimer);
   ov.classList.add('closing');
-  setTimeout(() => { ov.classList.remove('open', 'closing'); }, 320);
+  _walletCloseTimer = setTimeout(() => { ov.classList.remove('open', 'closing'); }, 320);
 }
 
 function _closeWalletPopupForce() {
-  document.getElementById('wallet-popup-overlay').classList.remove('open');
+  clearTimeout(_walletCloseTimer);
+  const ov = document.getElementById('wallet-popup-overlay');
+  ov.classList.remove('open', 'closing');
 }
 
 async function _loadWallets() {
