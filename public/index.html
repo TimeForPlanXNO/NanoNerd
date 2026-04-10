@@ -8519,13 +8519,28 @@ document.addEventListener('click', function(e) {
 /* Dock size slider */
 function _maxFittingDockSize() {
   const dock = document.getElementById('mac-dock');
-  if (!dock) return 80;
-  const n = dock.querySelectorAll('.dock-icon-wrap').length;
+  if (!dock || !_dockIconSize) return 80;
+  /* Temporarily clear transform so scrollWidth reflects the true layout width */
+  const prevTransform = dock.style.transform;
+  dock.style.transform = '';
+  const naturalW = dock.scrollWidth;
+  dock.style.transform = prevTransform;
+  if (!naturalW) return 80;
+  /* Count only visible flex children (drag-handle is display:none when auto-hide is off) */
+  const allVis = Array.from(dock.children)
+    .filter(el => getComputedStyle(el).display !== 'none');
+  const iconWraps = allVis.filter(el => el.classList.contains('dock-icon-wrap'));
+  const n = iconWraps.length;
   if (!n) return 80;
   const gap = 6, padH = 20;
   const available = window.innerWidth - 16;
-  const max = Math.floor((available - gap * (n - 1) - padH) / n);
-  return Math.max(36, Math.min(80, max));
+  /* Derive fixed overhead (sep, settings-btn, handle, extra margins) from the
+     live measurement so we don't have to hard-code any element widths:
+     naturalW = padH + gap*(allVis.length-1) + n*_dockIconSize + fixedContrib */
+  const fixedContrib = naturalW - padH - gap * (allVis.length - 1) - n * _dockIconSize;
+  /* Solve: maxFit*n + gap*(allVis.length-1) + padH + fixedContrib <= available */
+  const maxFit = Math.floor((available - gap * (allVis.length - 1) - padH - fixedContrib) / n);
+  return Math.max(36, Math.min(80, maxFit));
 }
 
 function setDockIconSize(px) {
