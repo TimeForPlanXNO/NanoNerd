@@ -7,6 +7,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html { background: #0a1628; }
     body {
       width: 100vw;
       height: 100dvh;
@@ -2534,16 +2535,8 @@
     body:not(.macos) .dsp-macos-only { display: none !important; }
     body.macos .dsp-xp-only          { display: none !important; }
 
-    /* ── Mode-switch fade transition ── */
-    @keyframes _modeFadeIn  { from { opacity: 0 } to { opacity: 1 } }
-    @keyframes _modeFadeOut { from { opacity: 1 } to { opacity: 0 } }
-    #mode-slide-panel {
-      position: fixed; inset: 0; z-index: 999999; pointer-events: all;
-      background: linear-gradient(135deg, #0a1628 0%, #1a2a4a 50%, #0d1f3c 100%);
-      opacity: 0;
-    }
-    #mode-slide-panel.fade-in  { animation: _modeFadeIn  .25s ease forwards; }
-    #mode-slide-panel.fade-out { animation: _modeFadeOut .32s ease forwards; }
+    /* ── Mode-switch cross-dissolve: fade body opacity, swap at midpoint ── */
+    body.mode-transitioning { transition: opacity 0.3s ease !important; }
 
     /* ── UI Style section inside XP colour picker ── */
     .cp-ui-style-row { display: flex; gap: 6px; }
@@ -8037,18 +8030,18 @@ function setUiMode(mode, noAnim) {
     /* Direct swap with no animation (used by startup restore) */
     _doSwap();
   } else {
-    /* Fade-curtain — fades to dark, swaps UI underneath, then fades back */
-    const ov = document.createElement('div');
-    ov.id = 'mode-slide-panel';
-    ov.classList.add('fade-in');
-    document.body.appendChild(ov);
-    /* Swap while panel is fully opaque, then fade it out */
+    /* Cross-dissolve — fade body to transparent, swap at midpoint, fade back in.
+       html { background: #0a1628 } ensures the transparent gap shows dark, not white. */
+    document.body.classList.add('mode-transitioning');
+    document.body.style.opacity = '0';
     setTimeout(() => {
       _doSwap();
-      ov.classList.remove('fade-in');
-      ov.classList.add('fade-out');
-      setTimeout(() => ov.remove(), 330);
-    }, 260);
+      document.body.style.opacity = '1';
+      setTimeout(() => {
+        document.body.classList.remove('mode-transitioning');
+        document.body.style.opacity = '';
+      }, 320);
+    }, 160);
   }
 }
 
