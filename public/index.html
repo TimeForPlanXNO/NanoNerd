@@ -857,7 +857,7 @@
       height: 33px; padding: 0 17px;
       background: linear-gradient(180deg,#5aad3a 0%,#3d9020 50%,#2e8010 51%,#227010 100%);
       border: 1px solid #1a6010; border-radius: 15px;
-      color: var(--taskbar-label,#fff); font-size: 15px; font-weight: bold;
+      color: #fff; font-size: 15px; font-weight: bold;
       font-family: "Tahoma", sans-serif; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 4px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 3px rgba(0,0,0,.4);
@@ -8391,7 +8391,7 @@ const _MAT_TEXTURE_URL = {
 
 /* ── Taskbar label contrast per material ── */
 const _MAT_LABEL = {
-  silver: '#1a1a1a', gold: '#2e1800', copper: '#fff',
+  silver: '#1a1a1a', gold: '#fff',    copper: '#fff',
   wood:   '#fff',    stone: '#1a1a1a', glass:  '#1a1a1a',
   water:  '#1a1a1a', grass: '#fff',   sand:   '#1a1a1a',
 };
@@ -9026,7 +9026,7 @@ const _MAT_THEME = {
   gold: {
     win:  `linear-gradient(155deg,rgba(255,238,148,.55) 0%,rgba(188,132,0,.55) 13%,rgba(255,230,108,.55) 25%,rgba(218,168,30,.55) 38%,rgba(252,220,80,.55) 52%,rgba(174,118,0,.55) 66%,rgba(255,234,124,.55) 80%,rgba(210,160,18,.55) 100%)`,
     menu: `linear-gradient(155deg,rgba(255,242,162,.55) 0%,rgba(210,162,22,.55) 13%,rgba(255,236,122,.55) 25%,rgba(230,180,50,.55) 38%,rgba(252,228,102,.55) 52%,rgba(188,140,10,.55) 66%,rgba(255,240,132,.55) 80%,rgba(220,170,30,.55) 100%)`,
-    text: '#3a2800', hover: 'rgba(0,0,0,.12)' },
+    text: '#fff',    hover: 'rgba(255,255,255,.18)' },
   copper: {
     win:  `linear-gradient(155deg,rgba(238,156,114,.55) 0%,rgba(138,60,18,.55) 13%,rgba(222,122,74,.55) 25%,rgba(164,82,34,.55) 38%,rgba(216,110,62,.55) 52%,rgba(116,48,12,.55) 66%,rgba(226,132,82,.55) 80%,rgba(154,70,25,.55) 100%)`,
     menu: `linear-gradient(155deg,rgba(242,162,124,.55) 0%,rgba(150,70,28,.55) 13%,rgba(228,134,84,.55) 25%,rgba(178,96,48,.55) 38%,rgba(222,120,70,.55) 52%,rgba(128,58,20,.55) 66%,rgba(232,142,92,.55) 80%,rgba(164,82,38,.55) 100%)`,
@@ -9167,6 +9167,8 @@ function _applyDockMaterial(id) {
   }
   /* Mirror material to XP taskbar/titlebars with proper metallic/glass injection */
   _applyXpMaterial(id, true);
+  /* Glass: reset opacity to 0% so the texture overlay is fully transparent by default */
+  if (id === 'glass') setUiLevel(0);
   /* Inject ::before texture+gradient for macOS window/menu bars so opacity var controls both */
   const _mt = _MAT_THEME[id];
   _injectMacMatStyle(_MAT_TEXTURE_URL[id] || '', _mt ? _mt.win : '', _mt ? _mt.menu : '');
