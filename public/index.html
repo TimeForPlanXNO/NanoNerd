@@ -1665,6 +1665,8 @@
       border-bottom: 1px solid rgba(255,255,255,.1);
       display: flex; align-items: center; gap: 5px;
     }
+    /* Title fills available space; XP ✕ button auto-aligns to the right */
+    .wp-dialog-title { flex: 1; }
     .wp-dialog-body {
       flex: 1; overflow-y: auto; padding: 10px;
     }
@@ -2056,17 +2058,23 @@
     }
     body.macos .mv-wp-btn:hover { filter: none; background: rgba(255,255,255,.24); }
 
-    /* ── Display Properties dialog — macOS style ── */
-    /* Traffic-light buttons: hidden in XP, shown in macOS */
+    /* ── Display Properties dialog — mode-adaptive close button ── */
+    /* macOS red close dot — hidden in XP, shown in macOS */
     .wp-mac-btns { display: none; gap: 6px; align-items: center; flex-shrink: 0; }
     .wp-mac-btn  {
       width: 12px; height: 12px; border-radius: 50%; display: inline-block;
       border: 1px solid rgba(0,0,0,.2); padding: 0; flex-shrink: 0; cursor: default;
     }
     .wp-mac-cls  { background: #ff5f57; cursor: pointer; }
-    .wp-mac-min  { background: #febc2e; }
-    .wp-mac-max  { background: #28c840; }
     .wp-mac-cls:hover { filter: brightness(1.14); }
+    /* XP close button — shown in XP, hidden in macOS */
+    .wp-xp-cls { margin-left: auto; flex-shrink: 0; }
+    body.macos .wp-xp-cls { display: none !important; }
+    /* Footer removed — close is now in titlebar */
+    .wp-dialog-foot { display: none !important; }
+    /* Titlebar drag cursor */
+    .wp-dialog-head { cursor: grab; user-select: none; touch-action: none; }
+    .wp-dialog-head:active { cursor: grabbing; }
 
     /* Dialog shell */
     body.macos .wp-dialog {
@@ -2094,7 +2102,7 @@
       display: flex; align-items: center; gap: 8px;
     }
     body.macos .wp-mac-btns { display: flex; }
-    body.macos .wp-dialog-title { flex: 1; text-align: center; margin-right: 42px; }
+    body.macos .wp-dialog-title { flex: 1; text-align: center; margin-right: 12px; }
     /* Body */
     body.macos .wp-dialog-body { background: transparent; }
     body.macos .wp-dialog-body::-webkit-scrollbar-track { background: rgba(255,255,255,.04); }
@@ -2104,18 +2112,6 @@
     body.macos .wp-thumb.active { border-color: rgba(255,255,255,.78); background: rgba(255,255,255,.17); }
     body.macos .wp-thumb img    { border-color: rgba(255,255,255,.14); }
     body.macos .wp-thumb-label  { color: rgba(255,255,255,.70); font-family: -apple-system,"Segoe UI",sans-serif; }
-    /* Footer */
-    body.macos .wp-dialog-foot {
-      background: rgba(255,255,255,.05);
-      border-top: 1px solid rgba(255,255,255,.07);
-      padding: 8px 12px;
-    }
-    body.macos .wp-foot-btn {
-      background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.18);
-      color: #d0e0f8; border-radius: 7px; box-shadow: none;
-      font-family: -apple-system,"Segoe UI",sans-serif; font-size: 12px; padding: 4px 18px;
-    }
-    body.macos .wp-foot-btn:hover { filter: none; background: rgba(255,255,255,.24); }
     /* Tabs — macOS overrides */
     body.macos .wp-tabs-bar {
       background: rgba(255,255,255,.04);
@@ -2922,13 +2918,14 @@
 
   <!-- Wallpaper Picker Dialog -->
   <div class="wp-dialog" id="wp-dialog">
-    <div class="wp-dialog-head">
+    <div class="wp-dialog-head" id="wp-dialog-head">
+      <!-- macOS: single red close dot (no yellow/green) -->
       <div class="wp-mac-btns">
         <button class="wp-mac-btn wp-mac-cls" onclick="closeWpPicker()" title="Close"></button>
-        <span class="wp-mac-btn wp-mac-min"></span>
-        <span class="wp-mac-btn wp-mac-max"></span>
       </div>
       <span class="wp-dialog-title">🖼️ Display Properties — Wallpaper</span>
+      <!-- XP: close button right-aligned in titlebar -->
+      <button class="xp-btn cls wp-xp-cls" onclick="closeWpPicker()" title="Close">✕</button>
     </div>
     <div class="wp-tabs-bar">
       <button class="wp-tab-btn active" id="wp-tab-4k" onclick="_wpPickerTab('4k')">4K</button>
@@ -2941,9 +2938,6 @@
       <div class="wp-pane" id="wp-pane-xp">
         <div class="wp-grid" id="wp-grid-xp"></div>
       </div>
-    </div>
-    <div class="wp-dialog-foot">
-      <button class="wp-foot-btn" onclick="closeWpPicker()">Close</button>
     </div>
   </div>
 
@@ -3853,9 +3847,60 @@ function toggleWpPicker(e) {
 }
 
 function closeWpPicker() {
-  document.getElementById('wp-dialog').classList.remove('open');
+  const dlg = document.getElementById('wp-dialog');
+  dlg.classList.remove('open');
+  /* Reset any drag-repositioned position so next open uses the default CSS anchor */
+  dlg.style.top = '';
+  dlg.style.left = '';
+  dlg.style.right = '';
+  dlg.style.bottom = '';
   _wpPickerOpen = false;
 }
+
+/* ── Drag-to-reposition for the wallpaper dialog ── */
+(function _initWpDrag() {
+  const head = document.getElementById('wp-dialog-head');
+  if (!head) return;
+  let _dragging = false, _ox = 0, _oy = 0;
+
+  head.addEventListener('pointerdown', function(e) {
+    /* Only drag with primary button; ignore clicks on the close buttons */
+    if (e.button !== 0) return;
+    if (e.target.closest('.wp-mac-cls, .wp-xp-cls')) return;
+    /* On coarse (touch) devices skip drag to avoid blocking scroll */
+    if (window.matchMedia('(pointer:coarse)').matches) return;
+    const dlg = document.getElementById('wp-dialog');
+    const r   = dlg.getBoundingClientRect();
+    /* Switch from CSS anchor (top/right absolute) to explicit top/left */
+    dlg.style.top    = r.top  + 'px';
+    dlg.style.left   = r.left + 'px';
+    dlg.style.right  = 'auto';
+    dlg.style.bottom = 'auto';
+    _ox = e.clientX - r.left;
+    _oy = e.clientY - r.top;
+    _dragging = true;
+    head.setPointerCapture(e.pointerId);
+    head.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+
+  head.addEventListener('pointermove', function(e) {
+    if (!_dragging) return;
+    const dlg = document.getElementById('wp-dialog');
+    const maxX = window.innerWidth  - dlg.offsetWidth;
+    const maxY = window.innerHeight - dlg.offsetHeight;
+    dlg.style.left = Math.max(0, Math.min(maxX, e.clientX - _ox)) + 'px';
+    dlg.style.top  = Math.max(0, Math.min(maxY, e.clientY - _oy)) + 'px';
+  });
+
+  function _endDrag() {
+    if (!_dragging) return;
+    _dragging = false;
+    head.style.cursor = '';
+  }
+  head.addEventListener('pointerup',     _endDrag);
+  head.addEventListener('pointercancel', _endDrag);
+})();
 
 /* ══════════════════════════════════════════
    NANONERD STYLE PANEL — wallpapers + opacity + voice
