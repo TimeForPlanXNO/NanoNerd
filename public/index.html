@@ -3362,6 +3362,9 @@ function _stopMatrixWallpaper() {
   /* Restore app-shell background colour (was set to #000 when matrix was active) */
   const shell = document.getElementById('app-shell');
   if (shell) shell.style.backgroundColor = '';
+  /* Remove matrix-mode taskbar override so normal theme restores immediately */
+  const mts = document.getElementById('matrix-taskbar-style');
+  if (mts) mts.remove();
 }
 
 function _applyMatrixWallpaper() {
@@ -3378,13 +3381,27 @@ function _applyMatrixWallpaper() {
   _currentWallpaperType = 'matrix';
   localStorage.setItem('xp-wallpaper',      '_matrix_');
   localStorage.setItem('xp-wallpaper-type', 'matrix');
-  /* Create wallpaper canvas */
+  /* Create wallpaper canvas — insert into app-shell (not desktop) so it covers
+     the full viewport including the taskbar row.  z-index:0 keeps it above the
+     #000 app-shell background (painted at step 1 in the stacking context) but
+     below .desktop (z-index:auto, DOM-later = step 6) and below .taskbar (z-index:500). */
   const canvas = document.createElement('canvas');
   canvas.id = 'wp-matrix-canvas';
   /* backgroundColor prevents white flash when the bitmap is cleared on resize */
   canvas.style.backgroundColor = '#000';
-  desktop.insertBefore(canvas, desktop.firstChild);
+  shell.insertBefore(canvas, shell.firstChild);
   _matrixWpController = _startMatrixRain(canvas, { wallpaperMode: true });
+  /* Inject matrix-mode taskbar style so the taskbar is fully transparent and
+     shows the rain beneath it instead of a solid/black bar. */
+  let _mts = document.getElementById('matrix-taskbar-style');
+  if (!_mts) { _mts = document.createElement('style'); _mts.id = 'matrix-taskbar-style'; document.head.appendChild(_mts); }
+  _mts.textContent = [
+    `.taskbar{background:transparent!important;border-top-color:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}`,
+    `.start-btn{background:linear-gradient(180deg,rgba(0,100,0,.65) 0%,rgba(0,60,0,.75) 100%)!important;border-color:rgba(0,160,0,.5)!important;}`,
+    `.tb-btn{background:rgba(0,28,0,.55)!important;border-color:rgba(0,100,0,.4)!important;color:#00e000!important;}`,
+    `.tb-btn.active{background:rgba(0,55,0,.70)!important;}`,
+    `.xp-systrap{background:rgba(0,20,0,.55)!important;border-color:rgba(0,90,0,.4)!important;}`,
+  ].join('\n');
   /* Keep canvas sized to desktop — only call controller.resize() (DPR-aware);
      do NOT set canvas.width/height here, which would cause a double-resize that
      resets context state and distorts characters on orientation change.        */
