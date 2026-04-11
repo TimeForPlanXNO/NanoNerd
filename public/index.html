@@ -8142,11 +8142,6 @@ function _closeCpPopup()  { _closeDockSettings(); }
   });
 })();
 
-/* Disable eyedropper button on taskbar colour picker if not supported */
-(function() {
-  /* nn-bg-eye-btn is built lazily inside the style panel — handled in _buildNnBgPresetsLazy() */
-})();
-
 /* Restore saved theme colour on startup */
 (function() {
   const saved = localStorage.getItem('xp-theme-color');
