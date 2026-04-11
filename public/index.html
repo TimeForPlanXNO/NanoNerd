@@ -1647,8 +1647,8 @@
 
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
-      position: absolute; top: 38px; right: 10px; z-index: 201;
-      width: min(320px, calc(100vw - 20px)); max-height: calc(100vh - 90px);
+      position: absolute; top: 38px; left: 50%; transform: translateX(-50%); right: auto; z-index: 201;
+      width: min(300px, calc(100vw - 20px)); max-height: calc(100vh - 90px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -1668,13 +1668,13 @@
     /* Title fills available space; XP ✕ button auto-aligns to the right */
     .wp-dialog-title { flex: 1; }
     .wp-dialog-body {
-      flex: 1; overflow-y: auto; padding: 10px;
+      flex: 1; overflow-y: auto; padding: 6px;
     }
     .wp-dialog-body::-webkit-scrollbar { width: 5px; }
     .wp-dialog-body::-webkit-scrollbar-track { background: transparent; }
     .wp-dialog-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 3px; }
     .wp-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
     }
     .wp-thumb {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -1689,17 +1689,17 @@
       display: block;
     }
     .wp-thumb-label {
-      font-size: 9px; color: rgba(255,255,255,.72); text-align: center;
+      font-size: 8px; color: rgba(255,255,255,.72); text-align: center;
       line-height: 1.2; word-break: break-word; font-family: -apple-system,"Segoe UI","Tahoma",sans-serif;
     }
     /* ── Wallpaper picker tabs ── */
     .wp-tabs-bar {
       display: flex; flex-shrink: 0; gap: 4px;
       background: rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.1);
-      padding: 5px 8px 0;
+      padding: 4px 6px 0;
     }
     .wp-tab-btn {
-      padding: 4px 14px 5px; font-size: 11px; font-family: -apple-system,"Segoe UI","Tahoma",sans-serif;
+      padding: 3px 10px 4px; font-size: 11px; font-family: -apple-system,"Segoe UI","Tahoma",sans-serif;
       font-weight: 600; cursor: pointer;
       background: rgba(255,255,255,.08);
       border: 1px solid rgba(255,255,255,.14); border-bottom: none;
@@ -1908,17 +1908,18 @@
         box-shadow: 0 0 0 2px rgba(0,0,0,.75),
                     inset 0 1px 0 rgba(255,255,255,.08);
       }
-      /* Wallpaper dialog: full-width minus margins, clamp height above XP taskbar */
+      /* Wallpaper dialog: centered, full-width minus margins, clamp height above XP taskbar */
       .wp-dialog {
-        width: min(320px, calc(100vw - 20px));
+        width: min(300px, calc(100vw - 16px));
         max-height: calc(100vh - 92px);
-        right: max(10px, env(safe-area-inset-right));
+        left: 50%; right: auto; transform: translateX(-50%);
       }
-      /* macOS: full-width minus margins, clamp height above dock */
+      .wp-dialog .wp-grid { grid-template-columns: repeat(3, 1fr); }
+      /* macOS: centered, full-width minus margins, clamp height above dock */
       body.macos .wp-dialog {
-        width: min(320px, calc(100vw - 20px));
+        width: min(300px, calc(100vw - 16px));
         max-height: calc(100vh - 110px);
-        right: max(10px, env(safe-area-inset-right));
+        left: 50%; right: auto; transform: translateX(-50%);
       }
       /* Chat Settings: clamp width + pane height */
       .nn-dlg  { width: min(292px, calc(100% - 8px)); max-height: calc(100% - 54px); }
@@ -2008,11 +2009,11 @@
       /* NanoNerd settings dialog: tighter pane height so it stays within window */
       .nn-dlg           { max-height: calc(100vh - 60px); }
       .nn-pane          { max-height: calc(100vh - 140px); }
-      /* Wallpaper: use wide landscape layout */
+      /* Wallpaper: use wide landscape layout, centered */
       .wp-dialog {
         max-height: calc(100vh - 76px);
-        width: min(460px, calc(100vw - 16px));
-        right: max(8px, env(safe-area-inset-right));
+        width: min(420px, calc(100vw - 16px));
+        left: 50%; right: auto; transform: translateX(-50%);
       }
       .wp-grid { grid-template-columns: repeat(5, 1fr); }
       .wp-dialog-foot { justify-content: space-between; }
@@ -2022,8 +2023,8 @@
       body.macos .wifi-popup { max-height: calc(100vh - 36px); }
       body.macos .wp-dialog  {
         max-height: calc(100vh - 90px);
-        width: min(460px, calc(100vw - 16px));
-        right: max(8px, env(safe-area-inset-right));
+        width: min(420px, calc(100vw - 16px));
+        left: 50%; right: auto; transform: translateX(-50%);
       }
       body.macos .wp-grid     { grid-template-columns: repeat(5, 1fr); }
       /* Compact inner padding for all menus in landscape */
@@ -2093,7 +2094,7 @@
 
     /* Dialog shell */
     body.macos .wp-dialog {
-      top: 66px; max-height: calc(100vh - 110px);
+      top: 66px; left: 50%; transform: translateX(-50%); right: auto; max-height: calc(100vh - 110px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -3848,15 +3849,16 @@ function _wpPickerTab(id) {
   else             _buildWpGridXp();
 }
 
-/* Shift the dialog so it is fully inside #app-shell (called on open and resize) */
+/* Clamp the dialog vertically so it never overflows #app-shell (called on open and resize) */
 function _clampWpDialog() {
   const dlg   = document.getElementById('wp-dialog');
   const shell = document.getElementById('app-shell');
   if (!dlg || !shell || !_wpPickerOpen) return;
   const dr = dlg.getBoundingClientRect();
   const sr = shell.getBoundingClientRect();
-  /* Clamp when the dialog has been moved via drag (left/top inline styles are set) */
-  if (dlg.style.left || dlg.style.top) {
+  /* When dragged: dialog uses explicit px left/top (no transform); clamp all four edges */
+  const dragged = dlg.style.left && !dlg.style.left.includes('%');
+  if (dragged) {
     const curL = parseFloat(dlg.style.left) || 0;
     const curT = parseFloat(dlg.style.top)  || 0;
     const maxX = sr.width  - dlg.offsetWidth;
@@ -3865,25 +3867,13 @@ function _clampWpDialog() {
     dlg.style.top  = Math.max(0, Math.min(maxY, curT)) + 'px';
     return;
   }
-  /* Default CSS anchor (right/top): clamp all four edges if clipped */
-  const leftEdge   = dr.left   - sr.left;
-  const rightEdge  = dr.right  - sr.left;
+  /* Default centered anchor (left:50% transform): only clamp top/bottom overflow */
   const topEdge    = dr.top    - sr.top;
   const bottomEdge = dr.bottom - sr.top;
-  if (leftEdge < 0) {
-    dlg.style.right = 'auto';
-    dlg.style.left  = '10px';
-  } else if (rightEdge > sr.width) {
-    dlg.style.right = '10px';
-    dlg.style.left  = 'auto';
-  }
   if (topEdge < 0) {
     dlg.style.top = '4px';
   } else if (bottomEdge > sr.height) {
-    /* Push up just enough so the bottom edge is inside the shell */
-    dlg.style.top  = Math.max(4, sr.height - dlg.offsetHeight - 4) + 'px';
-    dlg.style.left = dlg.style.left || 'auto';
-    if (!dlg.style.left || dlg.style.left === 'auto') dlg.style.right = '10px';
+    dlg.style.top = Math.max(4, sr.height - dlg.offsetHeight - 4) + 'px';
   }
 }
 window.addEventListener('resize', _clampWpDialog);
@@ -3906,11 +3896,12 @@ function closeWpPicker() {
   const dlg = document.getElementById('wp-dialog');
   dlg.classList.remove('open');
   /* Reset any drag-repositioned position/coordinates so next open uses the default CSS anchor */
-  dlg.style.position = '';
-  dlg.style.top    = '';
-  dlg.style.left   = '';
-  dlg.style.right  = '';
-  dlg.style.bottom = '';
+  dlg.style.position  = '';
+  dlg.style.top       = '';
+  dlg.style.left      = '';
+  dlg.style.right     = '';
+  dlg.style.bottom    = '';
+  dlg.style.transform = '';
   _wpPickerOpen = false;
 }
 
@@ -3925,6 +3916,8 @@ document.addEventListener('DOMContentLoaded', function _initWpDrag() {
     if (e.target.closest('.wp-mac-cls, .wp-xp-cls')) return;
     const dlg   = document.getElementById('wp-dialog');
     const shell = document.getElementById('app-shell');
+    /* Clear CSS-centering transform before measuring position so getBoundingClientRect is accurate */
+    dlg.style.transform = '';
     const dr    = dlg.getBoundingClientRect();
     const sr    = shell.getBoundingClientRect();
     /* Anchor absolutely relative to #app-shell; clear right/bottom so left/top take over */
@@ -7754,8 +7747,7 @@ const _M_LAND_R  = 90;                         /* 90 px — icon-column safe gap
 
 /* ── Wallpaper button layout (centred in portrait, right on desktop) ── */
 function _applyWpBtnLayout() {
-  const btn     = document.getElementById('wp-btn');
-  const dlg     = document.getElementById('wp-dialog');
+  const btn      = document.getElementById('wp-btn');
   const resetBtn = document.getElementById('icon-reset-btn');
   if (!btn) return;
   const mobile = _isMobilePortrait();
@@ -7773,12 +7765,6 @@ function _applyWpBtnLayout() {
       resetBtn.style.transform = '';
       resetBtn.style.top       = '8px';
     }
-    if (dlg) {
-      dlg.style.left      = '50%';
-      dlg.style.right     = '';
-      dlg.style.transform = 'translateX(-50%)';
-      dlg.style.top       = '42px';
-    }
   } else {
     /* Desktop / landscape: anchor both buttons to the right edge */
     btn.style.left      = '';
@@ -7789,12 +7775,6 @@ function _applyWpBtnLayout() {
       resetBtn.style.right     = '42px';
       resetBtn.style.transform = '';
       resetBtn.style.top       = '8px';
-    }
-    if (dlg) {
-      dlg.style.left      = '';
-      dlg.style.right     = '10px';
-      dlg.style.transform = '';
-      dlg.style.top       = '';
     }
   }
 }
@@ -9061,14 +9041,9 @@ function toggleDockSettings() {
       popup.style.bottom    = Math.max(42, fromBot) + 'px';
       popup.style.maxHeight = Math.max(160, maxH) + 'px';
     }
-    popup.style.top = 'auto';
-    if (window.innerWidth <= 480) {
-      popup.style.left  = '14px';
-      popup.style.right = '14px';
-    } else {
-      popup.style.left  = 'auto';
-      popup.style.right = '14px';
-    }
+    popup.style.top   = 'auto';
+    popup.style.left  = 'auto';
+    popup.style.right = '14px';
   }
 }
 
