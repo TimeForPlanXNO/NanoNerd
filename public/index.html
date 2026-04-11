@@ -13,6 +13,18 @@
       --dock-glass-r: 255;
       --dock-glass-g: 255;
       --dock-glass-b: 255;
+      /* ── Taskbar label contrast (set per-material in JS) ── */
+      --taskbar-label: #fff;
+      /* ── XP start/donate popup theming (set per-material in JS) ── */
+      --sm-header-bg: linear-gradient(90deg,#1a50d0 0%,#1e6cf0 60%,#2080ff 100%);
+      --sm-border-color: #0055e5;
+      /* ── macOS donate popup theming (set per-material in JS) ── */
+      --mdp-header-bg: linear-gradient(180deg,#4a5a8a 0%,#3a4a7a 100%);
+      --mdp-border-color: rgba(0,0,0,.18);
+      --mdp-qr-border: #4a5a8a;
+      /* ── Texture overlays for macOS bars (set per-material in JS) ── */
+      --mac-win-texture: none;
+      --mac-menu-texture: none;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -168,9 +180,10 @@
 
     .xp-win-title {
       display: flex; align-items: center; gap: 5px;
-      color: #fff; font-size: 11px; font-weight: bold;
+      color: var(--taskbar-label,#fff); font-size: 11px; font-weight: bold;
       text-shadow: 1px 1px 2px rgba(0,0,0,.6);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      transition: color .12s;
     }
 
     .xp-win-title img  { width: 14px; height: 14px; object-fit: contain; }
@@ -876,11 +889,11 @@
       height: 22px; min-width: 0; flex: 1; max-width: 100px;
       background: linear-gradient(180deg,#1a4ab0 0%,#1e58cc 100%);
       border: 1px solid #0a3090; border-radius: 3px;
-      color: #fff; font-size: 10px; font-family: "Tahoma", sans-serif;
+      color: var(--taskbar-label,#fff); font-size: 10px; font-family: "Tahoma", sans-serif;
       display: flex; align-items: center; gap: 3px; padding: 0 5px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.15);
       cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-      transition: background .12s, box-shadow .12s, opacity .12s;
+      transition: background .12s, box-shadow .12s, opacity .12s, color .12s;
     }
 
     .tb-btn.active {
@@ -896,12 +909,12 @@
        CLOCK / STATS POPUP
     ═══════════════════════════ */
     .tb-clock {
-      font-size: 10px; color: #fff;
+      font-size: 10px; color: var(--taskbar-label,#fff);
       text-shadow: 0 1px 2px rgba(0,0,0,.5);
       white-space: nowrap; flex-shrink: 0; padding: 0 6px;
       background: none; border: none; cursor: pointer;
       font-family: "Tahoma", sans-serif; font-weight: bold;
-      border-radius: 3px; transition: background .12s; height: 22px;
+      border-radius: 3px; transition: background .12s, color .12s; height: 22px;
       display: flex; align-items: center;
     }
     .tb-clock:hover  { background: rgba(255,255,255,.15); }
@@ -1170,9 +1183,10 @@
       padding: 3px 5px; cursor: move; user-select: none; flex-shrink: 0;
     }
     .mv-title {
-      color: #fff; font-size: 11px; font-weight: bold;
+      color: var(--taskbar-label,#fff); font-size: 11px; font-weight: bold;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
       display: flex; align-items: center; gap: 4px;
+      transition: color .12s;
     }
     /* mv title-bar button group */
     .mv-btns { display: flex; gap: 2px; flex-shrink: 0; }
@@ -1303,7 +1317,7 @@
       bottom: 38px; left: 4px;
       width: 238px;
       background: #d4d0c8;
-      border: 2px solid #0055e5;
+      border: 2px solid var(--sm-border-color,#0055e5);
       border-radius: 8px 8px 0 0;
       box-shadow: 3px -2px 12px rgba(0,0,0,.45);
       z-index: 100001;
@@ -1312,6 +1326,7 @@
       display: none;
       flex-direction: column;
       transform-origin: bottom left;
+      transition: border-color .2s;
     }
 
     .start-menu.visible {
@@ -1325,9 +1340,10 @@
     }
 
     .sm-header {
-      background: linear-gradient(90deg, #1a50d0 0%, #1e6cf0 60%, #2080ff 100%);
+      background: var(--sm-header-bg, linear-gradient(90deg,#1a50d0 0%,#1e6cf0 60%,#2080ff 100%));
       padding: 10px 12px;
       display: flex; flex-direction: column; align-items: center; gap: 2px;
+      transition: background .2s;
     }
 
     .sm-header h2 {
@@ -2327,7 +2343,7 @@
     body.macos .mv-min:hover,
     body.macos .mv-max:hover,
     body.macos .mv-close:hover { filter: brightness(1.12); }
-    body.macos .mv-title { flex: 1; text-align: center; font-family: -apple-system,"Segoe UI",sans-serif; }
+    body.macos .mv-title { flex: 1; text-align: center; font-family: -apple-system,"Segoe UI",sans-serif; color: var(--mac-menu-text,#1a1a1a); }
 
     /* ── Dock responsive ── */
     .mac-dock-wrap { max-width: calc(100vw - 16px); }
@@ -2380,7 +2396,7 @@
       background: rgba(238,238,238,.97);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(0,0,0,.18);
+      border: 1px solid var(--mdp-border-color,rgba(0,0,0,.18));
       border-radius: 10px;
       box-shadow: 0 8px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.15);
       z-index: 100000; flex-direction: column; overflow-y: auto;
@@ -2394,9 +2410,10 @@
       to   { transform: scale(1)   translateY(0);    opacity: 1; }
     }
     .mdp-header {
-      background: linear-gradient(180deg, #4a5a8a 0%, #3a4a7a 100%);
+      background: var(--mdp-header-bg, linear-gradient(180deg,#4a5a8a 0%,#3a4a7a 100%));
       padding: 12px 14px; display: flex; flex-direction: column;
       align-items: center; gap: 4px;
+      transition: background .2s;
     }
     .mdp-header h3 { color: #fff; font-size: 13px; font-weight: 700; }
     .mdp-header p  { color: rgba(255,255,255,.75); font-size: 10px; font-style: italic; }
@@ -2405,7 +2422,7 @@
       align-items: center; gap: 8px; background: #f5f5f5;
     }
     .mdp-qr {
-      border: 3px solid #4a5a8a; border-radius: 6px; overflow: hidden;
+      border: 3px solid var(--mdp-qr-border,#4a5a8a); border-radius: 6px; overflow: hidden;
       cursor: pointer; transition: border-color .15s;
     }
     .mdp-qr:hover { border-color: #00aadd; }
@@ -2420,7 +2437,7 @@
     .mdp-credits {
       padding: 10px 12px; display: flex; align-items: center; gap: 8px; background: #f5f5f5;
     }
-    .mdp-credits img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid #4a5a8a; }
+    .mdp-credits img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--mdp-qr-border,#4a5a8a); }
     .mdp-credits-text { font-size: 10px; color: #444; line-height: 1.5; }
     .mdp-credits-text a { color: #3a4a9a; font-weight: 700; text-decoration: none; }
     .mdp-credits-text a:hover { text-decoration: underline; }
@@ -2496,57 +2513,82 @@
       box-shadow: 0 4px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.7);
       pointer-events: all;
     }
-    /* ── Metallic dock materials ── */
+    /* ── Photo-texture dock materials: real photo + gradient tint overlay ── */
     .mac-dock.mat-silver {
-      background: linear-gradient(155deg,
-        rgba(242,242,246,var(--mat-alpha,1)) 0%,  rgba(168,170,188,var(--mat-alpha,1)) 13%,
-        rgba(248,248,252,var(--mat-alpha,1)) 25%,  rgba(190,190,212,var(--mat-alpha,1)) 38%,
-        rgba(236,236,244,var(--mat-alpha,1)) 52%,  rgba(162,162,184,var(--mat-alpha,1)) 66%,
-        rgba(240,240,250,var(--mat-alpha,1)) 80%,  rgba(196,196,218,var(--mat-alpha,1)) 100%);
+      background:
+        linear-gradient(155deg,
+          rgba(242,242,246,calc(var(--mat-alpha,1)*.55)) 0%,  rgba(168,170,188,calc(var(--mat-alpha,1)*.55)) 13%,
+          rgba(248,248,252,calc(var(--mat-alpha,1)*.55)) 25%,  rgba(190,190,212,calc(var(--mat-alpha,1)*.55)) 38%,
+          rgba(236,236,244,calc(var(--mat-alpha,1)*.55)) 52%,  rgba(162,162,184,calc(var(--mat-alpha,1)*.55)) 66%,
+          rgba(240,240,250,calc(var(--mat-alpha,1)*.55)) 80%,  rgba(196,196,218,calc(var(--mat-alpha,1)*.55)) 100%),
+        url('/mat-silver.jpg') center/cover no-repeat;
       border-color: rgba(200,200,222,calc(var(--mat-alpha,1) * .85));
       box-shadow: 0 4px 28px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.8);
     }
     .mac-dock.mat-gold {
-      background: linear-gradient(155deg,
-        rgba(255,238,148,var(--mat-alpha,1)) 0%,  rgba(188,132,0,var(--mat-alpha,1))   13%,
-        rgba(255,230,108,var(--mat-alpha,1)) 25%,  rgba(218,168,30,var(--mat-alpha,1))  38%,
-        rgba(252,220,80,var(--mat-alpha,1))  52%,  rgba(174,118,0,var(--mat-alpha,1))   66%,
-        rgba(254,234,124,var(--mat-alpha,1)) 80%,  rgba(210,160,18,var(--mat-alpha,1))  100%);
+      background:
+        linear-gradient(155deg,
+          rgba(255,238,148,calc(var(--mat-alpha,1)*.45)) 0%,  rgba(188,132,0,calc(var(--mat-alpha,1)*.45))   13%,
+          rgba(255,230,108,calc(var(--mat-alpha,1)*.45)) 25%,  rgba(218,168,30,calc(var(--mat-alpha,1)*.45))  38%,
+          rgba(252,220,80,calc(var(--mat-alpha,1)*.45))  52%,  rgba(174,118,0,calc(var(--mat-alpha,1)*.45))   66%,
+          rgba(254,234,124,calc(var(--mat-alpha,1)*.45)) 80%,  rgba(210,160,18,calc(var(--mat-alpha,1)*.45))  100%),
+        url('/mat-gold.jpg') center/cover no-repeat;
       border-color: rgba(220,178,60,calc(var(--mat-alpha,1) * .85));
       box-shadow: 0 4px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,245,180,.7);
     }
     .mac-dock.mat-copper {
-      background: linear-gradient(155deg,
-        rgba(238,156,114,var(--mat-alpha,1)) 0%,  rgba(138,60,18,var(--mat-alpha,1))   13%,
-        rgba(222,122,74,var(--mat-alpha,1))  25%,  rgba(164,82,34,var(--mat-alpha,1))   38%,
-        rgba(216,110,62,var(--mat-alpha,1))  52%,  rgba(116,48,12,var(--mat-alpha,1))   66%,
-        rgba(226,132,82,var(--mat-alpha,1))  80%,  rgba(154,70,26,var(--mat-alpha,1))   100%);
+      background:
+        linear-gradient(155deg,
+          rgba(238,156,114,calc(var(--mat-alpha,1)*.45)) 0%,  rgba(138,60,18,calc(var(--mat-alpha,1)*.45))   13%,
+          rgba(222,122,74,calc(var(--mat-alpha,1)*.45))  25%,  rgba(164,82,34,calc(var(--mat-alpha,1)*.45))   38%,
+          rgba(216,110,62,calc(var(--mat-alpha,1)*.45))  52%,  rgba(116,48,12,calc(var(--mat-alpha,1)*.45))   66%,
+          rgba(226,132,82,calc(var(--mat-alpha,1)*.45))  80%,  rgba(154,70,26,calc(var(--mat-alpha,1)*.45))   100%),
+        url('/mat-copper.webp') center/cover no-repeat;
       border-color: rgba(194,108,64,calc(var(--mat-alpha,1) * .85));
       box-shadow: 0 4px 28px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,210,180,.6);
     }
-    /* ── Liquid Glass dock materials (macOS) ── */
-    .mac-dock.mat-wood  { background: rgba(180,130,80, var(--dock-glass-alpha,0.14)); border-color: rgba(160,120,70,.45); }
-    .mac-dock.mat-stone { background: rgba(140,140,140,var(--dock-glass-alpha,0.14)); border-color: rgba(160,160,160,.40); }
+    /* ── Textured liquid-glass dock materials ── */
+    .mac-dock.mat-wood {
+      background:
+        rgba(180,130,80,calc(var(--dock-glass-alpha,0.14)*2)),
+        url('/mat-wood.jpg') center/cover no-repeat;
+      border-color: rgba(160,120,70,.55);
+    }
+    .mac-dock.mat-stone {
+      background:
+        rgba(140,140,140,calc(var(--dock-glass-alpha,0.14)*2)),
+        url('/mat-stone.jpg') center/cover no-repeat;
+      border-color: rgba(160,160,160,.50);
+    }
     .mac-dock.mat-glass {
-      background: rgba(180,220,255,var(--dock-glass-alpha,0.14));
+      background:
+        rgba(180,220,255,calc(var(--dock-glass-alpha,0.14)*1.5)),
+        url('/mat-glass.jpg') center/cover no-repeat;
       border-color: rgba(160,210,255,.55);
       box-shadow: 0 4px 28px rgba(0,100,255,.12), inset 0 1px 0 rgba(255,255,255,.8);
     }
-    .mac-dock.mat-water { background: rgba(80,160,220, var(--dock-glass-alpha,0.14)); border-color: rgba(80,160,220,.50); }
-    .mac-dock.mat-grass { background: rgba(80,180,90,  var(--dock-glass-alpha,0.14)); border-color: rgba(80,160,80,.45); }
-    .mac-dock.mat-sand  { background: rgba(210,190,140,var(--dock-glass-alpha,0.14)); border-color: rgba(200,180,120,.45); }
-    /* ── macOS: all non-metallic dock → Liquid Glass (also catches custom colour) ── */
-    body.macos .mac-dock:not(.mat-gold):not(.mat-silver):not(.mat-copper) {
+    .mac-dock.mat-water {
+      background:
+        rgba(80,160,220,calc(var(--dock-glass-alpha,0.14)*2)),
+        url('/mat-water.png') center/cover no-repeat;
+      border-color: rgba(80,160,220,.55);
+    }
+    .mac-dock.mat-grass {
+      background:
+        rgba(80,180,90,calc(var(--dock-glass-alpha,0.14)*2)),
+        url('/mat-grass.jpg') center/cover no-repeat;
+      border-color: rgba(80,160,80,.50);
+    }
+    .mac-dock.mat-sand {
+      background:
+        rgba(210,190,140,calc(var(--dock-glass-alpha,0.14)*2)),
+        url('/mat-sand.jpg') center/cover no-repeat;
+      border-color: rgba(200,180,120,.50);
+    }
+    /* ── macOS: custom colour (no mat-X class) → Liquid Glass from --dock-glass-rgb ── */
+    body.macos .mac-dock:not(.mat-gold):not(.mat-silver):not(.mat-copper):not(.mat-wood):not(.mat-stone):not(.mat-glass):not(.mat-water):not(.mat-grass):not(.mat-sand) {
       background: rgb(var(--dock-glass-r,255) var(--dock-glass-g,255) var(--dock-glass-b,255) / var(--dock-glass-alpha,0.14)) !important;
       border-color: rgba(255,255,255,.45) !important;
-    }
-    body.macos .mac-dock.mat-glass {
-      background: rgb(180 220 255 / var(--dock-glass-alpha,0.14)) !important;
-      border-color: rgba(160,210,255,.55) !important;
-    }
-    body.macos .mac-dock.mat-water {
-      background: rgb(80 160 220 / var(--dock-glass-alpha,0.14)) !important;
-      border-color: rgba(80,160,220,.50) !important;
     }
     .dock-icon-wrap {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -8072,6 +8114,15 @@ function applyThemeColor(hex, isReset, skipMacSync) {
   document.querySelectorAll('.cp-swatch').forEach(sw =>
     sw.classList.toggle('active', sw.dataset.hex === hex)
   );
+  /* Compute luma to set label contrast and donate theme */
+  if (/^#[0-9a-f]{6}$/i.test(hex)) {
+    const rv = parseInt(hex.slice(1,3),16);
+    const gv = parseInt(hex.slice(3,5),16);
+    const bv = parseInt(hex.slice(5,7),16);
+    const luma = 0.299*rv + 0.587*gv + 0.114*bv;
+    document.documentElement.style.setProperty('--taskbar-label', luma > 150 ? '#1a1a1a' : '#fff');
+    _setDonateTheme(rv, gv, bv);
+  }
   if (!isReset) localStorage.setItem('xp-theme-color', hex);
   else          localStorage.removeItem('xp-theme-color');
   /* In macOS mode, sync dock + menu bar + window bars from the same colour */
@@ -8335,6 +8386,53 @@ const XP_MAT_HEX = {
 };
 let _xpMaterial = null;
 
+/* ── Dominant RGB for each material (used to fix white-dock bug + donate theming) ── */
+const _MAT_DOMINANT_RGB = {
+  silver: [210, 210, 228],
+  gold:   [220, 180,  60],
+  copper: [190, 100,  55],
+  wood:   [155, 105,  55],
+  stone:  [125, 125, 125],
+  glass:  [160, 210, 255],
+  water:  [ 80, 160, 220],
+  grass:  [ 80, 175,  90],
+  sand:   [200, 178, 120],
+};
+
+/* ── Texture file URL per material (for XP + macOS bar overlays) ── */
+const _MAT_TEXTURE_URL = {
+  silver: '/mat-silver.jpg',
+  gold:   '/mat-gold.jpg',
+  copper: '/mat-copper.webp',
+  wood:   '/mat-wood.jpg',
+  stone:  '/mat-stone.jpg',
+  glass:  '/mat-glass.jpg',
+  water:  '/mat-water.png',
+  grass:  '/mat-grass.jpg',
+  sand:   '/mat-sand.jpg',
+};
+
+/* ── Taskbar label contrast per material ── */
+const _MAT_LABEL = {
+  silver: '#1a1a1a', gold: '#2e1800', copper: '#fff',
+  wood:   '#fff',    stone: '#fff',   glass:  '#fff',
+  water:  '#fff',    grass: '#fff',   sand:   '#1a1a1a',
+};
+
+/* ── Set donate popup theming from an RGB triple ── */
+function _setDonateTheme(r, g, b) {
+  const root = document.documentElement;
+  const d = v => Math.max(0, Math.min(255, Math.round(v * 0.58)));
+  const l = v => Math.max(0, Math.min(255, Math.round(v * 1.22 + 18)));
+  const [dr,dg,db] = [d(r),d(g),d(b)];
+  const [lr,lg,lb] = [l(r),l(g),l(b)];
+  root.style.setProperty('--sm-header-bg',   `linear-gradient(90deg,rgb(${dr},${dg},${db}) 0%,rgb(${r},${g},${b}) 60%,rgb(${lr},${lg},${lb}) 100%)`);
+  root.style.setProperty('--sm-border-color', `rgb(${dr},${dg},${db})`);
+  root.style.setProperty('--mdp-header-bg',   `linear-gradient(180deg,rgb(${r},${g},${b}) 0%,rgb(${dr},${dg},${db}) 100%)`);
+  root.style.setProperty('--mdp-border-color',`rgba(${r},${g},${b},0.40)`);
+  root.style.setProperty('--mdp-qr-border',   `rgb(${r},${g},${b})`);
+}
+
 /* ── XP metallic CSS injection (uses --mat-alpha so level slider works) ── */
 const _XP_METALLIC_CSS = {
   silver: {
@@ -8360,11 +8458,25 @@ const _XP_METALLIC_CSS = {
 function _injectXpMetallic(id) {
   const m = _XP_METALLIC_CSS[id];
   if (!m) return;
+  const tx  = _MAT_TEXTURE_URL[id] || '';
+  const rgb = _MAT_DOMINANT_RGB[id] || [180,180,200];
+  /* Texture-aware background: image below + gradient tint on top */
+  const tbBg = tx
+    ? `background-image: url('${tx}') !important; background-size: cover !important; background-position: center !important; background-color: rgba(${rgb[0]},${rgb[1]},${rgb[2]},var(--mat-alpha,1)) !important; background-blend-mode: overlay !important;`
+    : `background: ${m.taskbar} !important;`;
+  const tbBarBg = tx
+    ? `background-image: url('${tx}') !important; background-size: cover !important; background-position: center !important; background-color: rgba(${rgb[0]},${rgb[1]},${rgb[2]},var(--mat-alpha,1)) !important; background-blend-mode: overlay !important;`
+    : `background: ${m.titlebar} !important;`;
+  /* Set label contrast + donate theme */
+  const label = _MAT_LABEL[id] || '#fff';
+  document.documentElement.style.setProperty('--taskbar-label', label);
+  const [dr,dg,db] = rgb.map(v => Math.max(0,Math.min(255,Math.round(v*0.58))));
+  _setDonateTheme(dr, dg, db);
   document.getElementById('theme-style').textContent = [
-    `.taskbar { background: ${m.taskbar} !important; border-top-color: ${m.border} !important; }`,
-    `body:not(.macos) .xp-titlebar { background: ${m.titlebar} !important; }`,
+    `.taskbar { ${tbBg} border-top-color: ${m.border} !important; }`,
+    `body:not(.macos) .xp-titlebar { ${tbBarBg} }`,
     `body:not(.macos) .xp-btn.min, body:not(.macos) .xp-btn.max { background: ${m.minmax} !important; }`,
-    `body:not(.macos) .mv-titlebar { background: ${m.titlebar} !important; }`,
+    `body:not(.macos) .mv-titlebar { ${tbBarBg} }`,
     `body:not(.macos) .mv-min, body:not(.macos) .mv-max { background: ${m.minmax} !important; border-color: ${m.border} !important; }`,
     `body:not(.macos) .mv-wp-btn { background: ${m.minmax} !important; border-color: ${m.border} !important; }`,
     `.tb-btn { background: ${m.minmax} !important; border-color: ${m.border} !important; }`,
@@ -8374,14 +8486,49 @@ function _injectXpMetallic(id) {
 
 function _injectXpGlass(id) {
   const tint = id === 'glass' ? '40,120,200' : '20,90,180';
+  const tx   = _MAT_TEXTURE_URL[id] || '';
+  const rgb  = _MAT_DOMINANT_RGB[id] || [40,120,200];
+  const tbBg = tx
+    ? `background-image: url('${tx}') !important; background-size: cover !important; background-position: center !important; background-color: rgba(${tint},var(--win-glass-alpha,0.10)) !important; background-blend-mode: overlay !important; backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%);`
+    : `background: rgba(${tint},var(--win-glass-alpha,0.10)) !important; backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%);`;
+  const barBg = tx
+    ? `background-image: url('${tx}') !important; background-size: cover !important; background-position: center !important; background-color: rgba(${tint},var(--win-glass-alpha,0.10)) !important; background-blend-mode: overlay !important; backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);`
+    : `background: rgba(${tint},var(--win-glass-alpha,0.10)) !important; backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%);`;
+  /* Glass is always dark-enough → white labels */
+  document.documentElement.style.setProperty('--taskbar-label', '#fff');
+  _setDonateTheme(rgb[0], rgb[1], rgb[2]);
   document.getElementById('theme-style').textContent = [
-    `.taskbar { background: rgba(${tint},var(--win-glass-alpha,0.10)) !important; border-top-color: rgba(${tint},0.55) !important; backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); }`,
-    `body:not(.macos) .xp-titlebar { background: rgba(${tint},var(--win-glass-alpha,0.10)) !important; backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%); }`,
+    `.taskbar { ${tbBg} border-top-color: rgba(${tint},0.55) !important; }`,
+    `body:not(.macos) .xp-titlebar { ${barBg} }`,
     `body:not(.macos) .xp-btn.min, body:not(.macos) .xp-btn.max { background: rgba(${tint},calc(var(--win-glass-alpha,0.10)*2)) !important; }`,
-    `body:not(.macos) .mv-titlebar { background: rgba(${tint},var(--win-glass-alpha,0.10)) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }`,
+    `body:not(.macos) .mv-titlebar { ${barBg} }`,
     `body:not(.macos) .mv-min, body:not(.macos) .mv-max { background: rgba(${tint},calc(var(--win-glass-alpha,0.10)*2)) !important; }`,
     `body:not(.macos) .mv-wp-btn { background: rgba(${tint},calc(var(--win-glass-alpha,0.10)*2)) !important; }`,
     `.tb-btn { background: rgba(${tint},calc(var(--win-glass-alpha,0.10)*1.5)) !important; }`,
+  ].join('\n');
+}
+
+/* ── XP texture injection for organic materials (wood/stone/grass/sand) ── */
+function _injectXpTexture(id) {
+  const tx   = _MAT_TEXTURE_URL[id];
+  const rgb  = _MAT_DOMINANT_RGB[id] || [150,150,150];
+  const hex  = XP_MAT_HEX[id];
+  if (!tx) { applyThemeColor(hex || '#1464c4', false, true); return; }
+  const label = _MAT_LABEL[id] || '#fff';
+  document.documentElement.style.setProperty('--taskbar-label', label);
+  _setDonateTheme(rgb[0], rgb[1], rgb[2]);
+  const tbBg   = `background-image: url('${tx}') !important; background-size: cover !important; background-position: center !important; background-color: rgba(${rgb[0]},${rgb[1]},${rgb[2]},var(--mat-alpha,1)) !important; background-blend-mode: overlay !important;`;
+  const minmax = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.6))`;
+  const border = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.8))`;
+  document.getElementById('theme-style').textContent = [
+    `.taskbar { ${tbBg} border-top-color: ${border} !important; }`,
+    `body:not(.macos) .xp-titlebar { ${tbBg} }`,
+    `body:not(.macos) .xp-btn.min, body:not(.macos) .xp-btn.max { background: ${minmax} !important; }`,
+    `body:not(.macos) .mv-titlebar { ${tbBg} }`,
+    `body:not(.macos) .mv-min, body:not(.macos) .mv-max { background: ${minmax} !important; border-color: ${border} !important; }`,
+    `body:not(.macos) .mv-wp-btn { background: ${minmax} !important; border-color: ${border} !important; }`,
+    `.tb-btn { background: ${minmax} !important; border-color: ${border} !important; }`,
+    `.tb-btn.active { background: rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.85)) !important; }`,
   ].join('\n');
 }
 
@@ -8392,6 +8539,8 @@ function _applyXpMaterial(id, skipMacSync) {
     _injectXpMetallic(id);
   } else if (id === 'glass' || id === 'water') {
     _injectXpGlass(id);
+  } else if (_MAT_TEXTURE_URL[id]) {
+    _injectXpTexture(id);
   } else {
     applyThemeColor(XP_MAT_HEX[id], false, skipMacSync);
   }
@@ -8877,13 +9026,13 @@ const _MAT_THEME = {
     win:  'linear-gradient(155deg,rgba(238,156,114,var(--mat-alpha,1)) 0%,rgba(138,60,18,var(--mat-alpha,1)) 13%,rgba(222,122,74,var(--mat-alpha,1)) 25%,rgba(164,82,34,var(--mat-alpha,1)) 38%,rgba(216,110,62,var(--mat-alpha,1)) 52%,rgba(116,48,12,var(--mat-alpha,1)) 66%,rgba(226,132,82,var(--mat-alpha,1)) 80%,rgba(154,70,26,var(--mat-alpha,1)) 100%)',
     menu: 'linear-gradient(155deg,rgba(242,162,124,var(--mat-alpha,1)) 0%,rgba(150,70,28,var(--mat-alpha,1)) 13%,rgba(228,134,84,var(--mat-alpha,1)) 25%,rgba(178,96,48,var(--mat-alpha,1)) 38%,rgba(222,120,70,var(--mat-alpha,1)) 52%,rgba(128,58,20,var(--mat-alpha,1)) 66%,rgba(232,142,92,var(--mat-alpha,1)) 80%,rgba(164,82,38,var(--mat-alpha,1)) 100%)',
     text: '#2e1008', hover: 'rgba(0,0,0,.12)' },
-  /* ── Liquid Glass: macOS title bars and menu bar use translucent tinted rgba ── */
-  wood:   { win: 'rgba(180,130,80,var(--win-glass-alpha,0.10))',   menu: 'rgba(180,130,80,var(--menu-glass-alpha,0.12))',   text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  stone:  { win: 'rgba(140,140,140,var(--win-glass-alpha,0.10))', menu: 'rgba(140,140,140,var(--menu-glass-alpha,0.12))', text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  glass:  { win: 'rgba(180,220,255,var(--win-glass-alpha,0.10))', menu: 'rgba(180,220,255,var(--menu-glass-alpha,0.12))', text: '#fff', hover: 'rgba(255,255,255,.2)'  },
-  water:  { win: 'rgba(80,160,220,var(--win-glass-alpha,0.10))',  menu: 'rgba(80,160,220,var(--menu-glass-alpha,0.12))',  text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  grass:  { win: 'rgba(80,180,90,var(--win-glass-alpha,0.10))',   menu: 'rgba(80,180,90,var(--menu-glass-alpha,0.12))',   text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  sand:   { win: 'rgba(210,190,140,var(--win-glass-alpha,0.10))', menu: 'rgba(210,190,140,var(--menu-glass-alpha,0.12))', text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
+  /* ── Liquid Glass: macOS title bars and menu bar use texture + translucent tint ── */
+  wood:   { win: `linear-gradient(rgba(180,130,80,var(--win-glass-alpha,0.10)),rgba(180,130,80,var(--win-glass-alpha,0.10))),url('/mat-wood.jpg') center/cover no-repeat`,   menu: `linear-gradient(rgba(180,130,80,var(--menu-glass-alpha,0.12)),rgba(180,130,80,var(--menu-glass-alpha,0.12))),url('/mat-wood.jpg') center/cover no-repeat`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  stone:  { win: `linear-gradient(rgba(140,140,140,var(--win-glass-alpha,0.10)),rgba(140,140,140,var(--win-glass-alpha,0.10))),url('/mat-stone.jpg') center/cover no-repeat`, menu: `linear-gradient(rgba(140,140,140,var(--menu-glass-alpha,0.12)),rgba(140,140,140,var(--menu-glass-alpha,0.12))),url('/mat-stone.jpg') center/cover no-repeat`, text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  glass:  { win: `linear-gradient(rgba(180,220,255,var(--win-glass-alpha,0.10)),rgba(180,220,255,var(--win-glass-alpha,0.10))),url('/mat-glass.jpg') center/cover no-repeat`, menu: `linear-gradient(rgba(180,220,255,var(--menu-glass-alpha,0.12)),rgba(180,220,255,var(--menu-glass-alpha,0.12))),url('/mat-glass.jpg') center/cover no-repeat`, text: '#fff', hover: 'rgba(255,255,255,.2)'  },
+  water:  { win: `linear-gradient(rgba(80,160,220,var(--win-glass-alpha,0.10)),rgba(80,160,220,var(--win-glass-alpha,0.10))),url('/mat-water.png') center/cover no-repeat`,  menu: `linear-gradient(rgba(80,160,220,var(--menu-glass-alpha,0.12)),rgba(80,160,220,var(--menu-glass-alpha,0.12))),url('/mat-water.png') center/cover no-repeat`,  text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  grass:  { win: `linear-gradient(rgba(80,180,90,var(--win-glass-alpha,0.10)),rgba(80,180,90,var(--win-glass-alpha,0.10))),url('/mat-grass.jpg') center/cover no-repeat`,   menu: `linear-gradient(rgba(80,180,90,var(--menu-glass-alpha,0.12)),rgba(80,180,90,var(--menu-glass-alpha,0.12))),url('/mat-grass.jpg') center/cover no-repeat`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  sand:   { win: `linear-gradient(rgba(210,190,140,var(--win-glass-alpha,0.10)),rgba(210,190,140,var(--win-glass-alpha,0.10))),url('/mat-sand.jpg') center/cover no-repeat`, menu: `linear-gradient(rgba(210,190,140,var(--menu-glass-alpha,0.12)),rgba(210,190,140,var(--menu-glass-alpha,0.12))),url('/mat-sand.jpg') center/cover no-repeat`, text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
 };
 
 /* ── Sync dock + macOS menu bar + window bars from a hex colour ── */
@@ -8925,6 +9074,8 @@ function _syncMacDockFromHex(hex) {
   }
   root.style.setProperty('--mac-menu-text',  textCol);
   root.style.setProperty('--mac-menu-hover', hoverCol);
+  root.style.setProperty('--taskbar-label',  isLight ? '#1a1a1a' : '#fff');
+  _setDonateTheme(rv, gv, bv);
   const wifiImg = document.querySelector('#mac-wifi-btn img');
   if (wifiImg) wifiImg.style.filter = (_macMode || !isLight) ? 'brightness(0) invert(1)' : 'grayscale(1)';
   /* Deactivate material swatches since we're now using a custom colour */
@@ -8955,15 +9106,26 @@ function _applyDockMaterial(id) {
       ? 'brightness(0) invert(1)'
       : 'grayscale(1)';
   }
+  /* Set taskbar label contrast from material */
+  const label = _MAT_LABEL[id] || '#fff';
+  root.style.setProperty('--taskbar-label', label);
+  /* Donate theming from material dominant colour */
+  const matRgb = _MAT_DOMINANT_RGB[id];
+  if (matRgb) _setDonateTheme(matRgb[0], matRgb[1], matRgb[2]);
   _fitDockToScreen();
   /* Persist */
   localStorage.setItem('dock-material', id);
   localStorage.removeItem('dock-custom-color');
-  /* Reset glass-tint vars so the Liquid Glass override uses white (neutral) for material mode */
-  const root2 = document.documentElement;
-  root2.style.setProperty('--dock-glass-r', 255);
-  root2.style.setProperty('--dock-glass-g', 255);
-  root2.style.setProperty('--dock-glass-b', 255);
+  /* Fix white-dock bug: use material's dominant colour for glass-tint vars */
+  if (matRgb) {
+    root.style.setProperty('--dock-glass-r', matRgb[0]);
+    root.style.setProperty('--dock-glass-g', matRgb[1]);
+    root.style.setProperty('--dock-glass-b', matRgb[2]);
+  } else {
+    root.style.setProperty('--dock-glass-r', 255);
+    root.style.setProperty('--dock-glass-g', 255);
+    root.style.setProperty('--dock-glass-b', 255);
+  }
   /* Mirror material to XP taskbar/titlebars with proper metallic/glass injection */
   _applyXpMaterial(id, true);
   /* Re-apply active state (applyThemeColor in _applyXpMaterial clears it for non-metallic) */
