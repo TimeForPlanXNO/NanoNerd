@@ -3849,10 +3849,11 @@ function toggleWpPicker(e) {
 function closeWpPicker() {
   const dlg = document.getElementById('wp-dialog');
   dlg.classList.remove('open');
-  /* Reset any drag-repositioned position so next open uses the default CSS anchor */
-  dlg.style.top = '';
-  dlg.style.left = '';
-  dlg.style.right = '';
+  /* Reset any drag-repositioned position/coordinates so next open uses the default CSS anchor */
+  dlg.style.position = '';
+  dlg.style.top    = '';
+  dlg.style.left   = '';
+  dlg.style.right  = '';
   dlg.style.bottom = '';
   _wpPickerOpen = false;
 }
@@ -3871,11 +3872,12 @@ function closeWpPicker() {
     if (window.matchMedia('(pointer:coarse)').matches) return;
     const dlg = document.getElementById('wp-dialog');
     const r   = dlg.getBoundingClientRect();
-    /* Switch from CSS anchor (top/right absolute) to explicit top/left */
-    dlg.style.top    = r.top  + 'px';
-    dlg.style.left   = r.left + 'px';
-    dlg.style.right  = 'auto';
-    dlg.style.bottom = 'auto';
+    /* Switch to fixed positioning so viewport-based clamping is exact */
+    dlg.style.position = 'fixed';
+    dlg.style.top      = r.top  + 'px';
+    dlg.style.left     = r.left + 'px';
+    dlg.style.right    = 'auto';
+    dlg.style.bottom   = 'auto';
     _ox = e.clientX - r.left;
     _oy = e.clientY - r.top;
     _dragging = true;
@@ -3893,9 +3895,10 @@ function closeWpPicker() {
     dlg.style.top  = Math.max(0, Math.min(maxY, e.clientY - _oy)) + 'px';
   });
 
-  function _endDrag() {
+  function _endDrag(e) {
     if (!_dragging) return;
     _dragging = false;
+    head.releasePointerCapture(e.pointerId);
     head.style.cursor = '';
   }
   head.addEventListener('pointerup',     _endDrag);
