@@ -3086,7 +3086,6 @@
         <div class="cp-main">
           <input type="color" id="cp-input" class="cp-color-wheel" value="#1550d4"
                  oninput="applyThemeColor(this.value)">
-          <button class="cp-eye" id="cp-eye-btn" onclick="cpPickFromScreen()" title="Pick color from screen">💧 Pick</button>
         </div>
         <div class="cp-presets" id="cp-presets" style="margin-top:6px;"></div>
       </div>
@@ -3951,9 +3950,6 @@ function _buildNnBgPresetsLazy() {
     sw.onclick = function() { _applyNnBgColorHex(p.hex); };
     container.appendChild(sw);
   });
-  /* Disable eyedropper if not supported */
-  const eye = document.getElementById('nn-bg-eye-btn');
-  if (eye && !window.EyeDropper) eye.disabled = true;
   /* Restore saved hex */
   const savedHex = localStorage.getItem('xp-nn-bg-hex');
   const inp = document.getElementById('nn-bg-color-input');
@@ -6230,8 +6226,6 @@ const wm = {
             <div class="nn-bg-cp-row">
               <input type="color" id="nn-bg-color-input" class="cp-color-wheel"
                      value="#001800" oninput="_applyNnBgColorHex(this.value)">
-              <button class="cp-eye" id="nn-bg-eye-btn" onclick="_nnBgPickFromScreen()"
-                      title="Pick from screen">💧 Pick</button>
             </div>
             <div class="cp-presets" id="nn-bg-presets"></div>
             <button class="nn-bg-reset-btn"
@@ -8150,7 +8144,6 @@ function _closeCpPopup()  { _closeDockSettings(); }
 
 /* Disable eyedropper button on taskbar colour picker if not supported */
 (function() {
-  if (!window.EyeDropper) document.getElementById('cp-eye-btn').disabled = true;
   /* nn-bg-eye-btn is built lazily inside the style panel — handled in _buildNnBgPresetsLazy() */
 })();
 
@@ -9081,8 +9074,8 @@ function _syncMacDockFromHex(hex) {
       dock.style.borderColor = `rgba(${Math.min(255,rv+60)},${Math.min(255,gv+60)},${Math.min(255,bv+60)},.22)`;
     }
   }
-  const textCol  = _macMode ? 'rgba(255,255,255,.9)' : (isLight ? '#1a1a1a' : '#fff');
-  const hoverCol = _macMode ? 'rgba(255,255,255,.2)'  : (isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.18)');
+  const textCol  = isLight ? '#1a1a1a' : 'rgba(255,255,255,.9)';
+  const hoverCol = isLight ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.2)';
   if (_macMode) {
     root.style.setProperty('--mac-win-bar',  `rgba(${rv},${gv},${bv},var(--win-glass-alpha,0.10))`);
     root.style.setProperty('--mac-menu-bar', `rgba(${rv},${gv},${bv},var(--menu-glass-alpha,0.12))`);
