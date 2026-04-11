@@ -8137,7 +8137,7 @@ function _closeCpPopup()  { _closeDockSettings(); }
     sw.dataset.hex = hex;
     sw.title = label;
     sw.style.background = hex;
-    sw.onclick = () => { applyThemeColor(hex); _closeCpPopup(); };
+    sw.onclick = () => { applyThemeColor(hex); };
     container.appendChild(sw);
   });
 })();
@@ -8913,6 +8913,14 @@ document.addEventListener('click', function(e) {
       !e.target.closest('#dock-settings-btn') &&
       !e.target.closest('#cp-btn')) {
     _closeDockSettings();
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if (_settingsDlgOpen &&
+      !e.target.closest('#nn-style-panel') &&
+      !e.target.closest('#nn-settings-tb-btn')) {
+    _nnStyleClose();
   }
 });
 
