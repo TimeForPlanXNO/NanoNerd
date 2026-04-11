@@ -1313,7 +1313,7 @@
       position: fixed;
       bottom: 38px; left: 4px;
       width: 238px;
-      background: #d4d0c8;
+      background: rgba(212,208,200,var(--mat-alpha,1));
       border: 2px solid var(--sm-border-color,#0055e5);
       border-radius: 8px 8px 0 0;
       box-shadow: 3px -2px 12px rgba(0,0,0,.45);
@@ -1356,7 +1356,7 @@
     .sm-body {
       padding: 14px 12px;
       display: flex; flex-direction: column; align-items: center; gap: 10px;
-      background: #f0ede8;
+      background: rgba(240,237,232,var(--mat-alpha,1));
     }
 
     .sm-qr {
@@ -2395,7 +2395,7 @@
     .mac-donate-popup {
       display: none; position: fixed;
       top: 30px; left: 4px; width: 262px;
-      background: rgba(238,238,238,.97);
+      background: rgba(238,238,238,var(--mat-alpha,.97));
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--mdp-border-color,rgba(0,0,0,.18));
@@ -3348,6 +3348,9 @@ function _stopMatrixWallpaper() {
     _matrixWpController._cleanupResize?.();
     _matrixWpController = null;
   }
+  /* Restore app-shell background colour (was set to #000 when matrix was active) */
+  const shell = document.getElementById('app-shell');
+  if (shell) shell.style.backgroundColor = '';
 }
 
 function _applyMatrixWallpaper() {
@@ -3358,6 +3361,8 @@ function _applyMatrixWallpaper() {
   if (vid) vid.remove();
   _stopMatrixWallpaper();
   shell.style.backgroundImage = 'none';
+  /* Dark backdrop so semi-transparent XP elements blur over black, not white */
+  shell.style.backgroundColor = '#000';
   _currentWallpaper     = '_matrix_';
   _currentWallpaperType = 'matrix';
   localStorage.setItem('xp-wallpaper',      '_matrix_');
@@ -3365,18 +3370,29 @@ function _applyMatrixWallpaper() {
   /* Create wallpaper canvas */
   const canvas = document.createElement('canvas');
   canvas.id = 'wp-matrix-canvas';
-  canvas.width  = desktop.offsetWidth  || window.innerWidth;
-  canvas.height = desktop.offsetHeight || window.innerHeight;
+  /* backgroundColor prevents white flash when the bitmap is cleared on resize */
+  canvas.style.backgroundColor = '#000';
   desktop.insertBefore(canvas, desktop.firstChild);
   _matrixWpController = _startMatrixRain(canvas, { wallpaperMode: true });
-  /* Keep canvas sized to desktop */
+  /* Keep canvas sized to desktop — only call controller.resize() (DPR-aware);
+     do NOT set canvas.width/height here, which would cause a double-resize that
+     resets context state and distorts characters on orientation change.        */
+  let _resizeTimer = null;
   function onResize() {
-    canvas.width  = desktop.offsetWidth;
-    canvas.height = desktop.offsetHeight;
     _matrixWpController?.resize();
   }
+  function onOrientationChange() {
+    /* Delay until layout has stabilised after the rotation */
+    clearTimeout(_resizeTimer);
+    _resizeTimer = setTimeout(() => { _matrixWpController?.resize(); }, 100);
+  }
   window.addEventListener('resize', onResize);
-  _matrixWpController._cleanupResize = () => window.removeEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onOrientationChange);
+  _matrixWpController._cleanupResize = () => {
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('orientationchange', onOrientationChange);
+    clearTimeout(_resizeTimer);
+  };
   /* Refresh active state in wallpaper picker grids */
   document.querySelectorAll('.wp-thumb').forEach(el => {
     el.classList.toggle('active', el.dataset.src === '_matrix_');
@@ -8407,14 +8423,17 @@ function _setDonateTheme(r, g, b, txUrl) {
   const l = v => Math.max(0, Math.min(255, Math.round(v * 1.22 + 18)));
   const [dr,dg,db] = [d(r),d(g),d(b)];
   const [lr,lg,lb] = [l(r),l(g),l(b)];
-  const texLayer = txUrl ? `,url('${txUrl}') center/cover no-repeat` : '';
-  const smAlpha  = txUrl ? '.65' : '1';
-  const mdpAlpha = txUrl ? '.65' : '1';
+  const texLayer  = txUrl ? `,url('${txUrl}') center/cover no-repeat` : '';
+  /* Use var(--mat-alpha,1) so the opacity/transparency slider also affects
+     the donate popup headers — the base multiplier (.65 for textured materials)
+     is preserved via calc() so texture mode stays correctly semi-transparent.  */
+  const smAlphaExpr  = txUrl ? 'calc(var(--mat-alpha,1)*.65)' : 'var(--mat-alpha,1)';
+  const mdpAlphaExpr = txUrl ? 'calc(var(--mat-alpha,1)*.65)' : 'var(--mat-alpha,1)';
   root.style.setProperty('--sm-header-bg',
-    `linear-gradient(90deg,rgba(${dr},${dg},${db},${smAlpha}) 0%,rgba(${r},${g},${b},${smAlpha}) 60%,rgba(${lr},${lg},${lb},${smAlpha}) 100%)${texLayer}`);
+    `linear-gradient(90deg,rgba(${dr},${dg},${db},${smAlphaExpr}) 0%,rgba(${r},${g},${b},${smAlphaExpr}) 60%,rgba(${lr},${lg},${lb},${smAlphaExpr}) 100%)${texLayer}`);
   root.style.setProperty('--sm-border-color', `rgb(${dr},${dg},${db})`);
   root.style.setProperty('--mdp-header-bg',
-    `linear-gradient(180deg,rgba(${r},${g},${b},${mdpAlpha}) 0%,rgba(${dr},${dg},${db},${mdpAlpha}) 100%)${texLayer}`);
+    `linear-gradient(180deg,rgba(${r},${g},${b},${mdpAlphaExpr}) 0%,rgba(${dr},${dg},${db},${mdpAlphaExpr}) 100%)${texLayer}`);
   root.style.setProperty('--mdp-border-color',`rgba(${r},${g},${b},0.40)`);
   root.style.setProperty('--mdp-qr-border',   `rgb(${r},${g},${b})`);
 }
