@@ -1647,8 +1647,8 @@
 
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
-      position: absolute; top: 38px; left: 50%; transform: translateX(-50%); right: auto; z-index: 201;
-      width: min(300px, calc(100vw - 20px)); max-height: calc(100vh - 90px);
+      position: absolute; top: 38px; right: 10px; left: auto; transform: none; z-index: 201;
+      width: min(380px, calc(100vw - 20px)); max-height: calc(100vh - 90px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -2014,11 +2014,11 @@
       /* NanoNerd settings dialog: tighter pane height so it stays within window */
       .nn-dlg           { max-height: calc(100vh - 60px); }
       .nn-pane          { max-height: calc(100vh - 140px); }
-      /* Wallpaper: use wide landscape layout, centered */
+      /* Wallpaper: wide landscape layout, right-anchored below button */
       .wp-dialog {
         max-height: calc(100vh - 76px);
-        width: min(420px, calc(100vw - 16px));
-        left: 50%; right: auto; transform: translateX(-50%);
+        width: min(460px, calc(100vw - 16px));
+        right: 10px; left: auto; transform: none;
       }
       .wp-grid { grid-template-columns: repeat(5, 1fr); }
       .wp-dialog-foot { justify-content: space-between; }
@@ -2028,8 +2028,8 @@
       body.macos .wifi-popup { max-height: calc(100vh - 36px); }
       body.macos .wp-dialog  {
         max-height: calc(100vh - 90px);
-        width: min(420px, calc(100vw - 16px));
-        left: 50%; right: auto; transform: translateX(-50%);
+        width: min(460px, calc(100vw - 16px));
+        right: 10px; left: auto; transform: none;
       }
       body.macos .wp-grid     { grid-template-columns: repeat(5, 1fr); }
       /* Compact inner padding for all menus in landscape */
@@ -2099,7 +2099,7 @@
 
     /* Dialog shell */
     body.macos .wp-dialog {
-      top: 66px; left: 50%; transform: translateX(-50%); right: auto; max-height: calc(100vh - 110px);
+      top: 62px; right: 10px; left: auto; transform: none; max-height: calc(100vh - 110px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -3861,8 +3861,8 @@ function _clampWpDialog() {
   if (!dlg || !shell || !_wpPickerOpen) return;
   const dr = dlg.getBoundingClientRect();
   const sr = shell.getBoundingClientRect();
-  /* When dragged: dialog uses explicit px left/top (no transform); clamp all four edges */
-  const dragged = dlg.style.left && !dlg.style.left.includes('%');
+  /* When dragged: dialog has explicit numeric px left (e.g. "490px"), not 'auto' or '50%' */
+  const dragged = dlg.style.left && dlg.style.left !== 'auto' && !dlg.style.left.includes('%');
   if (dragged) {
     const curL = parseFloat(dlg.style.left) || 0;
     const curT = parseFloat(dlg.style.top)  || 0;
@@ -3891,6 +3891,27 @@ function toggleWpPicker(e) {
   } else {
     _buildWpGrid4k();   /* build 4K tab (default active) */
     _buildWpGridXp();   /* pre-build XP tab so switching is instant */
+    /* Position dialog flush below the 🖼️ button, aligned by orientation */
+    const btn   = document.getElementById('wp-btn');
+    const shell = document.getElementById('app-shell');
+    if (btn && shell) {
+      const br  = btn.getBoundingClientRect();
+      const sr  = shell.getBoundingClientRect();
+      const top = Math.round(br.bottom - sr.top + 4);
+      if (_isMobilePortrait()) {
+        /* Portrait: center below the centered button */
+        dlg.style.top       = top + 'px';
+        dlg.style.left      = '50%';
+        dlg.style.right     = 'auto';
+        dlg.style.transform = 'translateX(-50%)';
+      } else {
+        /* Desktop / landscape: right-align below the right-corner button */
+        dlg.style.top       = top + 'px';
+        dlg.style.right     = Math.round(sr.right - br.right) + 'px';
+        dlg.style.left      = 'auto';
+        dlg.style.transform = '';
+      }
+    }
     dlg.classList.add('open');
     _wpPickerOpen = true;
     requestAnimationFrame(_clampWpDialog);
