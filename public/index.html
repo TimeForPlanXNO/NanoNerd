@@ -1648,7 +1648,7 @@
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
       position: absolute; top: 38px; right: 10px; z-index: 201;
-      width: 320px; max-height: calc(100vh - 50px);
+      width: min(320px, calc(100vw - 20px)); max-height: calc(100vh - 90px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -1746,8 +1746,8 @@
     /* ── NANONERD SETTINGS DIALOG (compact floating tabbed panel) ── */
     .nn-dlg {
       position: absolute; top: 44px; right: 4px; z-index: 30;
-      width: 292px;
-      max-height: calc(100vh - 54px);
+      width: min(292px, calc(100% - 8px));
+      max-height: min(calc(100vh - 54px), calc(100% - 54px));
       background: #12181f; border: 1px solid #2a3a4a;
       border-radius: 7px; box-shadow: 0 8px 28px rgba(0,0,0,.72);
       display: flex; flex-direction: column; overflow: hidden;
@@ -1786,7 +1786,7 @@
     /* panes */
     .nn-pane {
       display: none; overflow-y: auto; padding: 10px 10px 12px;
-      max-height: 260px;
+      max-height: min(260px, calc(100vh - 180px));
     }
     .nn-pane.active { display: block; }
     .nn-pane::-webkit-scrollbar { width: 5px; }
@@ -1908,6 +1908,21 @@
         box-shadow: 0 0 0 2px rgba(0,0,0,.75),
                     inset 0 1px 0 rgba(255,255,255,.08);
       }
+      /* Wallpaper dialog: full-width minus margins, clamp height above XP taskbar */
+      .wp-dialog {
+        width: min(320px, calc(100vw - 20px));
+        max-height: calc(100vh - 92px);
+        right: max(10px, env(safe-area-inset-right));
+      }
+      /* macOS: full-width minus margins, clamp height above dock */
+      body.macos .wp-dialog {
+        width: min(320px, calc(100vw - 20px));
+        max-height: calc(100vh - 110px);
+        right: max(10px, env(safe-area-inset-right));
+      }
+      /* Chat Settings: clamp width + pane height */
+      .nn-dlg  { width: min(292px, calc(100% - 8px)); max-height: calc(100% - 54px); }
+      .nn-pane { max-height: min(260px, calc(100vh - 200px)); }
     }
 
     /* ── Theme colour controls (now inside dock/taskbar settings panel) ── */
@@ -1995,7 +2010,7 @@
       .nn-pane          { max-height: calc(100vh - 140px); }
       /* Wallpaper: use wide landscape layout */
       .wp-dialog {
-        max-height: calc(100vh - 50px);
+        max-height: calc(100vh - 76px);
         width: min(460px, calc(100vw - 16px));
         right: max(8px, env(safe-area-inset-right));
       }
@@ -2006,7 +2021,7 @@
       body.macos .stats-popup,
       body.macos .wifi-popup { max-height: calc(100vh - 36px); }
       body.macos .wp-dialog  {
-        max-height: calc(100vh - 70px);
+        max-height: calc(100vh - 90px);
         width: min(460px, calc(100vw - 16px));
         right: max(8px, env(safe-area-inset-right));
       }
@@ -2078,7 +2093,7 @@
 
     /* Dialog shell */
     body.macos .wp-dialog {
-      top: 66px; max-height: calc(100vh - 70px);
+      top: 66px; max-height: calc(100vh - 110px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
       -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -3833,6 +3848,37 @@ function _wpPickerTab(id) {
   else             _buildWpGridXp();
 }
 
+/* Shift the dialog so it is fully inside #app-shell (called on open and resize) */
+function _clampWpDialog() {
+  const dlg   = document.getElementById('wp-dialog');
+  const shell = document.getElementById('app-shell');
+  if (!dlg || !shell || !_wpPickerOpen) return;
+  const dr = dlg.getBoundingClientRect();
+  const sr = shell.getBoundingClientRect();
+  /* Only clamp when the dialog has been moved (left/top inline styles set by drag) */
+  if (dlg.style.left || dlg.style.top) {
+    const curL = parseFloat(dlg.style.left) || 0;
+    const curT = parseFloat(dlg.style.top)  || 0;
+    const maxX = sr.width  - dlg.offsetWidth;
+    const maxY = sr.height - dlg.offsetHeight;
+    dlg.style.left = Math.max(0, Math.min(maxX, curL)) + 'px';
+    dlg.style.top  = Math.max(0, Math.min(maxY, curT)) + 'px';
+    return;
+  }
+  /* Default CSS anchor (right/top): check right edge is not clipped */
+  const rightEdge = dr.right - sr.left;
+  const leftEdge  = dr.left  - sr.left;
+  if (leftEdge < 0) {
+    dlg.style.right = 'auto';
+    dlg.style.left  = '10px';
+  }
+  if (rightEdge > sr.width) {
+    dlg.style.right = '10px';
+    dlg.style.left  = 'auto';
+  }
+}
+window.addEventListener('resize', _clampWpDialog);
+
 function toggleWpPicker(e) {
   if (e) e.stopPropagation();
   const dlg = document.getElementById('wp-dialog');
@@ -3843,6 +3889,7 @@ function toggleWpPicker(e) {
     _buildWpGridXp();   /* pre-build XP tab so switching is instant */
     dlg.classList.add('open');
     _wpPickerOpen = true;
+    requestAnimationFrame(_clampWpDialog);
   }
 }
 
@@ -3859,51 +3906,54 @@ function closeWpPicker() {
 }
 
 /* ── Drag-to-reposition for the wallpaper dialog ── */
-(function _initWpDrag() {
+document.addEventListener('DOMContentLoaded', function _initWpDrag() {
   const head = document.getElementById('wp-dialog-head');
   if (!head) return;
   let _dragging = false, _ox = 0, _oy = 0;
 
   head.addEventListener('pointerdown', function(e) {
-    /* Only drag with primary button; ignore clicks on the close buttons */
     if (e.button !== 0) return;
     if (e.target.closest('.wp-mac-cls, .wp-xp-cls')) return;
-    /* On coarse (touch) devices skip drag to avoid blocking scroll */
-    if (window.matchMedia('(pointer:coarse)').matches) return;
-    const dlg = document.getElementById('wp-dialog');
-    const r   = dlg.getBoundingClientRect();
-    /* Switch to fixed positioning so viewport-based clamping is exact */
-    dlg.style.position = 'fixed';
-    dlg.style.top      = r.top  + 'px';
-    dlg.style.left     = r.left + 'px';
-    dlg.style.right    = 'auto';
-    dlg.style.bottom   = 'auto';
-    _ox = e.clientX - r.left;
-    _oy = e.clientY - r.top;
+    const dlg   = document.getElementById('wp-dialog');
+    const shell = document.getElementById('app-shell');
+    const dr    = dlg.getBoundingClientRect();
+    const sr    = shell.getBoundingClientRect();
+    /* Anchor absolutely relative to #app-shell; clear right/bottom so left/top take over */
+    dlg.style.left   = (dr.left - sr.left) + 'px';
+    dlg.style.top    = (dr.top  - sr.top)  + 'px';
+    dlg.style.right  = 'auto';
+    dlg.style.bottom = 'auto';
+    _ox = e.clientX - dr.left;
+    _oy = e.clientY - dr.top;
     _dragging = true;
     head.setPointerCapture(e.pointerId);
     head.style.cursor = 'grabbing';
     e.preventDefault();
-  });
 
-  head.addEventListener('pointermove', function(e) {
-    if (!_dragging) return;
-    const dlg = document.getElementById('wp-dialog');
-    const maxX = window.innerWidth  - dlg.offsetWidth;
-    const maxY = window.innerHeight - dlg.offsetHeight;
-    dlg.style.left = Math.max(0, Math.min(maxX, e.clientX - _ox)) + 'px';
-    dlg.style.top  = Math.max(0, Math.min(maxY, e.clientY - _oy)) + 'px';
+    function _onMove(ev) {
+      if (!_dragging) return;
+      const dlg2  = document.getElementById('wp-dialog');
+      const shell2 = document.getElementById('app-shell');
+      const sr2   = shell2.getBoundingClientRect();
+      const maxX  = sr2.width  - dlg2.offsetWidth;
+      const maxY  = sr2.height - dlg2.offsetHeight;
+      dlg2.style.left = Math.max(0, Math.min(maxX, ev.clientX - _ox - sr2.left)) + 'px';
+      dlg2.style.top  = Math.max(0, Math.min(maxY, ev.clientY - _oy - sr2.top))  + 'px';
+    }
+    function _onEnd(ev) {
+      if (!_dragging) return;
+      _dragging = false;
+      head.releasePointerCapture(ev.pointerId);
+      head.style.cursor = '';
+      document.removeEventListener('pointermove', _onMove);
+      document.removeEventListener('pointerup',   _onEnd);
+      document.removeEventListener('pointercancel', _onEnd);
+    }
+    document.addEventListener('pointermove',   _onMove);
+    document.addEventListener('pointerup',     _onEnd);
+    document.addEventListener('pointercancel', _onEnd);
   });
-
-  function _endDrag(e) {
-    if (!_dragging) return;
-    _dragging = false;
-    head.releasePointerCapture(e.pointerId);
-    head.style.cursor = '';
-  }
-  head.addEventListener('pointerup',     _endDrag);
-  head.addEventListener('pointercancel', _endDrag);
-})();
+});
 
 /* ══════════════════════════════════════════
    NANONERD STYLE PANEL — wallpapers + opacity + voice
