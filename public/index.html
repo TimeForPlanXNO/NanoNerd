@@ -1660,7 +1660,7 @@
     .wp-dialog.open { display: flex; }
     .wp-dialog-head {
       background: rgba(255,255,255,.08);
-      padding: 7px 10px 7px; color: rgba(255,255,255,.92); font-size: 11px; font-weight: 600;
+      padding: 7px 10px 7px; color: rgba(255,255,255,.92); font-size: 11px; font-weight: bold;
       text-shadow: 0 1px 2px rgba(0,0,0,.5); flex-shrink: 0;
       border-bottom: 1px solid rgba(255,255,255,.1);
       display: flex; align-items: center; gap: 5px;
@@ -2087,9 +2087,9 @@
       border-bottom: 1px solid rgba(255,255,255,.07);
       border-radius: 10px 10px 0 0;
       padding: 8px 12px 8px 10px;
-      color: rgba(255,255,255,.90);
+      color: var(--mac-menu-text, rgba(255,255,255,.90));
       font-family: -apple-system, "Segoe UI", Tahoma, sans-serif;
-      font-size: 12px; font-weight: 600;
+      font-size: 12px; font-weight: bold;
       text-shadow: none;
       display: flex; align-items: center; gap: 8px;
     }
@@ -2281,10 +2281,10 @@
       min-height: 30px;
     }
     body.macos .xp-win-title {
-      color: rgba(255,255,255,.85);
+      color: var(--mac-menu-text, rgba(255,255,255,.85));
       text-shadow: none;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: bold;
       flex: 1;
       justify-content: center;
     }
@@ -8404,7 +8404,7 @@ const _MAT_TEXTURE_URL = {
 /* ── Taskbar label contrast per material ── */
 const _MAT_LABEL = {
   silver: '#1a1a1a', gold: '#2e1800', copper: '#fff',
-  wood:   '#fff',    stone: '#1a1a1a', glass:  '#fff',
+  wood:   '#fff',    stone: '#1a1a1a', glass:  '#1a1a1a',
   water:  '#1a1a1a', grass: '#fff',   sand:   '#1a1a1a',
 };
 
@@ -9047,7 +9047,7 @@ const _MAT_THEME = {
      valid CSS image layers and fade together under opacity:var(--mat-alpha) on ::before ── */
   wood:   { win: `linear-gradient(rgba(180,130,80,.45),rgba(180,130,80,.45))`,   menu: `linear-gradient(rgba(180,130,80,.45),rgba(180,130,80,.45))`,   text: '#fff',    hover: 'rgba(255,255,255,.18)' },
   stone:  { win: `linear-gradient(rgba(140,140,140,.45),rgba(140,140,140,.45))`, menu: `linear-gradient(rgba(140,140,140,.45),rgba(140,140,140,.45))`, text: '#1a1a1a', hover: 'rgba(0,0,0,.1)'         },
-  glass:  { win: `linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45))`, menu: `linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45))`, text: '#fff',    hover: 'rgba(255,255,255,.2)'   },
+  glass:  { win: `linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45))`, menu: `linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45))`, text: '#1a1a1a', hover: 'rgba(0,0,0,.1)'          },
   water:  { win: `linear-gradient(rgba(80,160,220,.45),rgba(80,160,220,.45))`,   menu: `linear-gradient(rgba(80,160,220,.45),rgba(80,160,220,.45))`,   text: '#1a1a1a', hover: 'rgba(0,0,0,.1)'         },
   grass:  { win: `linear-gradient(rgba(80,180,90,.45),rgba(80,180,90,.45))`,     menu: `linear-gradient(rgba(80,180,90,.45),rgba(80,180,90,.45))`,     text: '#fff',    hover: 'rgba(255,255,255,.18)'  },
   sand:   { win: `linear-gradient(rgba(210,190,140,.45),rgba(210,190,140,.45))`, menu: `linear-gradient(rgba(210,190,140,.45),rgba(210,190,140,.45))`, text: '#3a2e10', hover: 'rgba(0,0,0,.1)'         },
