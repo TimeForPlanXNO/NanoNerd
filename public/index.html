@@ -2542,35 +2542,35 @@
       background-size: cover; background-position: center;
       opacity: var(--mat-alpha, 1);
     }
-    .mac-dock.mat-silver { border-color: rgba(200,200,222,.85); box-shadow: 0 4px 28px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.8); }
+    .mac-dock.mat-silver { border-color: rgba(200,200,222,calc(var(--mat-alpha,1)*.85)); box-shadow: 0 4px 28px rgba(0,0,0,calc(var(--mat-alpha,1)*.30)), inset 0 1px 0 rgba(255,255,255,calc(var(--mat-alpha,1)*.80)); }
     .mac-dock.mat-silver::before {
       background:
         linear-gradient(155deg,rgba(242,242,246,.55) 0%,rgba(168,170,188,.55) 13%,rgba(248,248,252,.55) 25%,rgba(190,190,212,.55) 38%,rgba(236,236,244,.55) 52%,rgba(162,162,184,.55) 66%,rgba(240,240,250,.55) 80%,rgba(196,196,218,.55) 100%),
         url('/mat-silver.jpg') center/cover no-repeat;
     }
-    .mac-dock.mat-gold { border-color: rgba(220,178,60,.85); box-shadow: 0 4px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,245,180,.7); }
+    .mac-dock.mat-gold { border-color: rgba(220,178,60,calc(var(--mat-alpha,1)*.85)); box-shadow: 0 4px 28px rgba(0,0,0,calc(var(--mat-alpha,1)*.28)), inset 0 1px 0 rgba(255,245,180,calc(var(--mat-alpha,1)*.70)); }
     .mac-dock.mat-gold::before {
       background:
         linear-gradient(155deg,rgba(255,238,148,.45) 0%,rgba(188,132,0,.45) 13%,rgba(255,230,108,.45) 25%,rgba(218,168,30,.45) 38%,rgba(252,220,80,.45) 52%,rgba(174,118,0,.45) 66%,rgba(254,234,124,.45) 80%,rgba(210,160,18,.45) 100%),
         url('/mat-gold.jpg') center/cover no-repeat;
     }
-    .mac-dock.mat-copper { border-color: rgba(194,108,64,.85); box-shadow: 0 4px 28px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,210,180,.6); }
+    .mac-dock.mat-copper { border-color: rgba(194,108,64,calc(var(--mat-alpha,1)*.85)); box-shadow: 0 4px 28px rgba(0,0,0,calc(var(--mat-alpha,1)*.30)), inset 0 1px 0 rgba(255,210,180,calc(var(--mat-alpha,1)*.60)); }
     .mac-dock.mat-copper::before {
       background:
         linear-gradient(155deg,rgba(238,156,114,.45) 0%,rgba(138,60,18,.45) 13%,rgba(222,122,74,.45) 25%,rgba(164,82,34,.45) 38%,rgba(216,110,62,.45) 52%,rgba(116,48,12,.45) 66%,rgba(226,132,82,.45) 80%,rgba(154,70,26,.45) 100%),
         url('/mat-copper.jpg') center/cover no-repeat;
     }
-    .mac-dock.mat-wood   { border-color: rgba(160,120,70,.55); }
+    .mac-dock.mat-wood   { border-color: rgba(160,120,70,calc(var(--mat-alpha,1)*.55)); }
     .mac-dock.mat-wood::before   { background: rgba(180,130,80,.28), url('/mat-wood.jpg') center/cover no-repeat; }
-    .mac-dock.mat-stone  { border-color: rgba(160,160,160,.50); }
+    .mac-dock.mat-stone  { border-color: rgba(160,160,160,calc(var(--mat-alpha,1)*.50)); }
     .mac-dock.mat-stone::before  { background: rgba(140,140,140,.28), url('/mat-stone.jpg') center/cover no-repeat; }
-    .mac-dock.mat-glass  { border-color: rgba(160,210,255,.55); box-shadow: 0 4px 28px rgba(0,100,255,.12), inset 0 1px 0 rgba(255,255,255,.8); }
+    .mac-dock.mat-glass  { border-color: rgba(160,210,255,calc(var(--mat-alpha,1)*.55)); box-shadow: 0 4px 28px rgba(0,100,255,calc(var(--mat-alpha,1)*.12)), inset 0 1px 0 rgba(255,255,255,calc(var(--mat-alpha,1)*.80)); }
     .mac-dock.mat-glass::before  { background: rgba(180,220,255,.22), url('/mat-glass.jpg') center/cover no-repeat; }
-    .mac-dock.mat-water  { border-color: rgba(80,160,220,.55); }
+    .mac-dock.mat-water  { border-color: rgba(80,160,220,calc(var(--mat-alpha,1)*.55)); }
     .mac-dock.mat-water::before  { background: rgba(80,160,220,.28), url('/mat-water.png') center/cover no-repeat; }
-    .mac-dock.mat-grass  { border-color: rgba(80,160,80,.50); }
+    .mac-dock.mat-grass  { border-color: rgba(80,160,80,calc(var(--mat-alpha,1)*.50)); }
     .mac-dock.mat-grass::before  { background: rgba(80,180,90,.28), url('/mat-grass.jpg') center/cover no-repeat; }
-    .mac-dock.mat-sand   { border-color: rgba(200,180,120,.50); }
+    .mac-dock.mat-sand   { border-color: rgba(200,180,120,calc(var(--mat-alpha,1)*.50)); }
     .mac-dock.mat-sand::before   { background: rgba(210,190,140,.28), url('/mat-sand.jpg') center/cover no-repeat; }
     /* ── macOS: custom colour (no mat-X class) → Liquid Glass from --dock-glass-rgb ── */
     body.macos .mac-dock:not(.mat-gold):not(.mat-silver):not(.mat-copper):not(.mat-wood):not(.mat-stone):not(.mat-glass):not(.mat-water):not(.mat-grass):not(.mat-sand) {
@@ -8491,7 +8491,7 @@ function _injectXpGlass(id) {
     ? `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${tx}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);`
     : '';
   const rules = tx ? [
-    `.taskbar{position:relative!important;isolation:isolate;background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},0.55)!important;}`,
+    `.taskbar{position:relative!important;isolation:isolate;background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;}`,
     `.taskbar::before{${pseudo}}`,
     `body:not(.macos) .xp-titlebar{position:relative!important;isolation:isolate;background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
     `body:not(.macos) .xp-titlebar::before{${pseudo}}`,
@@ -8502,13 +8502,13 @@ function _injectXpGlass(id) {
     `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
   ] : [
-    `.taskbar{background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},0.55)!important;}`,
-    `body:not(.macos) .xp-titlebar{background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
-    `body:not(.macos) .xp-btn.min,body:not(.macos) .xp-btn.max{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*2))!important;}`,
-    `body:not(.macos) .mv-titlebar{background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
-    `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*2))!important;}`,
-    `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*2))!important;}`,
-    `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*1.5))!important;}`,
+    `.taskbar{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;}`,
+    `body:not(.macos) .xp-titlebar{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
+    `body:not(.macos) .xp-btn.min,body:not(.macos) .xp-btn.max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
+    `body:not(.macos) .mv-titlebar{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
+    `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
+    `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
+    `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
   ];
   document.getElementById('theme-style').textContent = rules.join('\n');
 }
