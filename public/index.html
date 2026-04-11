@@ -2562,17 +2562,17 @@
         url('/mat-copper.jpg') center/cover no-repeat;
     }
     .mac-dock.mat-wood   { border-color: rgba(160,120,70,calc(var(--mat-alpha,1)*.55)); }
-    .mac-dock.mat-wood::before   { background: rgba(180,130,80,.28), url('/mat-wood.jpg') center/cover no-repeat; }
+    .mac-dock.mat-wood::before   { background: linear-gradient(rgba(180,130,80,.45),rgba(180,130,80,.45)), url('/mat-wood.jpg') center/cover no-repeat; }
     .mac-dock.mat-stone  { border-color: rgba(160,160,160,calc(var(--mat-alpha,1)*.50)); }
-    .mac-dock.mat-stone::before  { background: rgba(140,140,140,.28), url('/mat-stone.jpg') center/cover no-repeat; }
+    .mac-dock.mat-stone::before  { background: linear-gradient(rgba(140,140,140,.45),rgba(140,140,140,.45)), url('/mat-stone.jpg') center/cover no-repeat; }
     .mac-dock.mat-glass  { border-color: rgba(160,210,255,calc(var(--mat-alpha,1)*.55)); box-shadow: 0 4px 28px rgba(0,100,255,calc(var(--mat-alpha,1)*.12)), inset 0 1px 0 rgba(255,255,255,calc(var(--mat-alpha,1)*.80)); }
-    .mac-dock.mat-glass::before  { background: rgba(180,220,255,.22), url('/mat-glass.jpg') center/cover no-repeat; }
+    .mac-dock.mat-glass::before  { background: linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45)), url('/mat-glass.jpg') center/cover no-repeat; }
     .mac-dock.mat-water  { border-color: rgba(80,160,220,calc(var(--mat-alpha,1)*.55)); }
-    .mac-dock.mat-water::before  { background: rgba(80,160,220,.28), url('/mat-water.png') center/cover no-repeat; }
+    .mac-dock.mat-water::before  { background: linear-gradient(rgba(80,160,220,.45),rgba(80,160,220,.45)), url('/mat-water.png') center/cover no-repeat; }
     .mac-dock.mat-grass  { border-color: rgba(80,160,80,calc(var(--mat-alpha,1)*.50)); }
-    .mac-dock.mat-grass::before  { background: rgba(80,180,90,.28), url('/mat-grass.jpg') center/cover no-repeat; }
+    .mac-dock.mat-grass::before  { background: linear-gradient(rgba(80,180,90,.45),rgba(80,180,90,.45)), url('/mat-grass.jpg') center/cover no-repeat; }
     .mac-dock.mat-sand   { border-color: rgba(200,180,120,calc(var(--mat-alpha,1)*.50)); }
-    .mac-dock.mat-sand::before   { background: rgba(210,190,140,.28), url('/mat-sand.jpg') center/cover no-repeat; }
+    .mac-dock.mat-sand::before   { background: linear-gradient(rgba(210,190,140,.45),rgba(210,190,140,.45)), url('/mat-sand.jpg') center/cover no-repeat; }
     /* ── macOS: custom colour (no mat-X class) → Liquid Glass from --dock-glass-rgb ── */
     body.macos .mac-dock:not(.mat-gold):not(.mat-silver):not(.mat-copper):not(.mat-wood):not(.mat-stone):not(.mat-glass):not(.mat-water):not(.mat-grass):not(.mat-sand) {
       background: rgb(var(--dock-glass-r,255) var(--dock-glass-g,255) var(--dock-glass-b,255) / var(--dock-glass-alpha,0.14)) !important;
@@ -8404,20 +8404,28 @@ const _MAT_TEXTURE_URL = {
 /* ── Taskbar label contrast per material ── */
 const _MAT_LABEL = {
   silver: '#1a1a1a', gold: '#2e1800', copper: '#fff',
-  wood:   '#fff',    stone: '#fff',   glass:  '#fff',
-  water:  '#fff',    grass: '#fff',   sand:   '#1a1a1a',
+  wood:   '#fff',    stone: '#1a1a1a', glass:  '#fff',
+  water:  '#1a1a1a', grass: '#fff',   sand:   '#1a1a1a',
 };
 
 /* ── Set donate popup theming from an RGB triple ── */
-function _setDonateTheme(r, g, b) {
+/* txUrl (optional): when provided, adds the material photo texture as a second layer
+   behind the semi-transparent gradient tint, matching window/dock bar rendering. */
+function _setDonateTheme(r, g, b, txUrl) {
+  txUrl = txUrl || '';
   const root = document.documentElement;
   const d = v => Math.max(0, Math.min(255, Math.round(v * 0.58)));
   const l = v => Math.max(0, Math.min(255, Math.round(v * 1.22 + 18)));
   const [dr,dg,db] = [d(r),d(g),d(b)];
   const [lr,lg,lb] = [l(r),l(g),l(b)];
-  root.style.setProperty('--sm-header-bg',   `linear-gradient(90deg,rgb(${dr},${dg},${db}) 0%,rgb(${r},${g},${b}) 60%,rgb(${lr},${lg},${lb}) 100%)`);
+  const texLayer = txUrl ? `,url('${txUrl}') center/cover no-repeat` : '';
+  const smAlpha  = txUrl ? '.65' : '1';
+  const mdpAlpha = txUrl ? '.65' : '1';
+  root.style.setProperty('--sm-header-bg',
+    `linear-gradient(90deg,rgba(${dr},${dg},${db},${smAlpha}) 0%,rgba(${r},${g},${b},${smAlpha}) 60%,rgba(${lr},${lg},${lb},${smAlpha}) 100%)${texLayer}`);
   root.style.setProperty('--sm-border-color', `rgb(${dr},${dg},${db})`);
-  root.style.setProperty('--mdp-header-bg',   `linear-gradient(180deg,rgb(${r},${g},${b}) 0%,rgb(${dr},${dg},${db}) 100%)`);
+  root.style.setProperty('--mdp-header-bg',
+    `linear-gradient(180deg,rgba(${r},${g},${b},${mdpAlpha}) 0%,rgba(${dr},${dg},${db},${mdpAlpha}) 100%)${texLayer}`);
   root.style.setProperty('--mdp-border-color',`rgba(${r},${g},${b},0.40)`);
   root.style.setProperty('--mdp-qr-border',   `rgb(${r},${g},${b})`);
 }
@@ -8452,7 +8460,7 @@ function _injectXpMetallic(id) {
   const label = _MAT_LABEL[id] || '#fff';
   document.documentElement.style.setProperty('--taskbar-label', label);
   const [dr,dg,db] = rgb.map(v => Math.max(0,Math.min(255,Math.round(v*0.58))));
-  _setDonateTheme(dr, dg, db);
+  _setDonateTheme(dr, dg, db, tx);
   /* Use ::before pseudo-element for texture so opacity var fully controls visibility */
   const pseudo = tx
     ? `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${tx}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);`
@@ -8487,7 +8495,7 @@ function _injectXpGlass(id) {
   const tx   = _MAT_TEXTURE_URL[id] || '';
   const rgb  = _MAT_DOMINANT_RGB[id] || [40,120,200];
   document.documentElement.style.setProperty('--taskbar-label', '#fff');
-  _setDonateTheme(rgb[0], rgb[1], rgb[2]);
+  _setDonateTheme(rgb[0], rgb[1], rgb[2], tx);
   const pseudo = tx
     ? `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${tx}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);`
     : '';
@@ -8522,7 +8530,7 @@ function _injectXpTexture(id) {
   if (!tx) { applyThemeColor(hex || '#1464c4', false, true); return; }
   const label = _MAT_LABEL[id] || '#fff';
   document.documentElement.style.setProperty('--taskbar-label', label);
-  _setDonateTheme(rgb[0], rgb[1], rgb[2]);
+  _setDonateTheme(rgb[0], rgb[1], rgb[2], tx);
   const pseudo = `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${tx}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);`;
   const minmax = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.6))`;
   const border = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.8))`;
@@ -9035,13 +9043,14 @@ const _MAT_THEME = {
     win:  `linear-gradient(155deg,rgba(238,156,114,.55) 0%,rgba(138,60,18,.55) 13%,rgba(222,122,74,.55) 25%,rgba(164,82,34,.55) 38%,rgba(216,110,62,.55) 52%,rgba(116,48,12,.55) 66%,rgba(226,132,82,.55) 80%,rgba(154,70,25,.55) 100%)`,
     menu: `linear-gradient(155deg,rgba(242,162,124,.55) 0%,rgba(150,70,28,.55) 13%,rgba(228,134,84,.55) 25%,rgba(178,96,48,.55) 38%,rgba(222,120,70,.55) 52%,rgba(128,58,20,.55) 66%,rgba(232,142,92,.55) 80%,rgba(164,82,38,.55) 100%)`,
     text: '#2e1008', hover: 'rgba(0,0,0,.12)' },
-  /* ── Liquid Glass: tint only (opacity via var; texture injected via ::before) ── */
-  wood:   { win: `rgba(180,130,80,var(--win-glass-alpha,0.60))`,   menu: `rgba(180,130,80,var(--menu-glass-alpha,0.65))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  stone:  { win: `rgba(140,140,140,var(--win-glass-alpha,0.60))`,  menu: `rgba(140,140,140,var(--menu-glass-alpha,0.65))`,  text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  glass:  { win: `rgba(180,220,255,var(--win-glass-alpha,0.60))`,  menu: `rgba(180,220,255,var(--menu-glass-alpha,0.65))`,  text: '#fff', hover: 'rgba(255,255,255,.2)'  },
-  water:  { win: `rgba(80,160,220,var(--win-glass-alpha,0.60))`,   menu: `rgba(80,160,220,var(--menu-glass-alpha,0.65))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  grass:  { win: `rgba(80,180,90,var(--win-glass-alpha,0.60))`,    menu: `rgba(80,180,90,var(--menu-glass-alpha,0.65))`,    text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  sand:   { win: `rgba(210,190,140,var(--win-glass-alpha,0.60))`,  menu: `rgba(210,190,140,var(--menu-glass-alpha,0.65))`,  text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
+  /* ── Liquid Glass: solid-colour gradient tint (.45 alpha) so both tint + texture are
+     valid CSS image layers and fade together under opacity:var(--mat-alpha) on ::before ── */
+  wood:   { win: `linear-gradient(rgba(180,130,80,.45),rgba(180,130,80,.45))`,   menu: `linear-gradient(rgba(180,130,80,.45),rgba(180,130,80,.45))`,   text: '#fff',    hover: 'rgba(255,255,255,.18)' },
+  stone:  { win: `linear-gradient(rgba(140,140,140,.45),rgba(140,140,140,.45))`, menu: `linear-gradient(rgba(140,140,140,.45),rgba(140,140,140,.45))`, text: '#1a1a1a', hover: 'rgba(0,0,0,.1)'         },
+  glass:  { win: `linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45))`, menu: `linear-gradient(rgba(180,220,255,.45),rgba(180,220,255,.45))`, text: '#fff',    hover: 'rgba(255,255,255,.2)'   },
+  water:  { win: `linear-gradient(rgba(80,160,220,.45),rgba(80,160,220,.45))`,   menu: `linear-gradient(rgba(80,160,220,.45),rgba(80,160,220,.45))`,   text: '#1a1a1a', hover: 'rgba(0,0,0,.1)'         },
+  grass:  { win: `linear-gradient(rgba(80,180,90,.45),rgba(80,180,90,.45))`,     menu: `linear-gradient(rgba(80,180,90,.45),rgba(80,180,90,.45))`,     text: '#fff',    hover: 'rgba(255,255,255,.18)'  },
+  sand:   { win: `linear-gradient(rgba(210,190,140,.45),rgba(210,190,140,.45))`, menu: `linear-gradient(rgba(210,190,140,.45),rgba(210,190,140,.45))`, text: '#3a2e10', hover: 'rgba(0,0,0,.1)'         },
 };
 
 /* ── Sync dock + macOS menu bar + window bars from a hex colour ── */
@@ -9084,7 +9093,7 @@ function _syncMacDockFromHex(hex) {
   root.style.setProperty('--mac-menu-text',  textCol);
   root.style.setProperty('--mac-menu-hover', hoverCol);
   root.style.setProperty('--taskbar-label',  isLight ? '#1a1a1a' : '#fff');
-  _setDonateTheme(rv, gv, bv);
+  _setDonateTheme(rv, gv, bv, '');
   const wifiImg = document.querySelector('#mac-wifi-btn img');
   if (wifiImg) wifiImg.style.filter = (_macMode || !isLight) ? 'brightness(0) invert(1)' : 'grayscale(1)';
   /* Clear material texture ::before on macOS bars when switching to custom colour */
@@ -9151,9 +9160,9 @@ function _applyDockMaterial(id) {
   /* Set taskbar label contrast from material */
   const label = _MAT_LABEL[id] || '#fff';
   root.style.setProperty('--taskbar-label', label);
-  /* Donate theming from material dominant colour */
+  /* Donate theming from material dominant colour + texture */
   const matRgb = _MAT_DOMINANT_RGB[id];
-  if (matRgb) _setDonateTheme(matRgb[0], matRgb[1], matRgb[2]);
+  if (matRgb) _setDonateTheme(matRgb[0], matRgb[1], matRgb[2], _MAT_TEXTURE_URL[id] || '');
   _fitDockToScreen();
   /* Persist */
   localStorage.setItem('dock-material', id);
