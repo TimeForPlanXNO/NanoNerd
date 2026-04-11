@@ -232,7 +232,7 @@
     /* Window content */
     .xp-content {
       flex: 1; display: flex; flex-direction: column;
-      background: #1a1f2e; overflow: hidden;
+      background: rgba(26,31,46,var(--win-glass-alpha,1)); overflow: hidden;
       border: 2px solid #0d40b0; border-top: none; border-radius: 0 0 4px 4px;
     }
 
@@ -2349,7 +2349,7 @@
     /* ── Dock responsive ── */
     .mac-dock-wrap { max-width: calc(100vw - 16px); }
     @media (max-width: 480px) {
-      .mac-dock { gap: 4px; padding: 4px 7px; }
+      .mac-dock { gap: 6px; padding: 4px 7px; }
     }
 
     /* ── macOS Menu Bar ── */
@@ -2504,7 +2504,7 @@
       pointer-events: none;
     }
     .mac-dock {
-      display: flex; align-items: flex-end; gap: 6px;
+      display: flex; align-items: flex-end; gap: 10px;
       padding: 6px 10px;
       background: rgba(255,255,255,var(--dock-glass-alpha,0.14));
       backdrop-filter: blur(24px) saturate(200%);
@@ -2766,6 +2766,7 @@
 
     /* ── Mode-conditional visibility in dock settings ── */
     body:not(.macos) .dsp-macos-only { display: none !important; }
+    @media (pointer:coarse) { .dsp-desktop-only { display: none !important; } }
     body.macos .dsp-xp-only          { display: none !important; }
 
     /* ── Mode-switch frosted overlay cross-fade ── */
@@ -3109,6 +3110,16 @@
         <div class="dsp-toggle-row" style="margin-top:8px;">
           <span class="dsp-toggle-label">Magnification</span>
           <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
+        </div>
+        <div class="dsp-desktop-only" style="margin-top:4px;">
+          <div class="dsp-section-label">Magnification Size</div>
+          <div class="dsp-slider-row">
+            <span>S</span>
+            <input type="range" class="dsp-slider" id="dsp-magnify-size-slider"
+                   min="120" max="300" value="165" step="5"
+                   oninput="setDockMagnifySize(+this.value / 100)">
+            <span>L</span>
+          </div>
         </div>
         <div class="dsp-toggle-row" style="margin-top:4px;">
           <span class="dsp-toggle-label">Auto-hide Dock</span>
@@ -3622,6 +3633,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
 
   /* ── Draw loop ── */
   let frame, lastTs = 0;
+  let _overlayCleared = false;  /* one-shot: clear status overlay the moment rain starts */
   function draw(ts) {
     if (!running) return;
     /* Re-apply DPR transform every frame — setting canvas.width/height (in resize or
@@ -3630,6 +3642,15 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
     ctx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
     const dt  = Math.min((ts - lastTs) / 16.67, 3);
     lastTs = ts;
+
+    /* Instant-clear the "Waiting…" status overlay the first time live rain begins.
+       Without this, the semi-transparent overlay text fades at 3%/frame and ghosts
+       behind the first falling characters for ~1–2 seconds.                        */
+    if (_hadLiveTx && !_overlayCleared) {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, cssW, cssH);
+      _overlayCleared = true;
+    }
 
     /* Fade: 3% per frame — uniform, no brightness jump when the last column finishes */
     ctx.fillStyle = 'rgba(0,0,0,0.03)';
@@ -8181,10 +8202,11 @@ function _closeCpPopup()  { _closeDockSettings(); }
    macOS MODE
 ══════════════════════════════════════════ */
 
-let _dockMagnify  = true;
-let _dockGenie    = true;
-let _dockAutoHide = true;   /* true = hide button shown on mobile; false = dock always visible */
-let _dockIconSize = 52;
+let _dockMagnify     = true;
+let _dockMagnifySize = 1.65;  /* peak scale multiplier — 1.2 (subtle) to 3.0 (dramatic) */
+let _dockGenie       = true;
+let _dockAutoHide    = true;   /* true = hide button shown on mobile; false = dock always visible */
+let _dockIconSize    = 52;
 let _dockMaterial = 'silver';
 
 /* ── UI Level (transparency vs opacity) — 0 = fully transparent, 100 = fully opaque ── */
@@ -8831,7 +8853,7 @@ function _updateDockDot(id) {
     if (isCoarse) return;
     const wraps = dock.querySelectorAll('.dock-icon-wrap');
     const BASE  = _dockIconSize;
-    const PEAK  = BASE * 1.65;
+    const PEAK  = BASE * _dockMagnifySize;
     const RANGE = 110;
     wraps.forEach(wrap => {
       const r  = wrap.getBoundingClientRect();
@@ -9007,6 +9029,13 @@ function toggleDockMagnify() {
     document.querySelectorAll('.dock-icon-wrap').forEach(w => { w.style.transform = ''; });
   }
   localStorage.setItem('dock-magnify', _dockMagnify ? '1' : '0');
+}
+
+function setDockMagnifySize(v) {
+  _dockMagnifySize = Math.max(1.2, Math.min(3.0, v));
+  localStorage.setItem('dock-magnify-size', _dockMagnifySize.toFixed(2));
+  const slider = document.getElementById('dsp-magnify-size-slider');
+  if (slider) slider.value = Math.round(_dockMagnifySize * 100);
 }
 
 function toggleDockAutoHide() {
@@ -9299,26 +9328,32 @@ document.addEventListener('click', function(e) {
 (function _macInit() {
   /* Restore settings */
   const savedMode    = localStorage.getItem('ui-mode') || 'xp';
-  const savedSize    = localStorage.getItem('dock-icon-size');
-  const savedMagnify  = localStorage.getItem('dock-magnify');
-  const savedAutoHide = localStorage.getItem('dock-auto-hide');
+  const savedSize        = localStorage.getItem('dock-icon-size');
+  const savedMagnify     = localStorage.getItem('dock-magnify');
+  const savedMagnifySize = localStorage.getItem('dock-magnify-size');
+  const savedAutoHide    = localStorage.getItem('dock-auto-hide');
   const savedMat      = localStorage.getItem('dock-material');
   const savedCustom  = localStorage.getItem('dock-custom-color');
   const savedLevelXp  = localStorage.getItem('ui-level-xp');
   const savedLevelMac = localStorage.getItem('ui-level-mac');
 
   if (savedSize)                _dockIconSize = +savedSize;
-  if (savedMagnify  !== null)   _dockMagnify  = savedMagnify  !== '0';
-  if (savedAutoHide !== null)   _dockAutoHide = savedAutoHide !== '0';
-  if (savedMat)                 _dockMaterial = savedMat;
-  if (savedLevelXp  !== null)   _uiLevel      = +savedLevelXp;
-  if (savedLevelMac !== null)   _macUiLevel   = +savedLevelMac;
+  if (savedMagnify     !== null) _dockMagnify     = savedMagnify  !== '0';
+  if (savedMagnifySize !== null) _dockMagnifySize = Math.max(1.2, Math.min(3.0, +savedMagnifySize));
+  if (savedAutoHide    !== null) _dockAutoHide    = savedAutoHide !== '0';
+  if (savedMat)                  _dockMaterial    = savedMat;
+  if (savedLevelXp     !== null) _uiLevel         = +savedLevelXp;
+  if (savedLevelMac    !== null) _macUiLevel      = +savedLevelMac;
 
   /* Sync pill initial states */
   const mpill  = document.getElementById('dsp-magnify-pill');
   const ahpill = document.getElementById('dsp-autohide-pill');
   if (mpill)  mpill.classList.toggle('on', _dockMagnify);
   if (ahpill) ahpill.classList.toggle('on', _dockAutoHide);
+
+  /* Sync magnification size slider */
+  const mszSlider = document.getElementById('dsp-magnify-size-slider');
+  if (mszSlider) mszSlider.value = Math.round(_dockMagnifySize * 100);
 
   /* Build dock and materials */
   _buildMacDock();
