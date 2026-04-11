@@ -2525,6 +2525,7 @@
     .mac-dock.mat-grass,
     .mac-dock.mat-sand {
       position: relative;
+      isolation: isolate;
       background: transparent !important;
     }
     .mac-dock.mat-silver::before,
@@ -8456,12 +8457,12 @@ function _injectXpMetallic(id) {
     ? `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${tx}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);`
     : '';
   const rules = tx ? [
-    `.taskbar{position:relative!important;background:transparent!important;border-top-color:${m.border}!important;}`,
+    `.taskbar{position:relative!important;isolation:isolate;background:transparent!important;border-top-color:${m.border}!important;}`,
     `.taskbar::before{${pseudo}}`,
-    `body:not(.macos) .xp-titlebar{position:relative!important;background:transparent!important;}`,
+    `body:not(.macos) .xp-titlebar{position:relative!important;isolation:isolate;background:transparent!important;}`,
     `body:not(.macos) .xp-titlebar::before{${pseudo}}`,
     `body:not(.macos) .xp-btn.min,body:not(.macos) .xp-btn.max{background:${m.minmax}!important;}`,
-    `body:not(.macos) .mv-titlebar{position:relative!important;background:transparent!important;}`,
+    `body:not(.macos) .mv-titlebar{position:relative!important;isolation:isolate;background:transparent!important;}`,
     `body:not(.macos) .mv-titlebar::before{${pseudo}}`,
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `body:not(.macos) .mv-wp-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
@@ -8490,16 +8491,16 @@ function _injectXpGlass(id) {
     ? `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${tx}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);`
     : '';
   const rules = tx ? [
-    `.taskbar{position:relative!important;background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},0.55)!important;}`,
+    `.taskbar{position:relative!important;isolation:isolate;background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},0.55)!important;}`,
     `.taskbar::before{${pseudo}}`,
-    `body:not(.macos) .xp-titlebar{position:relative!important;background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
+    `body:not(.macos) .xp-titlebar{position:relative!important;isolation:isolate;background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
     `body:not(.macos) .xp-titlebar::before{${pseudo}}`,
-    `body:not(.macos) .xp-btn.min,body:not(.macos) .xp-btn.max{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*2))!important;}`,
-    `body:not(.macos) .mv-titlebar{position:relative!important;background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
+    `body:not(.macos) .xp-btn.min,body:not(.macos) .xp-btn.max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
+    `body:not(.macos) .mv-titlebar{position:relative!important;isolation:isolate;background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
     `body:not(.macos) .mv-titlebar::before{${pseudo}}`,
-    `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*2))!important;}`,
-    `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*2))!important;}`,
-    `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.10)*1.5))!important;}`,
+    `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
+    `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
+    `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
   ] : [
     `.taskbar{background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},0.55)!important;}`,
     `body:not(.macos) .xp-titlebar{background:rgba(${tint},var(--win-glass-alpha,0.10))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
@@ -8525,17 +8526,17 @@ function _injectXpTexture(id) {
   const minmax = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.6))`;
   const border = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.8))`;
   document.getElementById('theme-style').textContent = [
-    `.taskbar{position:relative!important;background:transparent!important;border-top-color:${border}!important;}`,
+    `.taskbar{position:relative!important;isolation:isolate;background:transparent!important;border-top-color:${border}!important;}`,
     `.taskbar::before{${pseudo}}`,
-    `body:not(.macos) .xp-titlebar{position:relative!important;background:transparent!important;}`,
+    `body:not(.macos) .xp-titlebar{position:relative!important;isolation:isolate;background:transparent!important;}`,
     `body:not(.macos) .xp-titlebar::before{${pseudo}}`,
     `body:not(.macos) .xp-btn.min,body:not(.macos) .xp-btn.max{background:${minmax}!important;}`,
-    `body:not(.macos) .mv-titlebar{position:relative!important;background:transparent!important;}`,
+    `body:not(.macos) .mv-titlebar{position:relative!important;isolation:isolate;background:transparent!important;}`,
     `body:not(.macos) .mv-titlebar::before{${pseudo}}`,
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:${minmax}!important;border-color:${border}!important;}`,
     `body:not(.macos) .mv-wp-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn{background:${minmax}!important;border-color:${border}!important;}`,
-    `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.85))!important;}`,
+    `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.85)!important;}`,
   ].join('\n');
 }
 
@@ -9020,26 +9021,26 @@ function _buildDockMaterials() {
 
 /* Per-material colour tables for window bars, menu bar, and text */
 const _MAT_THEME = {
-  /* ── Metallic: brushed-metal gradient (no URL — texture injected via ::before) ── */
+  /* ── Metallic: brushed-metal gradient (opacity=1; slider controls ::before opacity) ── */
   silver: {
-    win:  `linear-gradient(155deg,rgba(242,242,246,calc(var(--mat-alpha,1)*.85)) 0%,rgba(168,170,188,calc(var(--mat-alpha,1)*.85)) 13%,rgba(248,248,252,calc(var(--mat-alpha,1)*.85)) 25%,rgba(190,190,212,calc(var(--mat-alpha,1)*.85)) 38%,rgba(236,236,244,calc(var(--mat-alpha,1)*.85)) 52%,rgba(162,162,184,calc(var(--mat-alpha,1)*.85)) 66%,rgba(240,240,250,calc(var(--mat-alpha,1)*.85)) 80%,rgba(196,196,218,calc(var(--mat-alpha,1)*.85)) 100%)`,
-    menu: `linear-gradient(155deg,rgba(248,248,252,calc(var(--mat-alpha,1)*.85)) 0%,rgba(196,196,218,calc(var(--mat-alpha,1)*.85)) 13%,rgba(250,250,254,calc(var(--mat-alpha,1)*.85)) 25%,rgba(200,200,222,calc(var(--mat-alpha,1)*.85)) 38%,rgba(244,244,250,calc(var(--mat-alpha,1)*.85)) 52%,rgba(172,172,196,calc(var(--mat-alpha,1)*.85)) 66%,rgba(246,246,252,calc(var(--mat-alpha,1)*.85)) 80%,rgba(202,202,224,calc(var(--mat-alpha,1)*.85)) 100%)`,
+    win:  `linear-gradient(155deg,#f2f2f6 0%,#a8aabc 13%,#f8f8fc 25%,#bebee4 38%,#ececf4 52%,#a2a2b8 66%,#f0f0fa 80%,#c4c4da 100%)`,
+    menu: `linear-gradient(155deg,#f8f8fc 0%,#c4c4da 13%,#fafaff 25%,#c8c8de 38%,#f4f4fa 52%,#acacc4 66%,#f6f6fc 80%,#cacae0 100%)`,
     text: '#1a1a1a', hover: 'rgba(0,0,0,.1)' },
   gold: {
-    win:  `linear-gradient(155deg,rgba(255,238,148,calc(var(--mat-alpha,1)*.85)) 0%,rgba(188,132,0,calc(var(--mat-alpha,1)*.85)) 13%,rgba(255,230,108,calc(var(--mat-alpha,1)*.85)) 25%,rgba(218,168,30,calc(var(--mat-alpha,1)*.85)) 38%,rgba(252,220,80,calc(var(--mat-alpha,1)*.85)) 52%,rgba(174,118,0,calc(var(--mat-alpha,1)*.85)) 66%,rgba(254,234,124,calc(var(--mat-alpha,1)*.85)) 80%,rgba(210,160,18,calc(var(--mat-alpha,1)*.85)) 100%)`,
-    menu: `linear-gradient(155deg,rgba(255,242,162,calc(var(--mat-alpha,1)*.85)) 0%,rgba(210,162,22,calc(var(--mat-alpha,1)*.85)) 13%,rgba(255,236,122,calc(var(--mat-alpha,1)*.85)) 25%,rgba(230,180,50,calc(var(--mat-alpha,1)*.85)) 38%,rgba(252,228,102,calc(var(--mat-alpha,1)*.85)) 52%,rgba(188,140,10,calc(var(--mat-alpha,1)*.85)) 66%,rgba(255,240,132,calc(var(--mat-alpha,1)*.85)) 80%,rgba(220,170,30,calc(var(--mat-alpha,1)*.85)) 100%)`,
+    win:  `linear-gradient(155deg,#ffee94 0%,#bc8400 13%,#ffe66c 25%,#daa81e 38%,#fcdc50 52%,#ae7600 66%,#ffea7c 80%,#d2a012 100%)`,
+    menu: `linear-gradient(155deg,#fff2a2 0%,#d2a216 13%,#ffec7a 25%,#e6b432 38%,#fce466 52%,#bc8c0a 66%,#fff084 80%,#dcaa1e 100%)`,
     text: '#3a2800', hover: 'rgba(0,0,0,.12)' },
   copper: {
-    win:  `linear-gradient(155deg,rgba(238,156,114,calc(var(--mat-alpha,1)*.85)) 0%,rgba(138,60,18,calc(var(--mat-alpha,1)*.85)) 13%,rgba(222,122,74,calc(var(--mat-alpha,1)*.85)) 25%,rgba(164,82,34,calc(var(--mat-alpha,1)*.85)) 38%,rgba(216,110,62,calc(var(--mat-alpha,1)*.85)) 52%,rgba(116,48,12,calc(var(--mat-alpha,1)*.85)) 66%,rgba(226,132,82,calc(var(--mat-alpha,1)*.85)) 80%,rgba(154,70,26,calc(var(--mat-alpha,1)*.85)) 100%)`,
-    menu: `linear-gradient(155deg,rgba(242,162,124,calc(var(--mat-alpha,1)*.85)) 0%,rgba(150,70,28,calc(var(--mat-alpha,1)*.85)) 13%,rgba(228,134,84,calc(var(--mat-alpha,1)*.85)) 25%,rgba(178,96,48,calc(var(--mat-alpha,1)*.85)) 38%,rgba(222,120,70,calc(var(--mat-alpha,1)*.85)) 52%,rgba(128,58,20,calc(var(--mat-alpha,1)*.85)) 66%,rgba(232,142,92,calc(var(--mat-alpha,1)*.85)) 80%,rgba(164,82,38,calc(var(--mat-alpha,1)*.85)) 100%)`,
+    win:  `linear-gradient(155deg,#ee9c72 0%,#8a3c12 13%,#de7a4a 25%,#a45222 38%,#d86e3e 52%,#74300c 66%,#e28452 80%,#9a4619 100%)`,
+    menu: `linear-gradient(155deg,#f2a27c 0%,#96461c 13%,#e48654 25%,#b26030 38%,#de7846 52%,#803a14 66%,#e88e5c 80%,#a45226 100%)`,
     text: '#2e1008', hover: 'rgba(0,0,0,.12)' },
-  /* ── Liquid Glass: tint only (no URL — texture injected via ::before) ── */
-  wood:   { win: `rgba(180,130,80,var(--win-glass-alpha,0.10))`,   menu: `rgba(180,130,80,var(--menu-glass-alpha,0.12))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  stone:  { win: `rgba(140,140,140,var(--win-glass-alpha,0.10))`,  menu: `rgba(140,140,140,var(--menu-glass-alpha,0.12))`,  text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  glass:  { win: `rgba(180,220,255,var(--win-glass-alpha,0.10))`,  menu: `rgba(180,220,255,var(--menu-glass-alpha,0.12))`,  text: '#fff', hover: 'rgba(255,255,255,.2)'  },
-  water:  { win: `rgba(80,160,220,var(--win-glass-alpha,0.10))`,   menu: `rgba(80,160,220,var(--menu-glass-alpha,0.12))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  grass:  { win: `rgba(80,180,90,var(--win-glass-alpha,0.10))`,    menu: `rgba(80,180,90,var(--menu-glass-alpha,0.12))`,    text: '#fff', hover: 'rgba(255,255,255,.18)' },
-  sand:   { win: `rgba(210,190,140,var(--win-glass-alpha,0.10))`,  menu: `rgba(210,190,140,var(--menu-glass-alpha,0.12))`,  text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
+  /* ── Liquid Glass: tint only (opacity via var; texture injected via ::before) ── */
+  wood:   { win: `rgba(180,130,80,var(--win-glass-alpha,0.60))`,   menu: `rgba(180,130,80,var(--menu-glass-alpha,0.65))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  stone:  { win: `rgba(140,140,140,var(--win-glass-alpha,0.60))`,  menu: `rgba(140,140,140,var(--menu-glass-alpha,0.65))`,  text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  glass:  { win: `rgba(180,220,255,var(--win-glass-alpha,0.60))`,  menu: `rgba(180,220,255,var(--menu-glass-alpha,0.65))`,  text: '#fff', hover: 'rgba(255,255,255,.2)'  },
+  water:  { win: `rgba(80,160,220,var(--win-glass-alpha,0.60))`,   menu: `rgba(80,160,220,var(--menu-glass-alpha,0.65))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  grass:  { win: `rgba(80,180,90,var(--win-glass-alpha,0.60))`,    menu: `rgba(80,180,90,var(--menu-glass-alpha,0.65))`,    text: '#fff', hover: 'rgba(255,255,255,.18)' },
+  sand:   { win: `rgba(210,190,140,var(--win-glass-alpha,0.60))`,  menu: `rgba(210,190,140,var(--menu-glass-alpha,0.65))`,  text: '#3a2e10', hover: 'rgba(0,0,0,.1)' },
 };
 
 /* ── Sync dock + macOS menu bar + window bars from a hex colour ── */
@@ -9091,21 +9092,25 @@ function _syncMacDockFromHex(hex) {
   document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => sw.classList.remove('active'));
 }
 
-/* Inject ::before CSS for macOS window/menu bars so texture opacity follows --mat-alpha */
-function _injectMacMatStyle(txUrl) {
+/* Inject ::before CSS for macOS window/menu bars so gradient+texture fade together via --mat-alpha.
+   Pass txUrl='' and winGrad/menuGrad='' to clear (custom colour mode). */
+function _injectMacMatStyle(txUrl, winGrad, menuGrad) {
   let el = document.getElementById('mat-mac-style');
   if (!el) {
     el = document.createElement('style');
     el.id = 'mat-mac-style';
     document.head.appendChild(el);
   }
-  if (txUrl) {
-    const p = `content:'';position:absolute;inset:0;z-index:-1;background-image:url('${txUrl}');background-size:cover;background-position:center;opacity:var(--mat-alpha,1);pointer-events:none;`;
+  if (txUrl || winGrad) {
+    /* Both gradient and texture go into ::before so opacity:var(--mat-alpha,1) fades both together */
+    const winBg   = txUrl ? `${winGrad||''},url('${txUrl}') center/cover no-repeat`  : (winGrad||'transparent');
+    const menuBg  = txUrl ? `${menuGrad||''},url('${txUrl}') center/cover no-repeat` : (menuGrad||'transparent');
+    const base = `content:'';position:absolute;inset:0;z-index:-1;background-size:cover,cover;background-position:center,center;opacity:var(--mat-alpha,1);pointer-events:none;`;
     el.textContent = [
-      `body.macos .xp-titlebar,body.macos .mv-titlebar,body.macos .wp-dialog-head{position:relative!important;}`,
-      `body.macos .xp-titlebar::before,body.macos .mv-titlebar::before,body.macos .wp-dialog-head::before{${p}}`,
-      `.macos-menubar{position:relative!important;}`,
-      `.macos-menubar::before{${p}}`,
+      `body.macos .xp-titlebar,body.macos .mv-titlebar,body.macos .wp-dialog-head{position:relative!important;isolation:isolate;background:transparent!important;}`,
+      `body.macos .xp-titlebar::before,body.macos .mv-titlebar::before,body.macos .wp-dialog-head::before{${base}background:${winBg};}`,
+      `.macos-menubar{position:relative!important;isolation:isolate;background:transparent!important;}`,
+      `.macos-menubar::before{${base}background:${menuBg};}`,
     ].join('\n');
   } else {
     el.textContent = '';
@@ -9158,8 +9163,9 @@ function _applyDockMaterial(id) {
   }
   /* Mirror material to XP taskbar/titlebars with proper metallic/glass injection */
   _applyXpMaterial(id, true);
-  /* Inject ::before texture for macOS window/menu bars so opacity var controls it */
-  _injectMacMatStyle(_MAT_TEXTURE_URL[id] || '');
+  /* Inject ::before texture+gradient for macOS window/menu bars so opacity var controls both */
+  const _mt = _MAT_THEME[id];
+  _injectMacMatStyle(_MAT_TEXTURE_URL[id] || '', _mt ? _mt.win : '', _mt ? _mt.menu : '');
   /* Re-apply active state (applyThemeColor in _applyXpMaterial clears it for non-metallic) */
   document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.matId === id);
