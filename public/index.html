@@ -2943,8 +2943,9 @@
       <span class="wp-dialog-title">🖼️ Display Properties — Wallpaper</span>
     </div>
     <div class="wp-tabs-bar">
-      <button class="wp-tab-btn active" id="wp-tab-4k"  onclick="_wpPickerTab('4k')">4K</button>
-      <button class="wp-tab-btn"        id="wp-tab-xp"  onclick="_wpPickerTab('xp')">Windows XP</button>
+      <button class="wp-tab-btn active" id="wp-tab-4k"       onclick="_wpPickerTab('4k')">4K</button>
+      <button class="wp-tab-btn"        id="wp-tab-xp"       onclick="_wpPickerTab('xp')">Windows XP</button>
+      <button class="wp-tab-btn"        id="wp-tab-textures" onclick="_wpPickerTab('textures')">Textures</button>
     </div>
     <div class="wp-dialog-body">
       <div class="wp-pane active" id="wp-pane-4k">
@@ -2952,6 +2953,9 @@
       </div>
       <div class="wp-pane" id="wp-pane-xp">
         <div class="wp-grid" id="wp-grid-xp"></div>
+      </div>
+      <div class="wp-pane" id="wp-pane-textures">
+        <div class="wp-grid" id="wp-grid-textures"></div>
       </div>
     </div>
     <div class="wp-dialog-foot">
@@ -3257,6 +3261,19 @@ const WALLPAPERS_4K = [
   { name: 'Half Dome',       src: '/wallpapers/4k/IMG_4252_1775774012300.jpeg' },
   { name: 'El Capitan',      src: '/wallpapers/4k/IMG_4253_1775774012300.jpeg' },
   { name: 'Sierra',          src: '/wallpapers/4k/IMG_4254_1775774012300.jpeg' },
+];
+
+/* ── Texture Wallpapers ── */
+const WALLPAPERS_TEXTURES = [
+  { name: 'Grass',   src: '/wallpapers/textures/grass.jpg',  mat: 'grass'  },
+  { name: 'Sand',    src: '/wallpapers/textures/sand.jpg',   mat: 'sand'   },
+  { name: 'Silver',  src: '/wallpapers/textures/silver.jpg', mat: 'silver' },
+  { name: 'Stone',   src: '/wallpapers/textures/stone.jpg',  mat: 'stone'  },
+  { name: 'Stone 2', src: '/wallpapers/textures/stone2.jpg', mat: 'stone'  },
+  { name: 'Water',   src: '/wallpapers/textures/water.png',  mat: 'water'  },
+  { name: 'Water 2', src: '/wallpapers/textures/water2.png', mat: 'water'  },
+  { name: 'Wood',    src: '/wallpapers/textures/wood.jpg',   mat: 'wood'   },
+  { name: 'Wood 2',  src: '/wallpapers/textures/wood2.jpg',  mat: 'wood'   },
 ];
 
 /* GIF icon used as the Matrix tile preview in both tabs */
@@ -3784,18 +3801,39 @@ function _buildWpGridXp() {
   });
 }
 
+/* Build the Textures wallpaper grid (lazy, one-time) */
+function _buildWpGridTextures() {
+  const grid = document.getElementById('wp-grid-textures');
+  if (!grid || grid.children.length > 0) return;
+  WALLPAPERS_TEXTURES.forEach(wp => {
+    const item = document.createElement('div');
+    item.className = 'wp-thumb' + (wp.src === _currentWallpaper ? ' active' : '');
+    item.dataset.src = wp.src;
+    const img = document.createElement('img');
+    img.src = wp.src; img.alt = wp.name; img.loading = 'lazy';
+    const lbl = document.createElement('div');
+    lbl.className = 'wp-thumb-label';
+    lbl.textContent = wp.name;
+    item.appendChild(img);
+    item.appendChild(lbl);
+    item.onclick = () => { _applyWallpaper(wp.src); if (wp.mat) _applyDockMaterial(wp.mat); };
+    grid.appendChild(item);
+  });
+}
+
 /* Backwards-compat stub (still called by old code paths) */
 function _buildWpGrid() { _buildWpGrid4k(); _buildWpGridXp(); }
 
 /* Switch the active tab in the wallpaper picker */
 function _wpPickerTab(id) {
-  ['4k','xp'].forEach(t => {
+  ['4k','xp','textures'].forEach(t => {
     document.getElementById('wp-tab-' + t)?.classList.toggle('active', t === id);
     document.getElementById('wp-pane-' + t)?.classList.toggle('active', t === id);
   });
   /* Lazy-build the pane being revealed */
-  if (id === '4k') _buildWpGrid4k();
-  else              _buildWpGridXp();
+  if (id === '4k')           _buildWpGrid4k();
+  else if (id === 'textures') _buildWpGridTextures();
+  else                        _buildWpGridXp();
 }
 
 function toggleWpPicker(e) {
