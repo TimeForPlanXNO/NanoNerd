@@ -9024,16 +9024,16 @@ function _buildDockMaterials() {
 const _MAT_THEME = {
   /* ── Metallic: brushed-metal gradient (opacity=1; slider controls ::before opacity) ── */
   silver: {
-    win:  `linear-gradient(155deg,#f2f2f6 0%,#a8aabc 13%,#f8f8fc 25%,#bebee4 38%,#ececf4 52%,#a2a2b8 66%,#f0f0fa 80%,#c4c4da 100%)`,
-    menu: `linear-gradient(155deg,#f8f8fc 0%,#c4c4da 13%,#fafaff 25%,#c8c8de 38%,#f4f4fa 52%,#acacc4 66%,#f6f6fc 80%,#cacae0 100%)`,
+    win:  `linear-gradient(155deg,rgba(242,242,246,.55) 0%,rgba(168,170,188,.55) 13%,rgba(248,248,252,.55) 25%,rgba(190,190,228,.55) 38%,rgba(236,236,244,.55) 52%,rgba(162,162,184,.55) 66%,rgba(240,240,250,.55) 80%,rgba(196,196,218,.55) 100%)`,
+    menu: `linear-gradient(155deg,rgba(248,248,252,.55) 0%,rgba(196,196,218,.55) 13%,rgba(250,250,255,.55) 25%,rgba(200,200,222,.55) 38%,rgba(244,244,250,.55) 52%,rgba(172,172,196,.55) 66%,rgba(246,246,252,.55) 80%,rgba(202,202,224,.55) 100%)`,
     text: '#1a1a1a', hover: 'rgba(0,0,0,.1)' },
   gold: {
-    win:  `linear-gradient(155deg,#ffee94 0%,#bc8400 13%,#ffe66c 25%,#daa81e 38%,#fcdc50 52%,#ae7600 66%,#ffea7c 80%,#d2a012 100%)`,
-    menu: `linear-gradient(155deg,#fff2a2 0%,#d2a216 13%,#ffec7a 25%,#e6b432 38%,#fce466 52%,#bc8c0a 66%,#fff084 80%,#dcaa1e 100%)`,
+    win:  `linear-gradient(155deg,rgba(255,238,148,.55) 0%,rgba(188,132,0,.55) 13%,rgba(255,230,108,.55) 25%,rgba(218,168,30,.55) 38%,rgba(252,220,80,.55) 52%,rgba(174,118,0,.55) 66%,rgba(255,234,124,.55) 80%,rgba(210,160,18,.55) 100%)`,
+    menu: `linear-gradient(155deg,rgba(255,242,162,.55) 0%,rgba(210,162,22,.55) 13%,rgba(255,236,122,.55) 25%,rgba(230,180,50,.55) 38%,rgba(252,228,102,.55) 52%,rgba(188,140,10,.55) 66%,rgba(255,240,132,.55) 80%,rgba(220,170,30,.55) 100%)`,
     text: '#3a2800', hover: 'rgba(0,0,0,.12)' },
   copper: {
-    win:  `linear-gradient(155deg,#ee9c72 0%,#8a3c12 13%,#de7a4a 25%,#a45222 38%,#d86e3e 52%,#74300c 66%,#e28452 80%,#9a4619 100%)`,
-    menu: `linear-gradient(155deg,#f2a27c 0%,#96461c 13%,#e48654 25%,#b26030 38%,#de7846 52%,#803a14 66%,#e88e5c 80%,#a45226 100%)`,
+    win:  `linear-gradient(155deg,rgba(238,156,114,.55) 0%,rgba(138,60,18,.55) 13%,rgba(222,122,74,.55) 25%,rgba(164,82,34,.55) 38%,rgba(216,110,62,.55) 52%,rgba(116,48,12,.55) 66%,rgba(226,132,82,.55) 80%,rgba(154,70,25,.55) 100%)`,
+    menu: `linear-gradient(155deg,rgba(242,162,124,.55) 0%,rgba(150,70,28,.55) 13%,rgba(228,134,84,.55) 25%,rgba(178,96,48,.55) 38%,rgba(222,120,70,.55) 52%,rgba(128,58,20,.55) 66%,rgba(232,142,92,.55) 80%,rgba(164,82,38,.55) 100%)`,
     text: '#2e1008', hover: 'rgba(0,0,0,.12)' },
   /* ── Liquid Glass: tint only (opacity via var; texture injected via ::before) ── */
   wood:   { win: `rgba(180,130,80,var(--win-glass-alpha,0.60))`,   menu: `rgba(180,130,80,var(--menu-glass-alpha,0.65))`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
@@ -9116,7 +9116,7 @@ function _injectMacMatStyle(txUrl, winGrad, menuGrad) {
     el.textContent = [
       `body.macos .xp-titlebar,body.macos .mv-titlebar,body.macos .wp-dialog-head{position:relative!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}`,
       `body.macos .xp-titlebar::before,body.macos .mv-titlebar::before,body.macos .wp-dialog-head::before{${base}background:${winBg};}`,
-      `.macos-menubar{position:relative!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}`,
+      `.macos-menubar{background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}`,
       `.macos-menubar::before{${base}background:${menuBg};}`,
     ].join('\n');
   } else {
