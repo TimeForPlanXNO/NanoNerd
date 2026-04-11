@@ -860,7 +860,7 @@
       height: 33px; padding: 0 17px;
       background: linear-gradient(180deg,#5aad3a 0%,#3d9020 50%,#2e8010 51%,#227010 100%);
       border: 1px solid #1a6010; border-radius: 15px;
-      color: #fff; font-size: 15px; font-weight: bold;
+      color: var(--taskbar-label,#fff); font-size: 15px; font-weight: bold;
       font-family: "Tahoma", sans-serif; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 4px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 3px rgba(0,0,0,.4);
@@ -2083,6 +2083,7 @@
     /* Titlebar */
     body.macos .wp-dialog-head {
       background: var(--mac-win-bar, rgba(42,42,48,.96));
+      background-blend-mode: normal, normal;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(255,255,255,.07);
@@ -2274,6 +2275,7 @@
     }
     body.macos .xp-titlebar {
       background: var(--mac-win-bar, rgba(42,42,48,.96));
+      background-blend-mode: normal, normal;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(255,255,255,.07);
@@ -2322,6 +2324,7 @@
     /* media viewer titlebar */
     body.macos .mv-titlebar {
       background: var(--mac-win-bar, rgba(42,42,48,.96));
+      background-blend-mode: normal, normal;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(255,255,255,.07);
@@ -2357,6 +2360,7 @@
       position: fixed; top: 0; left: 0; right: 0; height: 28px;
       z-index: 600;
       background: var(--mac-menu-bar, linear-gradient(180deg, rgba(236,236,236,.96) 0%, rgba(218,218,218,.96) 100%));
+      background-blend-mode: normal, normal;
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       border-bottom: 1px solid rgba(0,0,0,.18);
@@ -2543,7 +2547,7 @@
           rgba(222,122,74,calc(var(--mat-alpha,1)*.45))  25%,  rgba(164,82,34,calc(var(--mat-alpha,1)*.45))   38%,
           rgba(216,110,62,calc(var(--mat-alpha,1)*.45))  52%,  rgba(116,48,12,calc(var(--mat-alpha,1)*.45))   66%,
           rgba(226,132,82,calc(var(--mat-alpha,1)*.45))  80%,  rgba(154,70,26,calc(var(--mat-alpha,1)*.45))   100%),
-        url('/mat-copper.webp') center/cover no-repeat;
+        url('/mat-copper.jpg') center/cover no-repeat;
       border-color: rgba(194,108,64,calc(var(--mat-alpha,1) * .85));
       box-shadow: 0 4px 28px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,210,180,.6);
     }
@@ -8403,7 +8407,7 @@ const _MAT_DOMINANT_RGB = {
 const _MAT_TEXTURE_URL = {
   silver: '/mat-silver.jpg',
   gold:   '/mat-gold.jpg',
-  copper: '/mat-copper.webp',
+  copper: '/mat-copper.jpg',
   wood:   '/mat-wood.jpg',
   stone:  '/mat-stone.jpg',
   glass:  '/mat-glass.jpg',
@@ -9013,18 +9017,18 @@ function _buildDockMaterials() {
 
 /* Per-material colour tables for window bars, menu bar, and text */
 const _MAT_THEME = {
-  /* ── Metallic: multi-stop brushed-metal gradients honouring --mat-alpha ── */
+  /* ── Metallic: brushed-metal gradient + real photo texture layer ── */
   silver: {
-    win:  'linear-gradient(155deg,rgba(242,242,246,var(--mat-alpha,1)) 0%,rgba(168,170,188,var(--mat-alpha,1)) 13%,rgba(248,248,252,var(--mat-alpha,1)) 25%,rgba(190,190,212,var(--mat-alpha,1)) 38%,rgba(236,236,244,var(--mat-alpha,1)) 52%,rgba(162,162,184,var(--mat-alpha,1)) 66%,rgba(240,240,250,var(--mat-alpha,1)) 80%,rgba(196,196,218,var(--mat-alpha,1)) 100%)',
-    menu: 'linear-gradient(155deg,rgba(248,248,252,var(--mat-alpha,1)) 0%,rgba(196,196,218,var(--mat-alpha,1)) 13%,rgba(250,250,254,var(--mat-alpha,1)) 25%,rgba(200,200,222,var(--mat-alpha,1)) 38%,rgba(244,244,250,var(--mat-alpha,1)) 52%,rgba(172,172,196,var(--mat-alpha,1)) 66%,rgba(246,246,252,var(--mat-alpha,1)) 80%,rgba(202,202,224,var(--mat-alpha,1)) 100%)',
+    win:  `linear-gradient(155deg,rgba(242,242,246,calc(var(--mat-alpha,1)*.85)) 0%,rgba(168,170,188,calc(var(--mat-alpha,1)*.85)) 13%,rgba(248,248,252,calc(var(--mat-alpha,1)*.85)) 25%,rgba(190,190,212,calc(var(--mat-alpha,1)*.85)) 38%,rgba(236,236,244,calc(var(--mat-alpha,1)*.85)) 52%,rgba(162,162,184,calc(var(--mat-alpha,1)*.85)) 66%,rgba(240,240,250,calc(var(--mat-alpha,1)*.85)) 80%,rgba(196,196,218,calc(var(--mat-alpha,1)*.85)) 100%),url('/mat-silver.jpg') center/cover no-repeat`,
+    menu: `linear-gradient(155deg,rgba(248,248,252,calc(var(--mat-alpha,1)*.85)) 0%,rgba(196,196,218,calc(var(--mat-alpha,1)*.85)) 13%,rgba(250,250,254,calc(var(--mat-alpha,1)*.85)) 25%,rgba(200,200,222,calc(var(--mat-alpha,1)*.85)) 38%,rgba(244,244,250,calc(var(--mat-alpha,1)*.85)) 52%,rgba(172,172,196,calc(var(--mat-alpha,1)*.85)) 66%,rgba(246,246,252,calc(var(--mat-alpha,1)*.85)) 80%,rgba(202,202,224,calc(var(--mat-alpha,1)*.85)) 100%),url('/mat-silver.jpg') center/cover no-repeat`,
     text: '#1a1a1a', hover: 'rgba(0,0,0,.1)' },
   gold: {
-    win:  'linear-gradient(155deg,rgba(255,238,148,var(--mat-alpha,1)) 0%,rgba(188,132,0,var(--mat-alpha,1)) 13%,rgba(255,230,108,var(--mat-alpha,1)) 25%,rgba(218,168,30,var(--mat-alpha,1)) 38%,rgba(252,220,80,var(--mat-alpha,1)) 52%,rgba(174,118,0,var(--mat-alpha,1)) 66%,rgba(254,234,124,var(--mat-alpha,1)) 80%,rgba(210,160,18,var(--mat-alpha,1)) 100%)',
-    menu: 'linear-gradient(155deg,rgba(255,242,162,var(--mat-alpha,1)) 0%,rgba(210,162,22,var(--mat-alpha,1)) 13%,rgba(255,236,122,var(--mat-alpha,1)) 25%,rgba(230,180,50,var(--mat-alpha,1)) 38%,rgba(252,228,102,var(--mat-alpha,1)) 52%,rgba(188,140,10,var(--mat-alpha,1)) 66%,rgba(255,240,132,var(--mat-alpha,1)) 80%,rgba(220,170,30,var(--mat-alpha,1)) 100%)',
+    win:  `linear-gradient(155deg,rgba(255,238,148,calc(var(--mat-alpha,1)*.85)) 0%,rgba(188,132,0,calc(var(--mat-alpha,1)*.85)) 13%,rgba(255,230,108,calc(var(--mat-alpha,1)*.85)) 25%,rgba(218,168,30,calc(var(--mat-alpha,1)*.85)) 38%,rgba(252,220,80,calc(var(--mat-alpha,1)*.85)) 52%,rgba(174,118,0,calc(var(--mat-alpha,1)*.85)) 66%,rgba(254,234,124,calc(var(--mat-alpha,1)*.85)) 80%,rgba(210,160,18,calc(var(--mat-alpha,1)*.85)) 100%),url('/mat-gold.jpg') center/cover no-repeat`,
+    menu: `linear-gradient(155deg,rgba(255,242,162,calc(var(--mat-alpha,1)*.85)) 0%,rgba(210,162,22,calc(var(--mat-alpha,1)*.85)) 13%,rgba(255,236,122,calc(var(--mat-alpha,1)*.85)) 25%,rgba(230,180,50,calc(var(--mat-alpha,1)*.85)) 38%,rgba(252,228,102,calc(var(--mat-alpha,1)*.85)) 52%,rgba(188,140,10,calc(var(--mat-alpha,1)*.85)) 66%,rgba(255,240,132,calc(var(--mat-alpha,1)*.85)) 80%,rgba(220,170,30,calc(var(--mat-alpha,1)*.85)) 100%),url('/mat-gold.jpg') center/cover no-repeat`,
     text: '#3a2800', hover: 'rgba(0,0,0,.12)' },
   copper: {
-    win:  'linear-gradient(155deg,rgba(238,156,114,var(--mat-alpha,1)) 0%,rgba(138,60,18,var(--mat-alpha,1)) 13%,rgba(222,122,74,var(--mat-alpha,1)) 25%,rgba(164,82,34,var(--mat-alpha,1)) 38%,rgba(216,110,62,var(--mat-alpha,1)) 52%,rgba(116,48,12,var(--mat-alpha,1)) 66%,rgba(226,132,82,var(--mat-alpha,1)) 80%,rgba(154,70,26,var(--mat-alpha,1)) 100%)',
-    menu: 'linear-gradient(155deg,rgba(242,162,124,var(--mat-alpha,1)) 0%,rgba(150,70,28,var(--mat-alpha,1)) 13%,rgba(228,134,84,var(--mat-alpha,1)) 25%,rgba(178,96,48,var(--mat-alpha,1)) 38%,rgba(222,120,70,var(--mat-alpha,1)) 52%,rgba(128,58,20,var(--mat-alpha,1)) 66%,rgba(232,142,92,var(--mat-alpha,1)) 80%,rgba(164,82,38,var(--mat-alpha,1)) 100%)',
+    win:  `linear-gradient(155deg,rgba(238,156,114,calc(var(--mat-alpha,1)*.85)) 0%,rgba(138,60,18,calc(var(--mat-alpha,1)*.85)) 13%,rgba(222,122,74,calc(var(--mat-alpha,1)*.85)) 25%,rgba(164,82,34,calc(var(--mat-alpha,1)*.85)) 38%,rgba(216,110,62,calc(var(--mat-alpha,1)*.85)) 52%,rgba(116,48,12,calc(var(--mat-alpha,1)*.85)) 66%,rgba(226,132,82,calc(var(--mat-alpha,1)*.85)) 80%,rgba(154,70,26,calc(var(--mat-alpha,1)*.85)) 100%),url('/mat-copper.jpg') center/cover no-repeat`,
+    menu: `linear-gradient(155deg,rgba(242,162,124,calc(var(--mat-alpha,1)*.85)) 0%,rgba(150,70,28,calc(var(--mat-alpha,1)*.85)) 13%,rgba(228,134,84,calc(var(--mat-alpha,1)*.85)) 25%,rgba(178,96,48,calc(var(--mat-alpha,1)*.85)) 38%,rgba(222,120,70,calc(var(--mat-alpha,1)*.85)) 52%,rgba(128,58,20,calc(var(--mat-alpha,1)*.85)) 66%,rgba(232,142,92,calc(var(--mat-alpha,1)*.85)) 80%,rgba(164,82,38,calc(var(--mat-alpha,1)*.85)) 100%),url('/mat-copper.jpg') center/cover no-repeat`,
     text: '#2e1008', hover: 'rgba(0,0,0,.12)' },
   /* ── Liquid Glass: macOS title bars and menu bar use texture + translucent tint ── */
   wood:   { win: `linear-gradient(rgba(180,130,80,var(--win-glass-alpha,0.10)),rgba(180,130,80,var(--win-glass-alpha,0.10))),url('/mat-wood.jpg') center/cover no-repeat`,   menu: `linear-gradient(rgba(180,130,80,var(--menu-glass-alpha,0.12)),rgba(180,130,80,var(--menu-glass-alpha,0.12))),url('/mat-wood.jpg') center/cover no-repeat`,   text: '#fff', hover: 'rgba(255,255,255,.18)' },
