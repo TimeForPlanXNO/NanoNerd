@@ -9191,13 +9191,13 @@ function _applyDockMaterial(id) {
 let _dockCustomColor = null;
 
 function _applyDockCustomColor(hex) {
-  if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
   /* Leaving glass via custom colour: restore pre-glass opacity */
   if (_dockMaterial === 'glass' && _preGlassLevel !== null) {
     const _restore = _preGlassLevel;
     _preGlassLevel = null;
     setUiLevel(_restore);
   }
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
   _dockCustomColor = hex;
   _syncMacDockFromHex(hex);
   localStorage.setItem('dock-custom-color', hex);
