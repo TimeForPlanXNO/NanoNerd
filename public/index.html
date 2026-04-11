@@ -1914,7 +1914,7 @@
         max-height: calc(100vh - 92px);
         left: 50%; right: auto; transform: translateX(-50%);
       }
-      .wp-dialog .wp-grid { grid-template-columns: repeat(3, 1fr); }
+      .wp-dialog .wp-dialog-body { padding: 5px 4px; }
       /* macOS: centered, full-width minus margins, clamp height above dock */
       body.macos .wp-dialog {
         width: min(300px, calc(100vw - 16px));
@@ -1924,6 +1924,11 @@
       /* Chat Settings: clamp width + pane height */
       .nn-dlg  { width: min(292px, calc(100% - 8px)); max-height: calc(100% - 54px); }
       .nn-pane { max-height: min(260px, calc(100vh - 200px)); }
+    }
+
+    /* ── Very narrow portrait: 3-column wallpaper grid ── */
+    @media (max-width: 399px) and (orientation: portrait) {
+      .wp-dialog .wp-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     /* ── Theme colour controls (now inside dock/taskbar settings panel) ── */
@@ -3916,10 +3921,10 @@ document.addEventListener('DOMContentLoaded', function _initWpDrag() {
     if (e.target.closest('.wp-mac-cls, .wp-xp-cls')) return;
     const dlg   = document.getElementById('wp-dialog');
     const shell = document.getElementById('app-shell');
-    /* Clear CSS-centering transform before measuring position so getBoundingClientRect is accurate */
-    dlg.style.transform = '';
+    /* Snapshot position while centered transform is still active, then switch to px anchor */
     const dr    = dlg.getBoundingClientRect();
     const sr    = shell.getBoundingClientRect();
+    dlg.style.transform = '';
     /* Anchor absolutely relative to #app-shell; clear right/bottom so left/top take over */
     dlg.style.left   = (dr.left - sr.left) + 'px';
     dlg.style.top    = (dr.top  - sr.top)  + 'px';
