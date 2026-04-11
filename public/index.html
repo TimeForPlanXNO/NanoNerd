@@ -8174,6 +8174,7 @@ let _dockMaterial = 'silver';
 /* ── UI Level (transparency vs opacity) — 0 = fully transparent, 100 = fully opaque ── */
 let _uiLevel    = 80;   /* XP default:   80 = mostly opaque */
 let _macUiLevel = 20;   /* macOS default: 20 = translucent Liquid Glass */
+let _preGlassLevel = null; /* opacity saved just before glass is selected; restored on leaving glass */
 
 function _applyUiLevel(v) {
   const t = Math.max(0, Math.min(100, v)) / 100;
@@ -9122,6 +9123,7 @@ function _injectMacMatStyle(txUrl, winGrad, menuGrad) {
 }
 
 function _applyDockMaterial(id) {
+  const _prevMat = _dockMaterial;
   _dockMaterial = id;
   const dock = document.getElementById('mac-dock');
   if (dock) {
@@ -9167,8 +9169,15 @@ function _applyDockMaterial(id) {
   }
   /* Mirror material to XP taskbar/titlebars with proper metallic/glass injection */
   _applyXpMaterial(id, true);
-  /* Glass: reset opacity to 0% so the texture overlay is fully transparent by default */
-  if (id === 'glass') setUiLevel(0);
+  /* Glass: reset opacity to 0%; save pre-glass level so it can be restored on leaving */
+  if (id === 'glass') {
+    _preGlassLevel = _macMode ? _macUiLevel : _uiLevel;
+    setUiLevel(0);
+  } else if (_prevMat === 'glass' && _preGlassLevel !== null) {
+    const _restore = _preGlassLevel;
+    _preGlassLevel = null;
+    setUiLevel(_restore);
+  }
   /* Inject ::before texture+gradient for macOS window/menu bars so opacity var controls both */
   const _mt = _MAT_THEME[id];
   _injectMacMatStyle(_MAT_TEXTURE_URL[id] || '', _mt ? _mt.win : '', _mt ? _mt.menu : '');
@@ -9183,6 +9192,12 @@ let _dockCustomColor = null;
 
 function _applyDockCustomColor(hex) {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
+  /* Leaving glass via custom colour: restore pre-glass opacity */
+  if (_dockMaterial === 'glass' && _preGlassLevel !== null) {
+    const _restore = _preGlassLevel;
+    _preGlassLevel = null;
+    setUiLevel(_restore);
+  }
   _dockCustomColor = hex;
   _syncMacDockFromHex(hex);
   localStorage.setItem('dock-custom-color', hex);
