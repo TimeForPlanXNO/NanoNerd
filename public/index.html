@@ -8536,7 +8536,7 @@ function _injectXpTexture(id) {
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:${minmax}!important;border-color:${border}!important;}`,
     `body:not(.macos) .mv-wp-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn{background:${minmax}!important;border-color:${border}!important;}`,
-    `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.85)!important;}`,
+    `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.85))!important;}`,
   ].join('\n');
 }
 
