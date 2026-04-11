@@ -1613,7 +1613,7 @@
     /* ── WALLPAPER BUTTON ── */
     .wp-btn {
       position: absolute; top: 8px; right: 10px;
-      z-index: 5;  /* sits behind open windows; taskbar (500) stays supreme */
+      z-index: 3;  /* above icon-col (z-index:2), below all windows (z-index:10+) */
       width: 26px; height: 26px; box-sizing: border-box;
       padding: 0; border-radius: 5px;
       background: linear-gradient(180deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.10) 100%);
@@ -1629,7 +1629,7 @@
     /* ── ICON RESET BUTTON (XP mode only, desktop top-right) ── */
     #icon-reset-btn {
       position: absolute; top: 8px; right: 42px;
-      z-index: 5;
+      z-index: 3;  /* same level as wp-btn — above icon-col, below all windows */
       width: 26px; height: 26px; box-sizing: border-box;
       padding: 0; border-radius: 5px;
       background: rgba(255,255,255,.12);
@@ -2039,8 +2039,9 @@
     body.macos .macos-menubar  { display: flex !important; }
     body.macos .desktop        { margin-top: 28px; }
     body.macos .icon-col       { display: none !important; }
-    /* wallpaper btn sits just below the menu bar in macOS mode — no z-index override, stays at 5 so windows cover it */
-    body.macos .wp-btn         { top: 32px; }
+    /* wallpaper btn is inside .desktop (margin-top:28px in macOS mode). top:4px relative to desktop
+       puts it at viewport y≈32, just below the 28px menu bar. */
+    body.macos .wp-btn         { top: 4px; }
     /* Hide reset button in macOS top bar */
     body.macos #mac-reset-btn  { display: none !important; }
     /* Maximised regular windows stop at the dock (CSS var set by JS) */
@@ -2912,11 +2913,11 @@
       </div>
     </div>
     <div class="win-area" id="win-area"></div>
-  </div>
 
-  <!-- Wallpaper Button + Icon-reset Button (XP only, hidden until icon moved) -->
-  <button id="icon-reset-btn" onclick="_resetIconPositions()" title="Reset icon positions" style="display:none;">🔄</button>
-  <button class="wp-btn" id="wp-btn" onclick="toggleWpPicker(event)" title="Change wallpaper">🖼️</button>
+    <!-- Wallpaper Button + Icon-reset Button inside .desktop so they share the window stacking context -->
+    <button id="icon-reset-btn" onclick="_resetIconPositions()" title="Reset icon positions" style="display:none;">🔄</button>
+    <button class="wp-btn" id="wp-btn" onclick="toggleWpPicker(event)" title="Change wallpaper">🖼️</button>
+  </div>
 
   <!-- Wallpaper Picker Dialog -->
   <div class="wp-dialog" id="wp-dialog">
@@ -9102,14 +9103,20 @@ function _injectMacMatStyle(txUrl, winGrad, menuGrad) {
     document.head.appendChild(el);
   }
   if (txUrl || winGrad) {
-    /* Both gradient and texture go into ::before so opacity:var(--mat-alpha,1) fades both together */
+    /* Both gradient and texture go into ::before so opacity:var(--mat-alpha,1) fades both together.
+       backdrop-filter on the titlebar would create a new stacking context that buries the ::before
+       behind it, making the texture invisible. Disable it while a material is active. */
     const winBg   = txUrl ? `${winGrad||''},url('${txUrl}') center/cover no-repeat`  : (winGrad||'transparent');
     const menuBg  = txUrl ? `${menuGrad||''},url('${txUrl}') center/cover no-repeat` : (menuGrad||'transparent');
+    /* z-index:-1 puts ::before behind content children but above the element's own background layer.
+       isolation:isolate is intentionally omitted — it would create a stacking context that clips
+       z-index:-1 children to be above the element itself, defeating the purpose.
+       backdrop-filter is disabled because it also creates a stacking context that buries the ::before. */
     const base = `content:'';position:absolute;inset:0;z-index:-1;background-size:cover,cover;background-position:center,center;opacity:var(--mat-alpha,1);pointer-events:none;`;
     el.textContent = [
-      `body.macos .xp-titlebar,body.macos .mv-titlebar,body.macos .wp-dialog-head{position:relative!important;isolation:isolate;background:transparent!important;}`,
+      `body.macos .xp-titlebar,body.macos .mv-titlebar,body.macos .wp-dialog-head{position:relative!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}`,
       `body.macos .xp-titlebar::before,body.macos .mv-titlebar::before,body.macos .wp-dialog-head::before{${base}background:${winBg};}`,
-      `.macos-menubar{position:relative!important;isolation:isolate;background:transparent!important;}`,
+      `.macos-menubar{position:relative!important;background:transparent!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}`,
       `.macos-menubar::before{${base}background:${menuBg};}`,
     ].join('\n');
   } else {
