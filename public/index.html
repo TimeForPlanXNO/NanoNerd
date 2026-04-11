@@ -3855,7 +3855,7 @@ function _clampWpDialog() {
   if (!dlg || !shell || !_wpPickerOpen) return;
   const dr = dlg.getBoundingClientRect();
   const sr = shell.getBoundingClientRect();
-  /* Only clamp when the dialog has been moved (left/top inline styles set by drag) */
+  /* Clamp when the dialog has been moved via drag (left/top inline styles are set) */
   if (dlg.style.left || dlg.style.top) {
     const curL = parseFloat(dlg.style.left) || 0;
     const curT = parseFloat(dlg.style.top)  || 0;
@@ -3865,16 +3865,25 @@ function _clampWpDialog() {
     dlg.style.top  = Math.max(0, Math.min(maxY, curT)) + 'px';
     return;
   }
-  /* Default CSS anchor (right/top): check right edge is not clipped */
-  const rightEdge = dr.right - sr.left;
-  const leftEdge  = dr.left  - sr.left;
+  /* Default CSS anchor (right/top): clamp all four edges if clipped */
+  const leftEdge   = dr.left   - sr.left;
+  const rightEdge  = dr.right  - sr.left;
+  const topEdge    = dr.top    - sr.top;
+  const bottomEdge = dr.bottom - sr.top;
   if (leftEdge < 0) {
     dlg.style.right = 'auto';
     dlg.style.left  = '10px';
-  }
-  if (rightEdge > sr.width) {
+  } else if (rightEdge > sr.width) {
     dlg.style.right = '10px';
     dlg.style.left  = 'auto';
+  }
+  if (topEdge < 0) {
+    dlg.style.top = '4px';
+  } else if (bottomEdge > sr.height) {
+    /* Push up just enough so the bottom edge is inside the shell */
+    dlg.style.top  = Math.max(4, sr.height - dlg.offsetHeight - 4) + 'px';
+    dlg.style.left = dlg.style.left || 'auto';
+    if (!dlg.style.left || dlg.style.left === 'auto') dlg.style.right = '10px';
   }
 }
 window.addEventListener('resize', _clampWpDialog);
@@ -3943,7 +3952,7 @@ document.addEventListener('DOMContentLoaded', function _initWpDrag() {
     function _onEnd(ev) {
       if (!_dragging) return;
       _dragging = false;
-      head.releasePointerCapture(ev.pointerId);
+      if (head.hasPointerCapture(ev.pointerId)) head.releasePointerCapture(ev.pointerId);
       head.style.cursor = '';
       document.removeEventListener('pointermove', _onMove);
       document.removeEventListener('pointerup',   _onEnd);
