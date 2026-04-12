@@ -1950,6 +1950,9 @@
     body:not(.macos).ui-low-opacity .stats-label,
     body:not(.macos).ui-low-opacity .stats-section-title { color: #555 !important; }
     body:not(.macos).ui-low-opacity .stats-value { color: #1a1a1a !important; }
+    body:not(.macos).ui-low-opacity .stats-value.green { color: #16a34a !important; }
+    body:not(.macos).ui-low-opacity .stats-value.red   { color: #dc2626 !important; }
+    body:not(.macos).ui-low-opacity .stats-value.blue  { color: #0055e5 !important; }
     body:not(.macos).ui-low-opacity .stats-section,
     body:not(.macos).ui-low-opacity .wifi-rep { border-color: #d4d0c8 !important; }
     /* macOS silver: when opacity < 50% the header background is nearly transparent;
@@ -8948,6 +8951,27 @@ function setUiMode(mode, noAnim) {
     if (dspMatLbl) dspMatLbl.textContent = 'Material';
     const cpReset = document.getElementById('cp-reset-btn');
     if (cpReset) cpReset.textContent = _macMode ? '↺ Reset Colour' : '↺ Reset XP Blue';
+
+    /* Sync dock-settings-btn presence: macOS uses top-bar btn; XP uses dock btn */
+    const existingDockSettingsBtn = document.getElementById('dock-settings-btn');
+    if (_macMode) {
+      /* Remove dock 🎨 button when switching to macOS */
+      if (existingDockSettingsBtn) existingDockSettingsBtn.remove();
+    } else {
+      /* Re-add dock 🎨 button when switching back to XP, if missing */
+      if (!existingDockSettingsBtn) {
+        const dock = document.getElementById('mac-dock');
+        if (dock) {
+          const sb = document.createElement('button');
+          sb.className = 'dock-settings-btn';
+          sb.id = 'dock-settings-btn';
+          sb.title = 'Dock Settings';
+          sb.textContent = '🎨';
+          sb.onclick = toggleDockSettings;
+          dock.appendChild(sb);
+        }
+      }
+    }
   }
 
   if (noAnim) {
