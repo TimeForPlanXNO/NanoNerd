@@ -3922,7 +3922,7 @@ function toggleWpPicker(e) {
         dlg.style.top       = top + 'px';
         dlg.style.left      = leftPx + 'px';
         dlg.style.right     = 'auto';
-        dlg.style.transform = '';
+        dlg.style.transform = 'none';
       } else {
         /* Desktop / landscape: right-align below the right-corner button */
         dlg.style.top       = top + 'px';
@@ -6513,7 +6513,7 @@ const wpDrag = {
     const sr = shell.getBoundingClientRect();
     const curLeft = dr.left - sr.left + shell.scrollLeft;
     const curTop  = dr.top  - sr.top  + shell.scrollTop;
-    dlg.style.transform = '';
+    dlg.style.transform = 'none';
     dlg.style.left   = curLeft + 'px';
     dlg.style.top    = curTop  + 'px';
     dlg.style.right  = 'auto';
