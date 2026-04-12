@@ -1249,7 +1249,7 @@
 
     .wifi-popup {
       display: none; position: fixed; bottom: 38px; right: 48px;
-      width: 320px; max-height: calc(100vh - 44px);
+      width: 320px; max-height: min(480px, calc(100vh - 44px));
       background: #ece9d8; border: 1px solid #0055e5;
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
       border-radius: 4px 4px 0 0; z-index: 100000;
@@ -1274,7 +1274,7 @@
     }
     .wifi-popup-list {
       overflow-y: auto; flex: 1;
-      max-height: calc(100vh - 80px);
+      max-height: min(420px, calc(100vh - 80px));
     }
     .wifi-popup-list::-webkit-scrollbar { width: 8px; }
     .wifi-popup-list::-webkit-scrollbar-track { background: #ece9d8; }
@@ -1945,13 +1945,13 @@
       color: #fff !important;
       text-shadow: 0 1px 3px rgba(0,0,0,.6) !important;
     }
-    body.ui-low-opacity .stats-popup,
-    body.ui-low-opacity .wifi-popup { color: #fff !important; }
-    body.ui-low-opacity .stats-label,
-    body.ui-low-opacity .stats-section-title { color: rgba(255,255,255,.7) !important; }
-    body.ui-low-opacity .stats-value { color: #fff !important; }
-    body.ui-low-opacity .stats-section,
-    body.ui-low-opacity .wifi-rep { border-color: rgba(255,255,255,.2) !important; }
+    body:not(.macos).ui-low-opacity .stats-popup,
+    body:not(.macos).ui-low-opacity .wifi-popup { color: #1a1a1a !important; }
+    body:not(.macos).ui-low-opacity .stats-label,
+    body:not(.macos).ui-low-opacity .stats-section-title { color: #555 !important; }
+    body:not(.macos).ui-low-opacity .stats-value { color: #1a1a1a !important; }
+    body:not(.macos).ui-low-opacity .stats-section,
+    body:not(.macos).ui-low-opacity .wifi-rep { border-color: #d4d0c8 !important; }
     /* macOS silver: when opacity < 50% the header background is nearly transparent;
        switch donate-popup header labels to dark so they stay legible */
     body.macos.mat-silver.ui-low-opacity .mdp-header h3,
@@ -2003,11 +2003,11 @@
         right: max(4px, env(safe-area-inset-right));
       }
       .wifi-popup {
-        max-height: calc(100vh - 48px);
+        max-height: min(360px, calc(100vh - 50px));
         width: min(280px, calc(100vw - 12px));
         right: max(4px, env(safe-area-inset-right));
       }
-      .wifi-popup-list { max-height: calc(100vh - 90px); }
+      .wifi-popup-list { max-height: min(300px, calc(100vh - 90px)); }
       .wifi-popup-head { padding: 4px 7px; }
       .wifi-rep        { padding: 4px 7px; }
       body.macos .wifi-popup { max-height: calc(100vh - 40px); }
@@ -2037,11 +2037,11 @@
       }
       /* Reps: also hug right edge, 8px buffer from top */
       .wifi-popup {
-        max-height: calc(100vh - 48px);
+        max-height: min(260px, calc(100vh - 48px));
         width: min(280px, calc(100vw - 12px));
         right: max(4px, env(safe-area-inset-right));
       }
-      .wifi-popup-list { max-height: calc(100vh - 86px); }
+      .wifi-popup-list { max-height: min(200px, calc(100vh - 86px)); }
       /* Start / Donate QR menu: compact for short landscape screens */
       .start-menu {
         max-height: calc(100vh - 42px);
@@ -2775,6 +2775,7 @@
     }
     .dsp-slider-row { display: flex; align-items: center; gap: 8px; }
     .dsp-slider-row span { font-size: 10px; color: #8888aa; flex-shrink: 0; }
+    .dsp-slider-val { font-size: 10px; color: #8888aa; }
     .dsp-slider {
       flex: 1; -webkit-appearance: none; appearance: none;
       height: 4px; border-radius: 2px; outline: none; cursor: pointer;
@@ -2892,6 +2893,7 @@
     </div>
     <div class="mac-mb-right">
       <button class="mac-mb-btn" id="mac-reset-btn" onclick="resetAll()" title="Reset chat &amp; icon positions" style="padding:0 6px;font-size:15px;">⟳</button>
+      <button class="mac-mb-btn" id="mac-topbar-settings-btn" onclick="toggleDockSettings()" title="Customise UI">🎨</button>
       <button class="mac-mb-btn" id="mac-wallet-btn" onclick="openWalletPopup()" title="Nano Wallets">
         <img src="/wallet-icon.png" style="width:16px;height:16px;border-radius:3px;vertical-align:middle;display:block;" alt="wallets">
       </button>
@@ -3161,6 +3163,7 @@
                  oninput="setUiLevel(+this.value)">
           <span>100%</span>
         </div>
+        <div style="text-align:right;margin-top:2px;"><span class="dsp-slider-val" id="dsp-level-val">100%</span></div>
       </div>
       <div class="dsp-macos-only">
         <div class="dsp-section-label" id="dsp-size-label">Dock Size</div>
@@ -3170,6 +3173,7 @@
                  oninput="setDockIconSize(+this.value)">
           <span>L</span>
         </div>
+        <div style="text-align:right;margin-top:2px;"><span class="dsp-slider-val" id="dsp-size-val">52px</span></div>
         <div class="dsp-toggle-row" style="margin-top:8px;">
           <span class="dsp-toggle-label">Magnification</span>
           <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
@@ -3183,6 +3187,7 @@
                    oninput="setDockMagnifySize(+this.value / 100)">
             <span>L</span>
           </div>
+          <div style="text-align:right;margin-top:2px;"><span class="dsp-slider-val" id="dsp-magnify-size-val">165%</span></div>
         </div>
         <div class="dsp-toggle-row" style="margin-top:4px;">
           <span class="dsp-toggle-label">Auto-hide Dock</span>
@@ -8512,6 +8517,8 @@ function setUiLevel(v) {
     slider.value = v;
     slider.style.setProperty('--pct', v + '%');
   }
+  const val = document.getElementById('dsp-level-val');
+  if (val) val.textContent = v + '%';
 }
 
 /* ── Dock visibility state & helpers ── */
@@ -8922,6 +8929,8 @@ function setUiMode(mode, noAnim) {
       const lv = _macMode ? _macUiLevel : _uiLevel;
       lvSlider.value = lv;
       lvSlider.style.setProperty('--pct', lv + '%');
+      const lvVal = document.getElementById('dsp-level-val');
+      if (lvVal) lvVal.textContent = lv + '%';
     }
 
     /* Dock visibility reset on mode switch */
@@ -9006,14 +9015,16 @@ function _buildMacDock() {
   /* Recycle Bin */
   dock.appendChild(_makeDockIconWrap('recycle_bin', APPS['recycle_bin']));
 
-  /* Settings button */
-  const sb = document.createElement('button');
-  sb.className = 'dock-settings-btn';
-  sb.id = 'dock-settings-btn';
-  sb.title = 'Dock Settings';
-  sb.textContent = '🎨';
-  sb.onclick = toggleDockSettings;
-  dock.appendChild(sb);
+  /* Settings button — only in XP mode; macOS uses the top-bar button */
+  if (!_macMode) {
+    const sb = document.createElement('button');
+    sb.className = 'dock-settings-btn';
+    sb.id = 'dock-settings-btn';
+    sb.title = 'Dock Settings';
+    sb.textContent = '🎨';
+    sb.onclick = toggleDockSettings;
+    dock.appendChild(sb);
+  }
 
   _applyDockIconSize(_dockIconSize);
 }
@@ -9243,36 +9254,42 @@ function _closeDockSettings() {
   if (db) db.classList.remove('active');
   const cb = document.getElementById('cp-btn');
   if (cb) cb.classList.remove('active');
+  const tb = document.getElementById('mac-topbar-settings-btn');
+  if (tb) tb.classList.remove('active');
 }
 
 function toggleDockSettings() {
   _dspOpen = !_dspOpen;
-  const popup = document.getElementById('dock-settings-popup');
-  const dockBtn = document.getElementById('dock-settings-btn'); /* macOS dock */
-  const xpBtn   = document.getElementById('cp-btn');           /* XP taskbar  */
+  const popup   = document.getElementById('dock-settings-popup');
+  const dockBtn = document.getElementById('dock-settings-btn');       /* XP dock btn (unused in macOS) */
+  const xpBtn   = document.getElementById('cp-btn');                  /* XP taskbar  */
+  const tbBtn   = document.getElementById('mac-topbar-settings-btn'); /* macOS top-bar */
   popup.classList.toggle('open', _dspOpen);
   if (dockBtn) dockBtn.classList.toggle('active', _dspOpen);
   if (xpBtn)   xpBtn.classList.toggle('active', _dspOpen);
+  if (tbBtn)   tbBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
     if (_macMode) {
-      /* Anchor above the 🎨 dock trigger button; fall back to dock-wrap if btn not found */
-      const triggerR = document.getElementById('dock-settings-btn')?.getBoundingClientRect?.() || null;
-      const dockR    = document.getElementById('mac-dock-wrap').getBoundingClientRect();
-      const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : (window.innerHeight - dockR.top + 6);
-      const maxH     = triggerR ? (triggerR.top - 10) : (dockR.top - 10);
-      popup.style.bottom    = fromBot + 'px';
-      popup.style.maxHeight = Math.max(160, maxH) + 'px';
+      /* Anchor below the 🎨 top-bar button, right-aligned to screen edge */
+      const r    = tbBtn ? tbBtn.getBoundingClientRect() : null;
+      const topY = r ? (r.bottom + 4) : 28;
+      const maxH = Math.max(160, window.innerHeight - topY - 12);
+      popup.style.top       = topY + 'px';
+      popup.style.bottom    = 'auto';
+      popup.style.maxHeight = maxH + 'px';
+      popup.style.left      = 'auto';
+      popup.style.right     = '4px';
     } else {
       /* XP mode — anchor above the #cp-btn trigger, clamped to viewport */
       const triggerR = (document.getElementById('cp-btn') || {}).getBoundingClientRect?.() || null;
       const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : 42;
       const maxH     = triggerR ? (triggerR.top - 10) : (window.innerHeight - 60);
+      popup.style.top       = 'auto';
       popup.style.bottom    = Math.max(42, fromBot) + 'px';
       popup.style.maxHeight = Math.max(160, maxH) + 'px';
+      popup.style.left      = 'auto';
+      popup.style.right     = '14px';
     }
-    popup.style.top   = 'auto';
-    popup.style.left  = 'auto';
-    popup.style.right = '14px';
   }
 }
 
@@ -9280,7 +9297,8 @@ document.addEventListener('click', function(e) {
   if (_dspOpen &&
       !e.target.closest('#dock-settings-popup') &&
       !e.target.closest('#dock-settings-btn') &&
-      !e.target.closest('#cp-btn')) {
+      !e.target.closest('#cp-btn') &&
+      !e.target.closest('#mac-topbar-settings-btn')) {
     _closeDockSettings();
   }
 });
@@ -9346,6 +9364,8 @@ function _applyDockIconSize(px) {
     const pct = ((px - +slider.min) / (+slider.max - +slider.min) * 100).toFixed(1) + '%';
     slider.style.setProperty('--pct', pct);
   }
+  const sizeVal = document.getElementById('dsp-size-val');
+  if (sizeVal) sizeVal.textContent = px + 'px';
   /* Re-fit dock to viewport after size change */
   _fitDockToScreen();
 }
@@ -9374,6 +9394,8 @@ function setDockMagnifySize(v) {
   localStorage.setItem('dock-magnify-size', _dockMagnifySize.toFixed(2));
   const slider = document.getElementById('dsp-magnify-size-slider');
   if (slider) slider.value = Math.round(_dockMagnifySize * 100);
+  const msVal = document.getElementById('dsp-magnify-size-val');
+  if (msVal) msVal.textContent = Math.round(_dockMagnifySize * 100) + '%';
 }
 
 function toggleDockAutoHide() {
@@ -9697,6 +9719,8 @@ document.addEventListener('click', function(e) {
   /* Sync magnification size slider */
   const mszSlider = document.getElementById('dsp-magnify-size-slider');
   if (mszSlider) mszSlider.value = Math.round(_dockMagnifySize * 100);
+  const msVal = document.getElementById('dsp-magnify-size-val');
+  if (msVal) msVal.textContent = Math.round(_dockMagnifySize * 100) + '%';
 
   /* Build dock and materials */
   _buildMacDock();
@@ -9720,6 +9744,8 @@ document.addEventListener('click', function(e) {
     const pct = ((_dockIconSize - +slider.min) / (+slider.max - +slider.min) * 100).toFixed(1) + '%';
     slider.style.setProperty('--pct', pct);
   }
+  const sizeVal = document.getElementById('dsp-size-val');
+  if (sizeVal) sizeVal.textContent = _dockIconSize + 'px';
 
   /* Set UI mode last (needs dock built) */
   setUiMode(savedMode === 'macos' ? 'macos' : 'xp', true); /* noAnim on startup */
