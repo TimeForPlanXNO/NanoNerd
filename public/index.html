@@ -1931,6 +1931,19 @@
       .wp-dialog .wp-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
+    /* ── Low-opacity label override: opacity < 50% → force white on all bars ──
+       When UI alpha drops below 0.50 the bars are nearly transparent and any dark
+       label colour (set by gold/silver/sand themes) becomes illegible.
+       JS adds `body.ui-low-opacity` in _applyUiLevel() when value < 50.           */
+    body.ui-low-opacity .xp-win-title,
+    body.ui-low-opacity .mv-title,
+    body.ui-low-opacity .tb-btn,
+    body.ui-low-opacity .tb-clock,
+    body.ui-low-opacity .mac-mb-btn {
+      color: #fff !important;
+      text-shadow: 0 1px 3px rgba(0,0,0,.6) !important;
+    }
+
     /* ── Theme colour controls (now inside dock/taskbar settings panel) ── */
     .cp-main { display: flex; gap: 8px; align-items: center; }
     .cp-color-wheel {
@@ -3954,30 +3967,34 @@ document.addEventListener('DOMContentLoaded', function _initWpDrag() {
     _ox = e.clientX - dr.left;
     _oy = e.clientY - dr.top;
     _dragging = true;
-    head.setPointerCapture(e.pointerId);
+    try { head.setPointerCapture(e.pointerId); } catch (_) { /* ignore on browsers that disallow */ }
     head.style.cursor = 'grabbing';
+    /* Prevent browser from treating this as a scroll or zoom gesture */
     e.preventDefault();
+    e.stopPropagation();
 
     function _onMove(ev) {
       if (!_dragging) return;
-      const dlg2  = document.getElementById('wp-dialog');
+      /* On mobile, prevent page scroll from interfering with dialog drag */
+      ev.preventDefault();
+      const dlg2   = document.getElementById('wp-dialog');
       const shell2 = document.getElementById('app-shell');
-      const sr2   = shell2.getBoundingClientRect();
-      const maxX  = sr2.width  - dlg2.offsetWidth;
-      const maxY  = sr2.height - dlg2.offsetHeight;
+      const sr2    = shell2.getBoundingClientRect();
+      const maxX   = sr2.width  - dlg2.offsetWidth;
+      const maxY   = sr2.height - dlg2.offsetHeight;
       dlg2.style.left = Math.max(0, Math.min(maxX, ev.clientX - _ox - sr2.left)) + 'px';
       dlg2.style.top  = Math.max(0, Math.min(maxY, ev.clientY - _oy - sr2.top))  + 'px';
     }
     function _onEnd(ev) {
       if (!_dragging) return;
       _dragging = false;
-      if (head.hasPointerCapture(ev.pointerId)) head.releasePointerCapture(ev.pointerId);
+      try { if (head.hasPointerCapture(ev.pointerId)) head.releasePointerCapture(ev.pointerId); } catch (_) {}
       head.style.cursor = '';
       document.removeEventListener('pointermove', _onMove);
       document.removeEventListener('pointerup',   _onEnd);
       document.removeEventListener('pointercancel', _onEnd);
     }
-    document.addEventListener('pointermove',   _onMove);
+    document.addEventListener('pointermove',   _onMove, { passive: false });
     document.addEventListener('pointerup',     _onEnd);
     document.addEventListener('pointercancel', _onEnd);
   });
@@ -8352,6 +8369,9 @@ function _applyUiLevel(v) {
   root.style.setProperty('--win-glass-alpha',  t.toFixed(3));
   root.style.setProperty('--menu-glass-alpha', t.toFixed(3));
   root.style.setProperty('--mat-alpha',        t.toFixed(3));
+  /* Below 50% opacity the bars are nearly transparent — force white labels so
+     dark-themed text (gold/silver/sand materials) stays legible on the wallpaper */
+  document.body.classList.toggle('ui-low-opacity', t < 0.50);
 }
 
 function setUiLevel(v) {
