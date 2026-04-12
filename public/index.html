@@ -1952,6 +1952,10 @@
     body.ui-low-opacity .stats-value { color: #fff !important; }
     body.ui-low-opacity .stats-section,
     body.ui-low-opacity .wifi-rep { border-color: rgba(255,255,255,.2) !important; }
+    /* macOS silver: when opacity < 50% the header background is nearly transparent;
+       switch donate-popup header labels to dark so they stay legible */
+    body.macos.mat-silver.ui-low-opacity .mdp-header h3,
+    body.macos.mat-silver.ui-low-opacity .mdp-header p { color: #1a1a1a !important; }
 
     /* ── Theme colour controls (now inside dock/taskbar settings panel) ── */
     .cp-main { display: flex; gap: 8px; align-items: center; }
@@ -1992,6 +1996,22 @@
       .tb-btn span         { font-size: 11px; }
       .tb-clock            { padding: 0 4px; font-size: 9px; }
       .wifi-btn            { padding: 0 4px; }
+      /* ── Popup menus: fit inside portrait viewport ── */
+      .stats-popup {
+        max-height: calc(100vh - 48px);
+        width: min(240px, calc(100vw - 20px));
+        right: max(4px, env(safe-area-inset-right));
+      }
+      .wifi-popup {
+        max-height: calc(100vh - 48px);
+        width: min(280px, calc(100vw - 12px));
+        right: max(4px, env(safe-area-inset-right));
+      }
+      .wifi-popup-list { max-height: calc(100vh - 90px); }
+      .wifi-popup-head { padding: 4px 7px; }
+      .wifi-rep        { padding: 4px 7px; }
+      body.macos .wifi-popup { max-height: calc(100vh - 40px); }
+      body.macos .stats-popup { max-height: calc(100vh - 40px); }
     }
     /* ── Mobile landscape taskbar: tighten spacing + safe-area pad ── */
     @media (max-height: 500px) and (orientation: landscape) {
@@ -2063,17 +2083,23 @@
       .wp-dialog-head         { padding: 5px 8px; }
       .wp-dialog-body         { padding: 6px 8px; }
       .wp-dialog-foot         { padding: 5px 8px; }
-      /* Donate popup: compact on short landscape screens */
+      /* Donate popup: proportionally compact on short landscape screens */
       .mac-donate-popup {
         width: min(262px, calc(100vw - 12px));
         max-height: calc(100vh - 34px);
         top: max(30px, env(safe-area-inset-top));
+        overflow-y: auto;
       }
-      .mdp-header             { padding: 6px 10px; gap: 2px; }
-      .mdp-header h3          { font-size: 11px; }
-      .mdp-body               { padding: 6px 10px; gap: 5px; }
-      .mdp-qr img             { width: 120px; height: 120px; }
-      .mdp-credits            { padding: 5px 10px; }
+      /* Inner sections scale with vh so the full popup fits without scrolling */
+      .mdp-header             { padding: min(6px, 1.5vh) 10px; gap: 2px; }
+      .mdp-header h3          { font-size: min(11px, 3.5vh); }
+      .mdp-header p           { font-size: min(9px, 2.5vh); }
+      .mdp-body               { padding: min(6px, 1.5vh) 10px; gap: min(5px, 1.2vh); }
+      .mdp-qr img             { width: min(100px, 26vh); height: min(100px, 26vh); }
+      .mdp-addr               { font-size: min(8px, 2.2vh); padding: min(3px, 0.8vh) 6px; }
+      .mdp-credits            { padding: min(5px, 1.2vh) 10px; gap: min(6px, 1.5vh); }
+      .mdp-credits img        { width: min(28px, 7vh); height: min(28px, 7vh); }
+      .mdp-credits-text       { font-size: min(9px, 2.5vh); }
     }
 
     /* ═══════════════════════════════════════════════════
@@ -8375,7 +8401,7 @@ function applyThemeColor(hex, isReset, skipMacSync) {
     `body:not(.macos) .mv-wp-btn { background: ${g.minmax} !important; border-color: ${g.minmaxBorder} !important; }`,
     `.tb-btn { background: ${g.tbbtn} !important; border-color: ${g.tbbtnBorder} !important; }`,
     `.tb-btn.active { background: ${g.tbbtnActv} !important; }`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:${g.taskbar}!important;border-color:${g.border}!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:#ece9d8!important;border-color:${g.border}!important;}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${g.titlebar}!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${g.border}!important;}`,
   ].join('\n');
@@ -8759,7 +8785,7 @@ function _injectXpMetallic(id) {
     `body:not(.macos) .mv-wp-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn.active{background:${m.taskbar}!important;}`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:${m.taskbar}!important;border-color:${m.border}!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:#ece9d8!important;border-color:${m.border}!important;}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${m.titlebar}!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${m.border}!important;}`,
   ] : [
@@ -8771,7 +8797,7 @@ function _injectXpMetallic(id) {
     `body:not(.macos) .mv-wp-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn.active{background:${m.taskbar}!important;}`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:${m.taskbar}!important;border-color:${m.border}!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:#ece9d8!important;border-color:${m.border}!important;}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${m.titlebar}!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${m.border}!important;}`,
   ];
@@ -8798,7 +8824,7 @@ function _injectXpGlass(id) {
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:#ece9d8!important;border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.6))!important;}`,
   ] : [
@@ -8809,7 +8835,7 @@ function _injectXpGlass(id) {
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:#ece9d8!important;border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.6))!important;}`,
   ];
@@ -8840,8 +8866,7 @@ function _injectXpTexture(id) {
     `body:not(.macos) .mv-wp-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.85))!important;}`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:transparent!important;border-color:${border}!important;position:fixed!important;isolation:isolate;}`,
-    `body:not(.macos) .stats-popup::before,body:not(.macos) .wifi-popup::before{${pseudo}}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:#ece9d8!important;border-color:${border}!important;position:fixed!important;}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${minmax}!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${border}!important;}`,
   ].join('\n');
@@ -9494,6 +9519,9 @@ function _injectMacMatStyle(txUrl, winGrad, menuGrad) {
 function _applyDockMaterial(id) {
   const _prevMat = _dockMaterial;
   _dockMaterial = id;
+  /* Track active material on body so CSS selectors like body.mat-silver can target it */
+  [...document.body.classList].filter(c => c.startsWith('mat-')).forEach(c => document.body.classList.remove(c));
+  document.body.classList.add('mat-' + id);
   const dock = document.getElementById('mac-dock');
   if (dock) {
     DOCK_MATERIALS.forEach(m => dock.classList.remove('mat-' + m.id));
@@ -9567,6 +9595,8 @@ function _applyDockCustomColor(hex) {
     setUiLevel(_restore);
   }
   if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
+  /* Custom colour has no named material — clear mat-* body class */
+  [...document.body.classList].filter(c => c.startsWith('mat-')).forEach(c => document.body.classList.remove(c));
   _dockCustomColor = hex;
   _syncMacDockFromHex(hex);
   localStorage.setItem('dock-custom-color', hex);
