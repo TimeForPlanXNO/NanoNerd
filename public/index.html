@@ -4811,8 +4811,8 @@ const wm = {
       let   w       = Math.round(ar.width * 0.60);
       let   h       = Math.round(w * 9 / 16);
       if (h > availH) { h = availH; w = Math.round(h * 16 / 9); }
+      if (h < 200)    { h = 200;    w = Math.round(h * 16 / 9); }
       w = Math.min(w, ar.width);
-      h = Math.max(200, h);
       const left    = Math.round((ar.width - w) / 2);
       const top     = topOff + Math.round(Math.max(0, availH - h) * 0.30);
       win.style.width  = w + 'px';
