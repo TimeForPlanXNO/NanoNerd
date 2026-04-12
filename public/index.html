@@ -6735,17 +6735,18 @@ function _positionPopupAboveBtn(popup, btn) {
   const vh = window.innerHeight;
   const br = btn.getBoundingClientRect();
 
-  /* Anchor bottom to the TASKBAR's top edge, not the button's top.
-     Buttons are vertically centred inside the 34px taskbar, so btn.top
-     is a few px below the taskbar's top — measuring the taskbar directly
-     gives exact flush placement with no overlap. */
-  const taskbarEl = document.querySelector('.taskbar');
-  const tbTop = (taskbarEl && taskbarEl.getBoundingClientRect().top > 0)
-    ? taskbarEl.getBoundingClientRect().top
-    : br.top;
+  /* Anchor bottom to the TASKBAR's top edge (not the button's top).
+     Buttons are vertically centred inside the 34px taskbar, so btn.top is
+     a few px below the taskbar's top — measuring the taskbar directly gives
+     exact flush placement. Skip if taskbar is hidden (display:none). */
+  const taskbarEl = document.querySelector('.taskbar:not([style*="display:none"])');
+  const tbRect    = taskbarEl ? taskbarEl.getBoundingClientRect() : null;
+  const tbTop     = (tbRect && tbRect.top > 0) ? tbRect.top : br.top;
 
   const pw = popup.offsetWidth  || parseInt(getComputedStyle(popup).width)  || 260;
-  const ph = popup.offsetHeight || 400;
+  /* Use live offsetHeight when popup is open; fall back to computed max-height, then 400px */
+  const cs = getComputedStyle(popup);
+  const ph = popup.offsetHeight || parseFloat(cs.maxHeight) || 400;
 
   let right  = vw - br.right;
   let bottom = vh - tbTop;
