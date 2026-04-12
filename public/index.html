@@ -917,6 +917,14 @@
     .tb-clock:hover  { background: rgba(255,255,255,.15); }
     .tb-clock.active { background: rgba(0,0,0,.25); }
 
+    /* ── Genie open/close keyframes ── */
+    @keyframes genie-up-in    { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+    @keyframes genie-up-out   { from { transform: scaleY(1); opacity: 1; } to { transform: scaleY(0); opacity: 0; } }
+    @keyframes genie-down-in  { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+    @keyframes genie-down-out { from { transform: scaleY(1); opacity: 1; } to { transform: scaleY(0); opacity: 0; } }
+    @keyframes genie-scale-in { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes genie-scale-out{ from { transform: scale(1);  opacity: 1; } to { transform: scale(.88); opacity: 0; } }
+
     .stats-popup {
       display: none; position: fixed; bottom: 38px; right: 4px;
       width: 260px; max-height: calc(100vh - 44px);
@@ -924,10 +932,11 @@
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
       border-radius: 4px 4px 0 0; z-index: 100000;
       font-family: "Tahoma", sans-serif; font-size: 11px;
-      animation: wifipop-in .15s ease;
       flex-direction: column; overflow-y: auto;
+      transform-origin: bottom right;
     }
-    .stats-popup.open { display: flex; }
+    .stats-popup.open   { display: flex; animation: genie-up-in  .18s cubic-bezier(.22,.68,0,1.2) forwards; }
+    .stats-popup.hiding { display: flex; animation: genie-up-out .14s ease-in forwards; }
     .stats-popup-head {
       background: linear-gradient(180deg,#0a5cdf 0%,#0845c0 100%);
       color: #fff; padding: 5px 9px; font-weight: bold; font-size: 11px;
@@ -1254,14 +1263,11 @@
       box-shadow: 3px 3px 10px rgba(0,0,0,.5);
       border-radius: 4px 4px 0 0; z-index: 100000;
       font-family: "Tahoma", sans-serif; font-size: 11px;
-      animation: wifipop-in .15s ease;
       flex-direction: column;
+      transform-origin: bottom right;
     }
-    .wifi-popup.open { display: flex; }
-    @keyframes wifipop-in {
-      from { transform: translateY(10px); opacity: 0; }
-      to   { transform: translateY(0);    opacity: 1; }
-    }
+    .wifi-popup.open   { display: flex; animation: genie-up-in  .18s cubic-bezier(.22,.68,0,1.2) forwards; }
+    .wifi-popup.hiding { display: flex; animation: genie-up-out .14s ease-in forwards; }
     .wifi-popup-head {
       background: linear-gradient(180deg,#0a5cdf 0%,#0845c0 100%);
       color: #fff; padding: 5px 9px; font-weight: bold; font-size: 11px;
@@ -1300,13 +1306,13 @@
        START MENU / QR POPUP
     ═══════════════════════════ */
     @keyframes start-menu-in  {
-      from { transform: translateY(20px) scale(.95); opacity: 0; }
-      to   { transform: translateY(0)    scale(1);   opacity: 1; }
+      from { transform: scaleY(0); opacity: 0; }
+      to   { transform: scaleY(1); opacity: 1; }
     }
 
     @keyframes start-menu-out {
-      from { transform: translateY(0)    scale(1);   opacity: 1; }
-      to   { transform: translateY(20px) scale(.95); opacity: 0; }
+      from { transform: scaleY(1); opacity: 1; }
+      to   { transform: scaleY(0); opacity: 0; }
     }
 
     .start-menu {
@@ -1656,8 +1662,10 @@
       border-radius: 10px;
       box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.07);
       display: none; flex-direction: column; overflow: hidden;
+      transform-origin: center;
     }
-    .wp-dialog.open { display: flex; }
+    .wp-dialog.open   { display: flex; animation: genie-scale-in  .2s cubic-bezier(.22,.68,0,1.2) forwards; }
+    .wp-dialog.hiding { display: flex; animation: genie-scale-out .14s ease-in forwards; }
     .wp-dialog-head {
       background: rgba(255,255,255,.08);
       padding: 7px 10px 7px; color: rgba(255,255,255,.92); font-size: 11px; font-weight: bold;
@@ -1955,6 +1963,10 @@
     body:not(.macos).ui-low-opacity .stats-value.blue  { color: #0055e5 !important; }
     body:not(.macos).ui-low-opacity .stats-section,
     body:not(.macos).ui-low-opacity .wifi-rep { border-color: #d4d0c8 !important; }
+    body:not(.macos).ui-low-opacity .stats-popup-head { color: #1a1a1a !important; }
+    body:not(.macos).ui-low-opacity .wifi-popup-head  { color: #1a1a1a !important; }
+    body:not(.macos).ui-low-opacity .sm-header h2     { color: #1a1a1a !important; text-shadow: none !important; }
+    body:not(.macos).ui-low-opacity .sm-header p      { color: #555    !important; text-shadow: none !important; }
     /* macOS silver: when opacity < 50% the header background is nearly transparent;
        switch donate-popup header labels to dark so they stay legible */
     body.macos.mat-silver.ui-low-opacity .mdp-header h3,
@@ -2014,7 +2026,7 @@
       .wifi-popup-head { padding: 4px 7px; }
       .wifi-rep        { padding: 4px 7px; }
       body.macos .wifi-popup { max-height: calc(100vh - 40px); }
-      body.macos .stats-popup { max-height: calc(100vh - 40px); }
+      body.macos .stats-popup { max-height: min(75vh, calc(100vh - 38px)); }
     }
     /* ── Mobile landscape taskbar: tighten spacing + safe-area pad ── */
     @media (max-height: 500px) and (orientation: landscape) {
@@ -2089,7 +2101,7 @@
       /* Donate popup: proportionally compact on short landscape screens */
       .mac-donate-popup {
         width: min(262px, calc(100vw - 12px));
-        max-height: calc(100vh - 34px);
+        max-height: min(80vh, calc(100vh - 38px));
         top: max(30px, env(safe-area-inset-top));
         overflow-y: auto;
       }
@@ -2470,15 +2482,12 @@
       border-radius: 10px;
       box-shadow: 0 8px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.15);
       z-index: 100000; flex-direction: column; overflow-y: auto;
-      max-height: calc(100vh - 34px);
+      max-height: min(520px, calc(100vh - 40px));
       font-family: -apple-system, "Segoe UI", sans-serif;
-      animation: mac-popup-in .15s ease;
+      transform-origin: top left;
     }
-    .mac-donate-popup.open { display: flex; }
-    @keyframes mac-popup-in {
-      from { transform: scale(.94) translateY(-6px); opacity: 0; }
-      to   { transform: scale(1)   translateY(0);    opacity: 1; }
-    }
+    .mac-donate-popup.open   { display: flex; animation: genie-down-in  .18s cubic-bezier(.22,.68,0,1.2) forwards; }
+    .mac-donate-popup.hiding { display: flex; animation: genie-down-out .14s ease-in forwards; }
     .mdp-header {
       background: var(--mdp-header-bg, linear-gradient(180deg,#4a5a8a 0%,#3a4a7a 100%));
       padding: 12px 14px; display: flex; flex-direction: column;
@@ -2736,8 +2745,14 @@
       box-shadow: 0 -4px 32px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.07);
       z-index: 100000; flex-direction: column; overflow: hidden;
       font-family: -apple-system, "Segoe UI", "Tahoma", sans-serif;
+      transform-origin: bottom right;
     }
-    .dock-settings-popup.open { display: flex; }
+    .dock-settings-popup.open   { display: flex; animation: genie-up-in  .18s cubic-bezier(.22,.68,0,1.2) forwards; }
+    .dock-settings-popup.hiding { display: flex; animation: genie-up-out .14s ease-in forwards; }
+    /* In macOS mode the settings panel drops down from the top-bar — flip origin */
+    body.macos .dock-settings-popup              { transform-origin: top right; }
+    body.macos .dock-settings-popup.open         { animation: genie-down-in  .18s cubic-bezier(.22,.68,0,1.2) forwards; }
+    body.macos .dock-settings-popup.hiding       { animation: genie-down-out .14s ease-in forwards; }
     .dsp-head {
       display: flex; align-items: center; justify-content: space-between;
       padding: 9px 14px 7px;
@@ -2934,7 +2949,7 @@
   <div class="desktop">
     <div class="icon-col" id="icon-col">
       <div class="desk-icon" data-icon-id="nanonerd" data-app="nanonerd">
-        <div class="di-emoji" style="position:relative;display:inline-flex;align-items:center;justify-content:center;">🧠<span class="xno-gold" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:20px;">Ӿ</span></div>
+        <img class="di-img" src="/nanonerd-logo.jpeg" alt="NanoNerd" style="border-radius:8px;" />
         <span class="label">NanoNerd</span>
       </div>
       <div class="desk-icon" data-icon-id="nano-org" data-app="nano_org">
@@ -3161,22 +3176,18 @@
       <div>
         <div class="dsp-section-label">Opacity</div>
         <div class="dsp-slider-row">
-          <span>0%</span>
+          <span class="dsp-slider-val" id="dsp-level-val">100%</span>
           <input type="range" class="dsp-slider" id="dsp-level-slider" min="0" max="100" value="100"
                  oninput="setUiLevel(+this.value)">
-          <span>100%</span>
         </div>
-        <div style="text-align:right;margin-top:2px;"><span class="dsp-slider-val" id="dsp-level-val">100%</span></div>
       </div>
       <div class="dsp-macos-only">
         <div class="dsp-section-label" id="dsp-size-label">Dock Size</div>
         <div class="dsp-slider-row">
-          <span>S</span>
+          <span class="dsp-slider-val" id="dsp-size-val">52px</span>
           <input type="range" class="dsp-slider" id="dsp-size-slider" min="36" max="80" value="52"
                  oninput="setDockIconSize(+this.value)">
-          <span>L</span>
         </div>
-        <div style="text-align:right;margin-top:2px;"><span class="dsp-slider-val" id="dsp-size-val">52px</span></div>
         <div class="dsp-toggle-row" style="margin-top:8px;">
           <span class="dsp-toggle-label">Magnification</span>
           <button class="dsp-pill on" id="dsp-magnify-pill" onclick="toggleDockMagnify()"></button>
@@ -3184,13 +3195,11 @@
         <div class="dsp-desktop-only" style="margin-top:4px;">
           <div class="dsp-section-label">Magnification Size</div>
           <div class="dsp-slider-row">
-            <span>S</span>
+            <span class="dsp-slider-val" id="dsp-magnify-size-val">165%</span>
             <input type="range" class="dsp-slider" id="dsp-magnify-size-slider"
                    min="120" max="300" value="165" step="5"
                    oninput="setDockMagnifySize(+this.value / 100)">
-            <span>L</span>
           </div>
-          <div style="text-align:right;margin-top:2px;"><span class="dsp-slider-val" id="dsp-magnify-size-val">165%</span></div>
         </div>
         <div class="dsp-toggle-row" style="margin-top:4px;">
           <span class="dsp-toggle-label">Auto-hide Dock</span>
@@ -3236,8 +3245,8 @@ const MEDIA_FILES = [
 const APPS = {
   nanonerd: {
     id: 'nanonerd', title: 'NanoNerd',
-    iconHtml: '<span style="position:relative;display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;font-size:12px;line-height:1;">🧠<span class="xno-gold" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:9px;">Ӿ</span></span>',
-    tbIconHtml: '<span style="position:relative;display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;font-size:12px;line-height:1;">🧠<span class="xno-gold" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:9px;">Ӿ</span></span>',
+    iconHtml: '<img src="/nanonerd-logo.jpeg" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">',
+    tbIconHtml: '<img src="/nanonerd-logo.jpeg" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">',
     type: 'chat', url: null,
   },
   nano_org: {
@@ -3978,15 +3987,16 @@ function toggleWpPicker(e) {
 
 function closeWpPicker() {
   const dlg = document.getElementById('wp-dialog');
-  dlg.classList.remove('open');
-  /* Reset any drag-repositioned position/coordinates so next open uses the default CSS anchor */
-  dlg.style.position  = '';
-  dlg.style.top       = '';
-  dlg.style.left      = '';
-  dlg.style.right     = '';
-  dlg.style.bottom    = '';
-  dlg.style.transform = '';
   _wpPickerOpen = false;
+  _genieClose(dlg, () => {
+    /* Reset any drag-repositioned position/coordinates so next open uses the default CSS anchor */
+    dlg.style.position  = '';
+    dlg.style.top       = '';
+    dlg.style.left      = '';
+    dlg.style.right     = '';
+    dlg.style.bottom    = '';
+    dlg.style.transform = '';
+  });
 }
 
 /* ── Wallpaper dialog drag — init on DOMContentLoaded ──
@@ -6681,6 +6691,21 @@ document.addEventListener('touchend',    () => { drag.end(); resizer.end(); wpDr
 document.addEventListener('touchcancel', () => { drag.end(); resizer.end(); wpDrag.end(); });
 
 /* ══════════════════════════════════════════
+   GENIE CLOSE HELPER
+══════════════════════════════════════════ */
+function _genieClose(el, afterFn) {
+  if (!el) { if (afterFn) afterFn(); return; }
+  el.classList.add('hiding');
+  const done = () => {
+    el.classList.remove('open', 'hiding');
+    if (afterFn) afterFn();
+  };
+  const onEnd = () => { el.removeEventListener('animationend', onEnd); done(); };
+  el.addEventListener('animationend', onEnd);
+  setTimeout(onEnd, 300); /* safety-net fallback */
+}
+
+/* ══════════════════════════════════════════
    START MENU
 ══════════════════════════════════════════ */
 let startMenuOpen = false;
@@ -6800,22 +6825,30 @@ function toggleWifiPopup() {
   const popup   = document.getElementById('wifi-popup');
   const btn     = document.getElementById('wifi-btn');
   const macBtn  = document.getElementById('mac-wifi-btn');
-  wifiOpen = !wifiOpen;
-  popup.classList.toggle('open', wifiOpen);
-  btn.classList.toggle('active', wifiOpen);
-  if (macBtn) macBtn.classList.toggle('active', wifiOpen);
   if (wifiOpen) {
-    _positionPopupAboveBtn(popup, btn);
-    if (!wifiLoaded) loadNanoReps();
+    wifiOpen = false;
+    btn.classList.remove('active');
+    if (macBtn) macBtn.classList.remove('active');
+    _genieClose(popup);
+    return;
   }
+  wifiOpen = true;
+  popup.classList.add('open');
+  btn.classList.add('active');
+  if (macBtn) macBtn.classList.add('active');
+  _positionPopupAboveBtn(popup, btn);
+  if (!wifiLoaded) loadNanoReps();
 }
 
 function closeWifiPopup() {
+  if (!wifiOpen) return;
   wifiOpen = false;
-  document.getElementById('wifi-popup').classList.remove('open');
-  document.getElementById('wifi-btn').classList.remove('active');
+  const popup  = document.getElementById('wifi-popup');
+  const btn    = document.getElementById('wifi-btn');
   const macBtn = document.getElementById('mac-wifi-btn');
+  btn.classList.remove('active');
   if (macBtn) macBtn.classList.remove('active');
+  _genieClose(popup);
 }
 
 async function loadNanoReps() {
@@ -6953,32 +6986,37 @@ let statsOpen = false;
 let statsTimer = null;
 
 function toggleStatsPopup() {
-  statsOpen = !statsOpen;
   const popup   = document.getElementById('stats-popup');
   const btn     = document.getElementById('clock');
   const macBtn  = document.getElementById('mac-clock');
-  popup.classList.toggle('open', statsOpen);
-  btn.classList.toggle('active', statsOpen);
-  if (macBtn) macBtn.classList.toggle('active', statsOpen);
   if (statsOpen) {
-    _positionPopupAboveBtn(popup, btn);
-    fetchAndRenderStats();
-    /* 1-second refresh while popup is open for crisp real-time Conf/sec */
-    statsTimer = setInterval(fetchAndRenderStats, 1000);
-  } else {
-    clearInterval(statsTimer);
-    statsTimer = null;
+    statsOpen = false;
+    btn.classList.remove('active');
+    if (macBtn) macBtn.classList.remove('active');
+    clearInterval(statsTimer); statsTimer = null;
+    _genieClose(popup);
+    return;
   }
+  statsOpen = true;
+  popup.classList.add('open');
+  btn.classList.add('active');
+  if (macBtn) macBtn.classList.add('active');
+  _positionPopupAboveBtn(popup, btn);
+  fetchAndRenderStats();
+  /* 1-second refresh while popup is open for crisp real-time Conf/sec */
+  statsTimer = setInterval(fetchAndRenderStats, 1000);
 }
 
 function closeStatsPopup() {
+  if (!statsOpen) return;
   statsOpen = false;
-  document.getElementById('stats-popup').classList.remove('open');
-  document.getElementById('clock').classList.remove('active');
+  const popup  = document.getElementById('stats-popup');
+  const btn    = document.getElementById('clock');
   const macBtn = document.getElementById('mac-clock');
+  btn.classList.remove('active');
   if (macBtn) macBtn.classList.remove('active');
-  clearInterval(statsTimer);
-  statsTimer = null;
+  clearInterval(statsTimer); statsTimer = null;
+  _genieClose(popup);
 }
 
 /* Reposition open popups when viewport size / orientation changes */
@@ -9065,7 +9103,7 @@ function _makeDockIconWrap(id, app) {
 
   /* Icon content */
   if (id === 'nanonerd') {
-    icon.innerHTML = '<div class="di-nn-inner" style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:38px;line-height:1;">🧠<span class="xno-gold di-nn-xno" style="position:absolute;top:45%;left:50%;transform:translate(-50%,-50%);font-size:24px;">Ӿ</span></div>';
+    icon.innerHTML = '<img src="/nanonerd-logo.jpeg" class="di-nn-inner" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
   } else if (id === 'media_folder') {
     icon.innerHTML = '<div style="width:88%;height:88%;display:flex;align-items:center;justify-content:center;padding:6%;"><svg viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></div>';
   } else if (id === 'games_folder') {
@@ -9273,48 +9311,54 @@ let _dspOpen = false;
 function _closeDockSettings() {
   if (!_dspOpen) return;
   _dspOpen = false;
-  document.getElementById('dock-settings-popup').classList.remove('open');
   const db = document.getElementById('dock-settings-btn');
   if (db) db.classList.remove('active');
   const cb = document.getElementById('cp-btn');
   if (cb) cb.classList.remove('active');
   const tb = document.getElementById('mac-topbar-settings-btn');
   if (tb) tb.classList.remove('active');
+  _genieClose(document.getElementById('dock-settings-popup'));
 }
 
 function toggleDockSettings() {
-  _dspOpen = !_dspOpen;
   const popup   = document.getElementById('dock-settings-popup');
   const dockBtn = document.getElementById('dock-settings-btn');       /* XP dock btn (unused in macOS) */
   const xpBtn   = document.getElementById('cp-btn');                  /* XP taskbar  */
   const tbBtn   = document.getElementById('mac-topbar-settings-btn'); /* macOS top-bar */
-  popup.classList.toggle('open', _dspOpen);
-  if (dockBtn) dockBtn.classList.toggle('active', _dspOpen);
-  if (xpBtn)   xpBtn.classList.toggle('active', _dspOpen);
-  if (tbBtn)   tbBtn.classList.toggle('active', _dspOpen);
   if (_dspOpen) {
-    if (_macMode) {
-      /* Anchor below the 🎨 top-bar button, right-aligned to screen edge */
-      const r    = tbBtn ? tbBtn.getBoundingClientRect() : null;
-      const topY = r ? (r.bottom + 4) : 28;
-      const maxH = Math.max(160, window.innerHeight - topY - 12);
-      popup.style.top       = topY + 'px';
-      popup.style.bottom    = 'auto';
-      popup.style.maxHeight = maxH + 'px';
-      popup.style.left      = 'auto';
-      popup.style.right     = '4px';
-    } else {
-      /* XP mode — anchor above the #cp-btn trigger, clamped to viewport */
-      const triggerR = (document.getElementById('cp-btn') || {}).getBoundingClientRect?.() || null;
-      const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : 42;
-      const maxH     = triggerR ? (triggerR.top - 10) : (window.innerHeight - 60);
-      popup.style.top       = 'auto';
-      popup.style.bottom    = Math.max(42, fromBot) + 'px';
-      popup.style.maxHeight = Math.max(160, maxH) + 'px';
-      popup.style.left      = 'auto';
-      popup.style.right     = '14px';
-    }
+    _dspOpen = false;
+    if (dockBtn) dockBtn.classList.remove('active');
+    if (xpBtn)   xpBtn.classList.remove('active');
+    if (tbBtn)   tbBtn.classList.remove('active');
+    _genieClose(popup);
+    return;
   }
+  _dspOpen = true;
+  if (_macMode) {
+    /* Anchor below the 🎨 top-bar button, right-aligned to screen edge */
+    const r    = tbBtn ? tbBtn.getBoundingClientRect() : null;
+    const topY = r ? (r.bottom + 4) : 28;
+    const maxH = Math.max(160, window.innerHeight - topY - 12);
+    popup.style.top       = topY + 'px';
+    popup.style.bottom    = 'auto';
+    popup.style.maxHeight = maxH + 'px';
+    popup.style.left      = 'auto';
+    popup.style.right     = '4px';
+  } else {
+    /* XP mode — anchor above the #cp-btn trigger, clamped to viewport */
+    const triggerR = (document.getElementById('cp-btn') || {}).getBoundingClientRect?.() || null;
+    const fromBot  = triggerR ? (window.innerHeight - triggerR.top + 6) : 42;
+    const maxH     = triggerR ? (triggerR.top - 10) : (window.innerHeight - 60);
+    popup.style.top       = 'auto';
+    popup.style.bottom    = Math.max(42, fromBot) + 'px';
+    popup.style.maxHeight = Math.max(160, maxH) + 'px';
+    popup.style.left      = 'auto';
+    popup.style.right     = '14px';
+  }
+  popup.classList.add('open');
+  if (dockBtn) dockBtn.classList.add('active');
+  if (xpBtn)   xpBtn.classList.add('active');
+  if (tbBtn)   tbBtn.classList.add('active');
 }
 
 document.addEventListener('click', function(e) {
@@ -9374,13 +9418,7 @@ function _applyDockIconSize(px) {
     el.style.width  = px + 'px';
     el.style.height = px + 'px';
   });
-  /* Scale NanoNerd emoji proportionally */
-  const nnInner = document.querySelector('.di-nn-inner');
-  if (nnInner) {
-    nnInner.style.fontSize = Math.round(px * 0.73) + 'px';
-    const xno = nnInner.querySelector('.di-nn-xno');
-    if (xno) xno.style.fontSize = Math.round(px * 0.46) + 'px';
-  }
+  /* NanoNerd dock icon is now a full-bleed img — no additional sizing needed */
   /* Update slider gradient fill */
   const slider = document.getElementById('dsp-size-slider');
   if (slider) {
@@ -9695,11 +9733,17 @@ window.addEventListener('orientationchange', () => setTimeout(_fitDockToScreen, 
 /* ── macOS Donate Dropdown ── */
 let _macDonateOpen = false;
 function toggleMacDonate() {
-  _macDonateOpen = !_macDonateOpen;
   const popup = document.getElementById('mac-donate-popup');
   const btn   = document.getElementById('mac-apple-btn');
-  popup.classList.toggle('open', _macDonateOpen);
-  if (btn) btn.classList.toggle('active', _macDonateOpen);
+  if (_macDonateOpen) {
+    _macDonateOpen = false;
+    if (btn) btn.classList.remove('active');
+    _genieClose(popup);
+    return;
+  }
+  _macDonateOpen = true;
+  popup.classList.add('open');
+  if (btn) btn.classList.add('active');
 }
 
 document.addEventListener('click', function(e) {
@@ -9707,9 +9751,10 @@ document.addEventListener('click', function(e) {
       !e.target.closest('#mac-donate-popup') &&
       !e.target.closest('#mac-apple-btn')) {
     _macDonateOpen = false;
-    document.getElementById('mac-donate-popup').classList.remove('open');
-    const b = document.getElementById('mac-apple-btn');
+    const popup = document.getElementById('mac-donate-popup');
+    const b     = document.getElementById('mac-apple-btn');
     if (b) b.classList.remove('active');
+    _genieClose(popup);
   }
 });
 
