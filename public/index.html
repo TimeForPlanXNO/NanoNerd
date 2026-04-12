@@ -2613,8 +2613,7 @@
     .dock-icon-wrap {
       display: flex; flex-direction: column; align-items: center; gap: 3px;
       position: relative; cursor: pointer;
-      will-change: transform; transform-origin: bottom center;
-      transition: transform .15s cubic-bezier(.18,.89,.32,1.28);
+      transform-origin: bottom center;
       flex-shrink: 0;
     }
     .dock-icon {
@@ -2623,7 +2622,7 @@
       display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,.1);
       box-shadow: 0 2px 8px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.4);
-      transition: width .15s, height .15s; flex-shrink: 0;
+      transition: width .15s ease-out, height .15s ease-out; flex-shrink: 0;
     }
     .dock-icon img,
     .dock-icon svg,
@@ -9027,24 +9026,47 @@ function _updateDockDot(id) {
   const dock = document.getElementById('mac-dock');
   if (!dock) return;
 
+  /* Cache natural centre-X of every icon wrap once on mouseenter,
+     before any animation has run. This prevents the feedback loop
+     where reading BoundingClientRect mid-transition returns a
+     moving value, causing icons to jump as the cursor moves. */
+  dock.addEventListener('mouseenter', function() {
+    if (window.matchMedia('(pointer:coarse)').matches) return;
+    dock.querySelectorAll('.dock-icon-wrap').forEach(wrap => {
+      const r = wrap.getBoundingClientRect();
+      wrap._cx = r.left + r.width / 2;
+    });
+  });
+
   dock.addEventListener('mousemove', function(e) {
     const isCoarse = window.matchMedia('(pointer:coarse)').matches;
     if (isCoarse) return;
     const wraps = dock.querySelectorAll('.dock-icon-wrap');
     const BASE  = _dockIconSize;
     const PEAK  = BASE * _dockMagnifySize;
-    const RANGE = 110;
+    const RANGE = BASE * 2.2;   /* proportional to icon size */
     wraps.forEach(wrap => {
-      const r  = wrap.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
+      /* Use the stable cached centre; fall back to live rect only if
+         mouseenter somehow didn't fire (e.g. focus-entered via keyboard). */
+      const cx = wrap._cx !== undefined
+        ? wrap._cx
+        : (wrap.getBoundingClientRect().left + BASE / 2);
       const d  = Math.abs(e.clientX - cx);
-      /* Magnification — only when enabled */
+
+      /* Magnification — change .dock-icon width/height so the flex slot
+         grows, pushing neighbours apart (no visual overlap). */
       if (_dockMagnify) {
-        const sc = d < RANGE ? 1 + (PEAK / BASE - 1) * Math.max(0, 1 - d / RANGE) : 1;
-        wrap.style.transform = `scale(${sc.toFixed(3)})`;
+        /* Cosine falloff: smooth ease-in at edges, peak at centre. */
+        const t    = d < RANGE ? Math.cos((d / RANGE) * Math.PI / 2) : 0;
+        const sc   = 1 + (PEAK / BASE - 1) * t;
+        const sz   = (BASE * sc).toFixed(1) + 'px';
+        const icon = wrap.querySelector('.dock-icon');
+        if (icon) { icon.style.width = sz; icon.style.height = sz; }
+        wrap.style.transform = ''; /* not used for magnification anymore */
       }
-      /* Tooltip — always on non-coarse pointer regardless of _dockMagnify state,
-         so labels remain accessible even when magnification is disabled. */
+
+      /* Tooltip — always on non-coarse pointer regardless of _dockMagnify
+         state, so labels remain accessible even when magnification is off. */
       if (d < RANGE / 2) wrap.classList.add('tooltip-visible');
       else               wrap.classList.remove('tooltip-visible');
     });
@@ -9052,7 +9074,10 @@ function _updateDockDot(id) {
 
   dock.addEventListener('mouseleave', function() {
     dock.querySelectorAll('.dock-icon-wrap').forEach(w => {
+      const icon = w.querySelector('.dock-icon');
+      if (icon) { icon.style.width = ''; icon.style.height = ''; }
       w.style.transform = '';
+      w._cx = undefined;
       w.classList.remove('tooltip-visible');
     });
   });
@@ -9200,7 +9225,12 @@ function toggleDockMagnify() {
   _dockMagnify = !_dockMagnify;
   document.getElementById('dsp-magnify-pill').classList.toggle('on', _dockMagnify);
   if (!_dockMagnify) {
-    document.querySelectorAll('.dock-icon-wrap').forEach(w => { w.style.transform = ''; });
+    document.querySelectorAll('.dock-icon-wrap').forEach(w => {
+      const icon = w.querySelector('.dock-icon');
+      if (icon) { icon.style.width = ''; icon.style.height = ''; }
+      w.style.transform = '';
+      w._cx = undefined;
+    });
   }
   localStorage.setItem('dock-magnify', _dockMagnify ? '1' : '0');
 }
