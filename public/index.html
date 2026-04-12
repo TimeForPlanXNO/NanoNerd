@@ -6722,6 +6722,30 @@ function showCopyToast(msg) {
 let wifiOpen = false;
 let wifiLoaded = false;
 
+/**
+ * Position a fixed popup so its bottom edge sits flush with btn's top
+ * and its right edge aligns with btn's right edge — clamped within viewport.
+ * Used for the stats popup (clock) and wifi/reps popup.
+ */
+function _positionPopupAboveBtn(popup, btn) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const br = btn.getBoundingClientRect();
+  const pw = popup.offsetWidth  || parseInt(getComputedStyle(popup).width)  || 260;
+  const ph = popup.offsetHeight || parseInt(getComputedStyle(popup).maxHeight) || 400;
+
+  let right  = vw - br.right;
+  let bottom = vh - br.top;
+
+  const left = vw - right - pw;
+  if (left < 4) right = Math.max(0, vw - pw - 4);
+  if (bottom + ph > vh - 4) bottom = vh - ph - 4;
+  if (bottom < 4) bottom = 4;
+
+  popup.style.right  = Math.max(0, right)  + 'px';
+  popup.style.bottom = Math.max(0, bottom) + 'px';
+}
+
 function toggleWifiPopup() {
   const popup   = document.getElementById('wifi-popup');
   const btn     = document.getElementById('wifi-btn');
@@ -6730,7 +6754,10 @@ function toggleWifiPopup() {
   popup.classList.toggle('open', wifiOpen);
   btn.classList.toggle('active', wifiOpen);
   if (macBtn) macBtn.classList.toggle('active', wifiOpen);
-  if (wifiOpen && !wifiLoaded) loadNanoReps();
+  if (wifiOpen) {
+    _positionPopupAboveBtn(popup, btn);
+    if (!wifiLoaded) loadNanoReps();
+  }
 }
 
 function closeWifiPopup() {
@@ -6884,6 +6911,7 @@ function toggleStatsPopup() {
   btn.classList.toggle('active', statsOpen);
   if (macBtn) macBtn.classList.toggle('active', statsOpen);
   if (statsOpen) {
+    _positionPopupAboveBtn(popup, btn);
     fetchAndRenderStats();
     /* 1-second refresh while popup is open for crisp real-time Conf/sec */
     statsTimer = setInterval(fetchAndRenderStats, 1000);
@@ -6902,6 +6930,20 @@ function closeStatsPopup() {
   clearInterval(statsTimer);
   statsTimer = null;
 }
+
+/* Reposition open popups when viewport size / orientation changes */
+window.addEventListener('resize', function() {
+  if (wifiOpen) {
+    const p = document.getElementById('wifi-popup');
+    const b = document.getElementById('wifi-btn');
+    if (p && b) _positionPopupAboveBtn(p, b);
+  }
+  if (statsOpen) {
+    const p = document.getElementById('stats-popup');
+    const b = document.getElementById('clock');
+    if (p && b) _positionPopupAboveBtn(p, b);
+  }
+});
 
 function fmtNum(n) {
   if (!n && n !== 0) return '—';
