@@ -6728,17 +6728,32 @@ let wifiLoaded = false;
  * Used for the stats popup (clock) and wifi/reps popup.
  */
 function _positionPopupAboveBtn(popup, btn) {
+  /* macOS popups are top-anchored by CSS — don't override them */
+  if (document.body.classList.contains('macos')) return;
+
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const br = btn.getBoundingClientRect();
+
+  /* Anchor bottom to the TASKBAR's top edge, not the button's top.
+     Buttons are vertically centred inside the 34px taskbar, so btn.top
+     is a few px below the taskbar's top — measuring the taskbar directly
+     gives exact flush placement with no overlap. */
+  const taskbarEl = document.querySelector('.taskbar');
+  const tbTop = (taskbarEl && taskbarEl.getBoundingClientRect().top > 0)
+    ? taskbarEl.getBoundingClientRect().top
+    : br.top;
+
   const pw = popup.offsetWidth  || parseInt(getComputedStyle(popup).width)  || 260;
-  const ph = popup.offsetHeight || parseInt(getComputedStyle(popup).maxHeight) || 400;
+  const ph = popup.offsetHeight || 400;
 
   let right  = vw - br.right;
-  let bottom = vh - br.top;
+  let bottom = vh - tbTop;
 
+  /* Clamp: don't overflow left edge */
   const left = vw - right - pw;
   if (left < 4) right = Math.max(0, vw - pw - 4);
+  /* Clamp: if popup is taller than available space, shift down just enough */
   if (bottom + ph > vh - 4) bottom = vh - ph - 4;
   if (bottom < 4) bottom = 4;
 
@@ -8824,7 +8839,7 @@ function _injectXpTexture(id) {
     `body:not(.macos) .mv-wp-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.85))!important;}`,
-    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:transparent!important;border-color:${border}!important;position:relative!important;isolation:isolate;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:transparent!important;border-color:${border}!important;position:fixed!important;isolation:isolate;}`,
     `body:not(.macos) .stats-popup::before,body:not(.macos) .wifi-popup::before{${pseudo}}`,
     `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${minmax}!important;}`,
     `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${border}!important;}`,
