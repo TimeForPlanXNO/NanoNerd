@@ -1647,7 +1647,7 @@
 
     /* ── WALLPAPER PICKER DIALOG ── */
     .wp-dialog {
-      position: absolute; top: 38px; right: 10px; left: auto; transform: none; z-index: 201;
+      position: absolute; top: 38px; right: 10px; left: auto; transform: none; z-index: 120000;
       width: min(380px, calc(100vw - 20px)); max-height: calc(100vh - 90px);
       background: rgba(20,20,28,var(--win-glass-alpha));
       backdrop-filter: blur(28px) saturate(180%);
@@ -3908,16 +3908,21 @@ function toggleWpPicker(e) {
     /* Position dialog flush below the 🖼️ button, aligned by orientation */
     const btn   = document.getElementById('wp-btn');
     const shell = document.getElementById('app-shell');
+    dlg.classList.add('open');
     if (btn && shell) {
       const br  = btn.getBoundingClientRect();
       const sr  = shell.getBoundingClientRect();
       const top = Math.round(br.bottom - sr.top + 4);
       if (_isMobilePortrait()) {
-        /* Portrait: center below the centered button */
+        /* Portrait: center horizontally using px (not %) so wpDrag.start never
+           needs to convert % → px, avoiding the scroll-offset jump on touchstart */
+        const dlgW   = dlg.offsetWidth  || 370;
+        const shellW = shell.offsetWidth || window.innerWidth;
+        const leftPx = Math.max(0, Math.round((shellW - dlgW) / 2));
         dlg.style.top       = top + 'px';
-        dlg.style.left      = '50%';
+        dlg.style.left      = leftPx + 'px';
         dlg.style.right     = 'auto';
-        dlg.style.transform = 'translateX(-50%)';
+        dlg.style.transform = '';
       } else {
         /* Desktop / landscape: right-align below the right-corner button */
         dlg.style.top       = top + 'px';
@@ -3926,7 +3931,6 @@ function toggleWpPicker(e) {
         dlg.style.transform = '';
       }
     }
-    dlg.classList.add('open');
     _wpPickerOpen = true;
     requestAnimationFrame(_clampWpDialog);
   }
@@ -6502,17 +6506,20 @@ const wpDrag = {
     const dlg   = document.getElementById('wp-dialog');
     const shell = document.getElementById('app-shell');
     if (!dlg || !shell) return;
-    /* Snapshot visual rect (transform may still be active for centered portrait), then
-       switch to explicit px left/top so delta-based moves work correctly.            */
+    /* Snapshot visual rect, switch to explicit px left/top so delta-based moves
+       work correctly. Add shell.scrollLeft/Top so that any residual scroll offset
+       (e.g. iOS elastic bounce) doesn't shift the dialog on first touchstart.     */
     const dr = dlg.getBoundingClientRect();
     const sr = shell.getBoundingClientRect();
+    const curLeft = dr.left - sr.left + shell.scrollLeft;
+    const curTop  = dr.top  - sr.top  + shell.scrollTop;
     dlg.style.transform = '';
-    dlg.style.left   = (dr.left - sr.left) + 'px';
-    dlg.style.top    = (dr.top  - sr.top)  + 'px';
+    dlg.style.left   = curLeft + 'px';
+    dlg.style.top    = curTop  + 'px';
     dlg.style.right  = 'auto';
     dlg.style.bottom = 'auto';
-    this.startLeft = dr.left - sr.left;
-    this.startTop  = dr.top  - sr.top;
+    this.startLeft = curLeft;
+    this.startTop  = curTop;
     this.startCX   = cx;
     this.startCY   = cy;
     this.active    = true;
