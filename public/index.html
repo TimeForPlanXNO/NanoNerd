@@ -3944,81 +3944,30 @@ function closeWpPicker() {
   _wpPickerOpen = false;
 }
 
-/* ── Drag-to-reposition for the wallpaper dialog ── */
+/* ── Wallpaper dialog drag — init on DOMContentLoaded ──
+   Uses the same mousedown + touchstart pattern as XP window drag so the
+   shared global mousemove/touchmove/mouseup/touchend loop handles moves.
+   This avoids setPointerCapture (unreliable on iOS) and per-drag listener
+   management, which could orphan listeners after pointercancel on Android. */
 document.addEventListener('DOMContentLoaded', function _initWpDrag() {
   const head = document.getElementById('wp-dialog-head');
   if (!head) return;
-  let _dragging = false, _ox = 0, _oy = 0;
 
-  head.addEventListener('pointerdown', function(e) {
-    /* Allow left-click (button 0) on mouse, and any button on touch/pen.
-       Some mobile browsers (iOS Safari, Firefox Android) report button=-1 on touch
-       pointerdown events, which would wrongly block drag initiation without this guard. */
-    if (e.button !== 0 && e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+  /* Mouse drag */
+  head.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
     if (e.target.closest('.wp-mac-cls, .wp-xp-cls')) return;
-    const dlg   = document.getElementById('wp-dialog');
-    const shell = document.getElementById('app-shell');
-    /* Snapshot position while centered transform is still active, then switch to px anchor */
-    const dr    = dlg.getBoundingClientRect();
-    const sr    = shell.getBoundingClientRect();
-    dlg.style.transform = '';
-    /* Anchor absolutely relative to #app-shell; clear right/bottom so left/top take over */
-    dlg.style.left   = (dr.left - sr.left) + 'px';
-    dlg.style.top    = (dr.top  - sr.top)  + 'px';
-    dlg.style.right  = 'auto';
-    dlg.style.bottom = 'auto';
-    _ox = e.clientX - dr.left;
-    _oy = e.clientY - dr.top;
-    _dragging = true;
-    try { head.setPointerCapture(e.pointerId); } catch (_) { /* ignore on browsers that disallow */ }
-    head.style.cursor = 'grabbing';
-    /* Prevent browser from treating this as a scroll or zoom gesture */
     e.preventDefault();
-    e.stopPropagation();
-
-    function _onMove(ev) {
-      if (!_dragging) return;
-      /* On mobile, prevent page scroll from interfering with dialog drag */
-      ev.preventDefault();
-      const dlg2   = document.getElementById('wp-dialog');
-      const shell2 = document.getElementById('app-shell');
-      const sr2    = shell2.getBoundingClientRect();
-      const newLeft = ev.clientX - _ox - sr2.left;
-      const newTop  = ev.clientY - _oy - sr2.top;
-      /* Horizontal clamp:
-         - Desktop / landscape: strict [0, maxX] — dialog stays fully on-screen.
-         - Portrait mobile: the dialog is nearly full-screen width so [0, maxX]
-           collapses to a tiny range (≈20px) and any leftward drag immediately
-           snaps to left:0. Instead, use a "keep ≥60px visible" clamp so the
-           dialog can slide partially off-screen and feel responsive.           */
-      const maxX  = sr2.width - dlg2.offsetWidth;
-      let clampedLeft;
-      if (_isMobilePortrait()) {
-        const MIN_VIS = 60;
-        const clampL  = -(dlg2.offsetWidth - MIN_VIS);  /* left edge: at most this far off */
-        const clampR  =  sr2.width         - MIN_VIS;   /* right edge: 60px always visible */
-        clampedLeft   = Math.max(clampL, Math.min(clampR, newLeft));
-      } else {
-        clampedLeft   = Math.max(0, Math.min(maxX, newLeft));
-      }
-      /* Vertical: strict clamp — dialog must stay fully within #app-shell vertically */
-      const maxY = sr2.height - dlg2.offsetHeight;
-      dlg2.style.left = clampedLeft + 'px';
-      dlg2.style.top  = Math.max(0, Math.min(maxY, newTop)) + 'px';
-    }
-    function _onEnd(ev) {
-      if (!_dragging) return;
-      _dragging = false;
-      try { if (head.hasPointerCapture(ev.pointerId)) head.releasePointerCapture(ev.pointerId); } catch (_) {}
-      head.style.cursor = '';
-      document.removeEventListener('pointermove', _onMove);
-      document.removeEventListener('pointerup',   _onEnd);
-      document.removeEventListener('pointercancel', _onEnd);
-    }
-    document.addEventListener('pointermove',   _onMove, { passive: false });
-    document.addEventListener('pointerup',     _onEnd);
-    document.addEventListener('pointercancel', _onEnd);
+    wpDrag.start(e.clientX, e.clientY);
   });
+
+  /* Touch drag — passive:false so we can call preventDefault in touchmove */
+  head.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.wp-mac-cls, .wp-xp-cls')) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    wpDrag.start(t.clientX, t.clientY);
+  }, { passive: false });
 });
 
 /* ══════════════════════════════════════════
@@ -6544,6 +6493,66 @@ const drag = {
 };
 
 /* ══════════════════════════════════════════
+   WALLPAPER DIALOG DRAG ENGINE
+   Mirror of `drag` — uses the same global mouse/touch loop so mobile
+   touchmove preventDefault is guaranteed (passive:false listener below).
+══════════════════════════════════════════ */
+const wpDrag = {
+  active: false,
+  startCX: 0, startCY: 0, startLeft: 0, startTop: 0,
+
+  start(cx, cy) {
+    const dlg   = document.getElementById('wp-dialog');
+    const shell = document.getElementById('app-shell');
+    if (!dlg || !shell) return;
+    /* Snapshot visual rect (transform may still be active for centered portrait), then
+       switch to explicit px left/top so delta-based moves work correctly.            */
+    const dr = dlg.getBoundingClientRect();
+    const sr = shell.getBoundingClientRect();
+    dlg.style.transform = '';
+    dlg.style.left   = (dr.left - sr.left) + 'px';
+    dlg.style.top    = (dr.top  - sr.top)  + 'px';
+    dlg.style.right  = 'auto';
+    dlg.style.bottom = 'auto';
+    this.startLeft = dr.left - sr.left;
+    this.startTop  = dr.top  - sr.top;
+    this.startCX   = cx;
+    this.startCY   = cy;
+    this.active    = true;
+  },
+
+  move(cx, cy) {
+    if (!this.active) return;
+    const dlg   = document.getElementById('wp-dialog');
+    const shell = document.getElementById('app-shell');
+    if (!dlg || !shell) return;
+    const sr      = shell.getBoundingClientRect();
+    const newLeft = this.startLeft + (cx - this.startCX);
+    const newTop  = this.startTop  + (cy - this.startCY);
+    /* Horizontal clamp:
+       Portrait: dialog is nearly full-width so a strict [0, maxX] would collapse
+       the moveable range to ~20px. Instead keep ≥60px visible on each side.
+       Desktop / landscape: strict [0, maxX] keeps the dialog fully on-screen.   */
+    const maxX = sr.width - dlg.offsetWidth;
+    let clampedLeft;
+    if (_isMobilePortrait()) {
+      const MIN_VIS = 60;
+      clampedLeft = Math.max(-(dlg.offsetWidth - MIN_VIS), Math.min(sr.width - MIN_VIS, newLeft));
+    } else {
+      clampedLeft = Math.max(0, Math.min(maxX, newLeft));
+    }
+    /* Vertical: strict clamp — dialog must stay within #app-shell vertically */
+    const maxY = sr.height - dlg.offsetHeight;
+    dlg.style.left = clampedLeft + 'px';
+    dlg.style.top  = Math.max(0, Math.min(maxY, newTop)) + 'px';
+  },
+
+  end() {
+    this.active = false;
+  },
+};
+
+/* ══════════════════════════════════════════
    GLOBAL RESIZE ENGINE
 ══════════════════════════════════════════ */
 const resizer = {
@@ -6616,15 +6625,16 @@ const resizer = {
 };
 
 /* Attach global move / end listeners once */
-document.addEventListener('mousemove', e => { drag.move(e.clientX, e.clientY); resizer.move(e.clientX, e.clientY); });
-document.addEventListener('mouseup',   () => { drag.end(); resizer.end(); });
+document.addEventListener('mousemove', e => { drag.move(e.clientX, e.clientY); resizer.move(e.clientX, e.clientY); wpDrag.move(e.clientX, e.clientY); });
+document.addEventListener('mouseup',   () => { drag.end(); resizer.end(); wpDrag.end(); });
 document.addEventListener('touchmove', e => {
   const cx = e.touches[0].clientX, cy = e.touches[0].clientY;
   if (drag.active)    { e.preventDefault(); drag.move(cx, cy); }
   if (resizer.active) { e.preventDefault(); resizer.move(cx, cy); }
+  if (wpDrag.active)  { e.preventDefault(); wpDrag.move(cx, cy); }
 }, { passive: false });
-document.addEventListener('touchend',    () => { drag.end(); resizer.end(); });
-document.addEventListener('touchcancel', () => { drag.end(); resizer.end(); });
+document.addEventListener('touchend',    () => { drag.end(); resizer.end(); wpDrag.end(); });
+document.addEventListener('touchcancel', () => { drag.end(); resizer.end(); wpDrag.end(); });
 
 /* ══════════════════════════════════════════
    START MENU
