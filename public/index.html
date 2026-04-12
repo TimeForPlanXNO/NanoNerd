@@ -3985,18 +3985,26 @@ document.addEventListener('DOMContentLoaded', function _initWpDrag() {
       const sr2    = shell2.getBoundingClientRect();
       const newLeft = ev.clientX - _ox - sr2.left;
       const newTop  = ev.clientY - _oy - sr2.top;
-      /* Horizontal: keep at least MIN_VIS pixels of the dialog visible on each side.
-         In portrait the dialog is nearly full-width, so a hard [0, maxX] clamp would
-         collapse the draggable range to just a few pixels and make it appear stuck.
-         Instead we allow the dialog to partially extend off-screen so any drag gesture
-         feels responsive, while guaranteeing 60 px is always on-screen.             */
-      const MIN_VIS = 60;
-      const clampL  = -(dlg2.offsetWidth  - MIN_VIS);   /* left edge can go this far negative */
-      const clampR  =  sr2.width          - MIN_VIS;    /* right edge: stop so 60px still shows */
+      /* Horizontal clamp:
+         - Desktop / landscape: strict [0, maxX] — dialog stays fully on-screen.
+         - Portrait mobile: the dialog is nearly full-screen width so [0, maxX]
+           collapses to a tiny range (≈20px) and any leftward drag immediately
+           snaps to left:0. Instead, use a "keep ≥60px visible" clamp so the
+           dialog can slide partially off-screen and feel responsive.           */
+      const maxX  = sr2.width - dlg2.offsetWidth;
+      let clampedLeft;
+      if (_isMobilePortrait()) {
+        const MIN_VIS = 60;
+        const clampL  = -(dlg2.offsetWidth - MIN_VIS);  /* left edge: at most this far off */
+        const clampR  =  sr2.width         - MIN_VIS;   /* right edge: 60px always visible */
+        clampedLeft   = Math.max(clampL, Math.min(clampR, newLeft));
+      } else {
+        clampedLeft   = Math.max(0, Math.min(maxX, newLeft));
+      }
       /* Vertical: strict clamp — dialog must stay fully within #app-shell vertically */
-      const maxY    = sr2.height - dlg2.offsetHeight;
-      dlg2.style.left = Math.max(clampL, Math.min(clampR, newLeft)) + 'px';
-      dlg2.style.top  = Math.max(0,      Math.min(maxY,   newTop))  + 'px';
+      const maxY = sr2.height - dlg2.offsetHeight;
+      dlg2.style.left = clampedLeft + 'px';
+      dlg2.style.top  = Math.max(0, Math.min(maxY, newTop)) + 'px';
     }
     function _onEnd(ev) {
       if (!_dragging) return;
