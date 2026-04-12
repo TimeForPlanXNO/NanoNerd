@@ -1169,7 +1169,7 @@
     ═══════════════════════════ */
     .mv-win {
       position: absolute; display: none; flex-direction: column;
-      background: #000; border: 2px solid #0831d9;
+      background: #000; border: 1px solid #0831d9;
       border-radius: 6px 6px 0 0; box-shadow: 4px 4px 14px rgba(0,0,0,.7);
       overflow: hidden; min-width: 220px; min-height: 160px;
       font-family: "Tahoma", sans-serif;
@@ -1905,7 +1905,7 @@
        1px border ring still gives the window a clear edge. ── */
     @media (max-width: 1023px) and (orientation: portrait) {
       .xp-win {
-        box-shadow: 0 0 0 2px rgba(0,0,0,.75),
+        box-shadow: 0 0 0 1px rgba(0,0,0,.75),
                     inset 0 1px 0 rgba(255,255,255,.08);
       }
       /* Wallpaper dialog: centered, full-width minus margins, clamp height above XP taskbar */
@@ -1945,6 +1945,13 @@
       color: #fff !important;
       text-shadow: 0 1px 3px rgba(0,0,0,.6) !important;
     }
+    body.ui-low-opacity .stats-popup,
+    body.ui-low-opacity .wifi-popup { color: #fff !important; }
+    body.ui-low-opacity .stats-label,
+    body.ui-low-opacity .stats-section-title { color: rgba(255,255,255,.7) !important; }
+    body.ui-low-opacity .stats-value { color: #fff !important; }
+    body.ui-low-opacity .stats-section,
+    body.ui-low-opacity .wifi-rep { border-color: rgba(255,255,255,.2) !important; }
 
     /* ── Theme colour controls (now inside dock/taskbar settings panel) ── */
     .cp-main { display: flex; gap: 8px; align-items: center; }
@@ -8309,6 +8316,9 @@ function applyThemeColor(hex, isReset, skipMacSync) {
     `body:not(.macos) .mv-wp-btn { background: ${g.minmax} !important; border-color: ${g.minmaxBorder} !important; }`,
     `.tb-btn { background: ${g.tbbtn} !important; border-color: ${g.tbbtnBorder} !important; }`,
     `.tb-btn.active { background: ${g.tbbtnActv} !important; }`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:${g.taskbar}!important;border-color:${g.border}!important;}`,
+    `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${g.titlebar}!important;}`,
+    `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${g.border}!important;}`,
   ].join('\n');
   document.getElementById('cp-input').value = hex;
   document.querySelectorAll('.cp-swatch').forEach(sw =>
@@ -8690,6 +8700,9 @@ function _injectXpMetallic(id) {
     `body:not(.macos) .mv-wp-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn.active{background:${m.taskbar}!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:${m.taskbar}!important;border-color:${m.border}!important;}`,
+    `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${m.titlebar}!important;}`,
+    `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${m.border}!important;}`,
   ] : [
     `.taskbar{background:${m.taskbar}!important;border-top-color:${m.border}!important;}`,
     `body:not(.macos) .xp-titlebar{background:${m.titlebar}!important;}`,
@@ -8699,6 +8712,9 @@ function _injectXpMetallic(id) {
     `body:not(.macos) .mv-wp-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn{background:${m.minmax}!important;border-color:${m.border}!important;}`,
     `.tb-btn.active{background:${m.taskbar}!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:${m.taskbar}!important;border-color:${m.border}!important;}`,
+    `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${m.titlebar}!important;}`,
+    `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${m.border}!important;}`,
   ];
   document.getElementById('theme-style').textContent = rules.join('\n');
 }
@@ -8723,6 +8739,9 @@ function _injectXpGlass(id) {
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);}`,
+    `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;}`,
+    `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.6))!important;}`,
   ] : [
     `.taskbar{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border-top-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;}`,
     `body:not(.macos) .xp-titlebar{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);}`,
@@ -8731,6 +8750,9 @@ function _injectXpGlass(id) {
     `body:not(.macos) .mv-min,body:not(.macos) .mv-max{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `body:not(.macos) .mv-wp-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*2))!important;}`,
     `.tb-btn{background:rgba(${tint},calc(var(--win-glass-alpha,0.60)*1.5))!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.9))!important;backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);}`,
+    `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:rgba(${tint},var(--win-glass-alpha,0.60))!important;}`,
+    `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:rgba(${tint},calc(var(--win-glass-alpha,0.60)*.6))!important;}`,
   ];
   document.getElementById('theme-style').textContent = rules.join('\n');
 }
@@ -8759,6 +8781,10 @@ function _injectXpTexture(id) {
     `body:not(.macos) .mv-wp-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn{background:${minmax}!important;border-color:${border}!important;}`,
     `.tb-btn.active{background:rgba(${rgb[0]},${rgb[1]},${rgb[2]},calc(var(--mat-alpha,1)*.85))!important;}`,
+    `body:not(.macos) .stats-popup,body:not(.macos) .wifi-popup{background:transparent!important;border-color:${border}!important;position:relative!important;isolation:isolate;}`,
+    `body:not(.macos) .stats-popup::before,body:not(.macos) .wifi-popup::before{${pseudo}}`,
+    `body:not(.macos) .stats-popup-head,body:not(.macos) .wifi-popup-head{background:${minmax}!important;}`,
+    `body:not(.macos) .stats-section,body:not(.macos) .wifi-rep{border-color:${border}!important;}`,
   ].join('\n');
 }
 
