@@ -2625,7 +2625,7 @@
     }
     .dock-icon {
       width: var(--dksz, 52px); height: var(--dksz, 52px);
-      border-radius: 12px; overflow: hidden;
+      border-radius: 12px; overflow: visible;
       display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,.1);
       box-shadow: 0 2px 8px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.4);
@@ -2635,6 +2635,7 @@
     .dock-icon svg,
     .dock-icon .di-emoji {
       width: 100%; height: 100%; object-fit: contain;
+      border-radius: 10px;
     }
     .dock-icon-dot {
       width: 4px; height: 4px; border-radius: 50%;
@@ -4815,8 +4816,8 @@ const wm = {
     } else if (window.innerWidth > 768) {
       /* Desktop / large tablet — 16:9 window at 60% of available area width,
          centred horizontally, near the vertical centre with a small top bias. */
-      const topOff  = _macMode ? 8 : 4;
-      const botOff  = _macMode ? _macDockH() : 34;
+      const topOff  = 4;
+      const botOff  = 34;
       const availH  = ar.height - topOff - botOff;
       let   w       = Math.round(ar.width * 0.60);
       let   h       = Math.round(w * 9 / 16);
@@ -9088,12 +9089,21 @@ function _updateDockDot(id) {
          grows, pushing neighbours apart (no visual overlap). */
       if (_dockMagnify) {
         /* Cosine falloff: smooth ease-in at edges, peak at centre. */
-        const t    = d < RANGE ? Math.cos((d / RANGE) * Math.PI / 2) : 0;
-        const sc   = 1 + (PEAK / BASE - 1) * t;
-        const sz   = (BASE * sc).toFixed(1) + 'px';
-        const icon = wrap.querySelector('.dock-icon');
-        if (icon) { icon.style.width = sz; icon.style.height = sz; }
-        wrap.style.transform = ''; /* not used for magnification anymore */
+        const t      = d < RANGE ? Math.cos((d / RANGE) * Math.PI / 2) : 0;
+        const sc     = 1 + (PEAK / BASE - 1) * t;
+        /* Slot size drives dock-bar growth (30% of full expansion = 70% less dock growth). */
+        const slotSc = 1 + (sc - 1) * 0.30;
+        const slotSz = (BASE * slotSc).toFixed(1) + 'px';
+        /* Visual scale: icon overflows upward to appear at full PEAK size. */
+        const imgSc  = (sc / slotSc).toFixed(3);
+        const icon   = wrap.querySelector('.dock-icon');
+        if (icon) {
+          icon.style.width  = slotSz;
+          icon.style.height = slotSz;
+          const img = icon.querySelector('img, svg, .di-emoji');
+          if (img) { img.style.transform = `scale(${imgSc})`; img.style.transformOrigin = 'bottom center'; }
+        }
+        wrap.style.transform = '';
       }
 
       /* Tooltip — always on non-coarse pointer regardless of _dockMagnify
@@ -9106,7 +9116,12 @@ function _updateDockDot(id) {
   dock.addEventListener('mouseleave', function() {
     dock.querySelectorAll('.dock-icon-wrap').forEach(w => {
       const icon = w.querySelector('.dock-icon');
-      if (icon) { icon.style.width = ''; icon.style.height = ''; }
+      if (icon) {
+        icon.style.width  = '';
+        icon.style.height = '';
+        const img = icon.querySelector('img, svg, .di-emoji');
+        if (img) { img.style.transform = ''; img.style.transformOrigin = ''; }
+      }
       w.style.transform = '';
       w._cx = undefined;
       w.classList.remove('tooltip-visible');
@@ -9258,7 +9273,12 @@ function toggleDockMagnify() {
   if (!_dockMagnify) {
     document.querySelectorAll('.dock-icon-wrap').forEach(w => {
       const icon = w.querySelector('.dock-icon');
-      if (icon) { icon.style.width = ''; icon.style.height = ''; }
+      if (icon) {
+        icon.style.width  = '';
+        icon.style.height = '';
+        const img = icon.querySelector('img, svg, .di-emoji');
+        if (img) { img.style.transform = ''; img.style.transformOrigin = ''; }
+      }
       w.style.transform = '';
       w._cx = undefined;
     });
