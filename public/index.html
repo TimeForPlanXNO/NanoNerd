@@ -4803,28 +4803,24 @@ const wm = {
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else if (window.innerWidth > 768) {
-      /* Desktop / large tablet.
-         macOS: full width, 8px below menu-bar top and flush with dock bottom —
-                shows a sliver of desktop wallpaper above the window title bar.
-         XP:    67% width, centred, full height above taskbar. */
-      if (_macMode) {
-        const botOff = _macDockH();
-        const h      = Math.max(200, ar.height - botOff - 8); /* 8px top gap + flush dock bottom */
-        win.style.width  = ar.width + 'px';
-        win.style.height = h + 'px';
-        win.style.left   = '0';
-        win.style.top    = '8px';
-        win.style.right  = 'auto';
-        win.style.bottom = 'auto';
-      } else {
-        const w = Math.round(ar.width * 0.67);
-        win.style.width  = w + 'px';
-        win.style.height = Math.max(200, ar.height - 34) + 'px';
-        win.style.left   = Math.round((ar.width - w) / 2) + 'px';
-        win.style.top    = '0';
-        win.style.right  = 'auto';
-        win.style.bottom = 'auto';
-      }
+      /* Desktop / large tablet — 16:9 window at 60% of available area width,
+         centred horizontally, near the vertical centre with a small top bias. */
+      const topOff  = _macMode ? 8 : 4;
+      const botOff  = _macMode ? _macDockH() : 34;
+      const availH  = ar.height - topOff - botOff;
+      let   w       = Math.round(ar.width * 0.60);
+      let   h       = Math.round(w * 9 / 16);
+      if (h > availH) { h = availH; w = Math.round(h * 16 / 9); }
+      w = Math.min(w, ar.width);
+      h = Math.max(200, h);
+      const left    = Math.round((ar.width - w) / 2);
+      const top     = topOff + Math.round(Math.max(0, availH - h) * 0.30);
+      win.style.width  = w + 'px';
+      win.style.height = h + 'px';
+      win.style.left   = left + 'px';
+      win.style.top    = top  + 'px';
+      win.style.right  = 'auto';
+      win.style.bottom = 'auto';
     }
   },
 
