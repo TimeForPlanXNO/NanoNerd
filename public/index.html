@@ -2949,7 +2949,7 @@
   <div class="desktop">
     <div class="icon-col" id="icon-col">
       <div class="desk-icon" data-icon-id="nanonerd" data-app="nanonerd">
-        <img class="di-img" src="/nanonerd-logo.jpeg" alt="NanoNerd" style="border-radius:8px;" />
+        <img class="di-img" src="/nanonerd-logo.png" alt="NanoNerd" />
         <span class="label">NanoNerd</span>
       </div>
       <div class="desk-icon" data-icon-id="nano-org" data-app="nano_org">
@@ -3245,8 +3245,8 @@ const MEDIA_FILES = [
 const APPS = {
   nanonerd: {
     id: 'nanonerd', title: 'NanoNerd',
-    iconHtml: '<img src="/nanonerd-logo.jpeg" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">',
-    tbIconHtml: '<img src="/nanonerd-logo.jpeg" style="width:14px;height:14px;border-radius:3px;object-fit:cover;">',
+    iconHtml: '<img src="/nanonerd-logo.png" style="width:14px;height:14px;object-fit:contain;">',
+    tbIconHtml: '<img src="/nanonerd-logo.png" style="width:14px;height:14px;object-fit:contain;">',
     type: 'chat', url: null,
   },
   nano_org: {
@@ -9103,7 +9103,7 @@ function _makeDockIconWrap(id, app) {
 
   /* Icon content */
   if (id === 'nanonerd') {
-    icon.innerHTML = '<img src="/nanonerd-logo.jpeg" class="di-nn-inner" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">';
+    icon.innerHTML = '<img src="/nanonerd-logo.png" class="di-nn-inner" style="width:100%;height:100%;object-fit:contain;">';
   } else if (id === 'media_folder') {
     icon.innerHTML = '<div style="width:88%;height:88%;display:flex;align-items:center;justify-content:center;padding:6%;"><svg viewBox="0 0 40 34" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;"><path d="M2 12 L38 12 L38 30 Q38 32 36 32 L4 32 Q2 32 2 30 Z" fill="#FFD233" stroke="#B8860B" stroke-width="1.5"/><path d="M2 10 L15 10 L18 6 L36 6 Q38 6 38 8 L38 12 L2 12 Z" fill="#FFC200" stroke="#B8860B" stroke-width="1.5"/><path d="M3 12 L37 12 L37 15 Q20 17 3 15 Z" fill="rgba(255,255,255,0.35)"/></svg></div>';
   } else if (id === 'games_folder') {
