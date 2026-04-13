@@ -9463,10 +9463,10 @@ function toggleDockMagnify() {
     document.querySelectorAll('.dock-icon-wrap').forEach(w => {
       const icon = w.querySelector('.dock-icon');
       if (icon) {
-        icon.style.width  = '';
-        icon.style.height = '';
-        const img = icon.querySelector('img, svg, .di-emoji');
-        if (img) { img.style.transform = ''; img.style.transformOrigin = ''; }
+        icon.style.width           = '';
+        icon.style.height          = '';
+        icon.style.transform       = '';
+        icon.style.transformOrigin = '';
       }
       w.style.transform = '';
       w._cx = undefined;
