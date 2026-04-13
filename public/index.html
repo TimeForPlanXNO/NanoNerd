@@ -9568,11 +9568,17 @@ function _updateDockDot(id) {
   const dock = document.getElementById('mac-dock');
   if (!dock) return;
 
+  /* Timer id for the post-mouseleave transition restore — cancelled if the
+     pointer re-enters before 200ms so we never clear transitions mid-hover. */
+  let _restoreTransitionTimer = null;
+
   /* Disable CSS width/height transitions on hover-enter so each mousemove
      update is instant — no "catching up" lag that fights rapid movements.
      Transitions are re-enabled on mouseleave for smooth shrink-back. */
   dock.addEventListener('mouseenter', function() {
     if (window.matchMedia('(pointer:coarse)').matches) return;
+    /* Cancel any pending post-leave transition restore to prevent race */
+    clearTimeout(_restoreTransitionTimer);
     dock.querySelectorAll('.dock-icon').forEach(ic => {
       ic.style.transition = 'none';
     });
@@ -9635,11 +9641,11 @@ function _updateDockDot(id) {
         ic.style.transformOrigin = '';
       }
       w.style.transform = '';
-      w._cx = undefined;
       w.classList.remove('tooltip-visible');
     });
-    /* Clear inline transition override after animation completes (restores CSS rule) */
-    setTimeout(() => {
+    /* Clear inline transition override after animation completes (restores CSS rule).
+       Stored so mouseenter can cancel it if the pointer quickly re-enters. */
+    _restoreTransitionTimer = setTimeout(() => {
       dock.querySelectorAll('.dock-icon').forEach(ic => {
         ic.style.transition = '';
       });
