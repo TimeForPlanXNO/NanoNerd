@@ -4236,7 +4236,7 @@ function _applyNnBgOpacity(val) {
 /* Restore opacity slider to saved value when the Transparency tab opens */
 function _restoreNnOpacitySlider() {
   const saved = localStorage.getItem('xp-nn-bg-opacity');
-  const val = saved !== null ? Number(saved) : 100;
+  const val = saved !== null ? Number(saved) : 67;
   const slider = document.getElementById('nn-opacity-slider');
   const pctEl  = document.getElementById('nn-opacity-pct');
   if (slider) slider.value = val;
@@ -4975,11 +4975,11 @@ const wm = {
       requestAnimationFrame(() => {
         const bgLayer = content.querySelector('#nn-bg-layer');
         if (bgLayer) {
-          /* Always apply a background — fallback to default Nano Green if none saved */
+          /* Always apply a background — fallback to Deep Space if none saved */
           bgLayer.style.background = savedNnBg ||
-            'linear-gradient(135deg,#000e00 0%,#002800 55%,#001200 100%)';
-          /* Apply saved opacity (default 100% = fully opaque) */
-          bgLayer.style.opacity = savedNnOpacity !== null ? Number(savedNnOpacity) / 100 : 1;
+            'linear-gradient(135deg,#080818 0%,#14145a 55%,#06061e 100%)';
+          /* Apply saved opacity (default 67% = mostly visible) */
+          bgLayer.style.opacity = savedNnOpacity !== null ? Number(savedNnOpacity) / 100 : 0.67;
         }
       });
     }
@@ -8755,14 +8755,14 @@ function _closeCpPopup()  { _closeDockSettings(); }
 })();
 
 /* UI level vars needed by _updateWifiIconColor() which applyThemeColor() calls below */
-let _uiLevel    = 80;   /* XP default:   80 = mostly opaque */
-let _macUiLevel = 20;   /* macOS default: 20 = translucent Liquid Glass */
+let _uiLevel    = 67;   /* XP default:   67% opacity */
+let _macUiLevel = 67;   /* macOS default: 67% opacity */
 
 /* Restore saved theme colour on startup */
 (function() {
   const saved = localStorage.getItem('xp-theme-color');
   if (saved) applyThemeColor(saved);
-  else document.getElementById('cp-input').value = _CP_DEFAULT;
+  else applyThemeColor(_CP_DEFAULT);   /* first launch — apply XP Blue */
 })();
 
 /* Apply saved wallpaper on load */
@@ -8774,6 +8774,9 @@ let _macUiLevel = 20;   /* macOS default: 20 = translucent Liquid Glass */
     requestAnimationFrame(() => _applyMatrixWallpaper());
   } else if (saved) {
     _applyWallpaper(saved, savedType);
+  } else {
+    /* First launch — default to Live XNO Matrix wallpaper */
+    requestAnimationFrame(() => _applyMatrixWallpaper());
   }
 })();
 
