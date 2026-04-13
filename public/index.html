@@ -8597,7 +8597,7 @@ function _updateDonateHeaderLabelColor() {
   /* Body labels — white at low opacity so text is legible against semi-transparent white bg */
   const bodyLow = _macMode && level < 50;
   root.style.setProperty('--mdp-body-label-color',    bodyLow ? '#fff'     : '#1a1a1a');
-  root.style.setProperty('--mdp-credits-label-color', bodyLow ? 'rgba(255,255,255,.85)' : '#444');
+  root.style.setProperty('--mdp-credits-label-color', bodyLow ? '#fff' : '#444');
   root.style.setProperty('--mdp-credits-link-color',  bodyLow ? '#aac4ff'  : '#3a4a9a');
 }
 
