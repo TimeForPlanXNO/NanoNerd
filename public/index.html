@@ -2110,25 +2110,30 @@
       .wp-dialog-body         { padding: 6px 8px; }
       .wp-dialog-foot         { padding: 5px 8px; }
       /* Donate popup: proportionally compact on short landscape screens.
-         max-height: calc(100vh - 38px) gives the full usable height below the 30px
-         menu bar with an 8px safety margin — more room than the old min(80vh,...) cap. */
+         max-height accounts for notched phones: top = max(30px, safe-area-inset-top)
+         so max-height subtracts the same value plus an 8px safety gap, ensuring the
+         popup bottom never overflows the viewport.
+         overflow-y:auto provides a scroll fallback on exceptionally short screens. */
       .mac-donate-popup {
         width: min(262px, calc(100vw - 12px));
-        max-height: calc(100vh - 38px);
+        max-height: calc(100vh - max(38px, env(safe-area-inset-top) + 8px));
         top: max(30px, env(safe-area-inset-top));
-        overflow: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
       }
-      /* Inner sections scale with vh so the full popup fits without scrolling */
+      /* Inner sections scale with vh so the full popup fits without scrolling.
+         flex-shrink + min-height:0 let sections compress in a height-constrained
+         flex column so all content can be visible without scrolling.           */
       .mdp-header             { padding: min(6px, 1.5vh) 10px; gap: 2px; }
       .mdp-header h3          { font-size: min(11px, 3.5vh); }
       .mdp-header p           { font-size: min(9px, 2.5vh); }
-      .mdp-body               { padding: min(5px, 1.2vh) 10px; gap: min(4px, 1vh); }
-      .mdp-qr img             { width: min(100px, 26vh); height: min(100px, 26vh); }
+      .mdp-body               { padding: min(5px, 1.2vh) 10px; gap: min(4px, 1vh); flex-shrink: 1; min-height: 0; }
+      .mdp-qr img             { width: min(100px, 18vh); height: min(100px, 18vh); }
       .mdp-addr               { font-size: min(8px, 2.2vh); padding: min(3px, 0.8vh) 6px; }
-      .mdp-credits            { padding: min(4px, 1vh) 10px; gap: min(5px, 1.2vh); }
+      .mdp-credits            { padding: min(4px, 1vh) 10px; gap: min(5px, 1.2vh); flex-shrink: 1; min-height: 0; }
       .mdp-credits img        { width: min(24px, 6vh); height: min(24px, 6vh); }
       .mdp-credits-text       { font-size: min(9px, 2.5vh); }
-      .mdp-github             { padding: min(5px, 1.2vh) 12px; font-size: min(11px, 2.8vh); }
+      .mdp-github             { padding: min(5px, 1.2vh) 12px; font-size: min(11px, 2.8vh); flex-shrink: 0; }
     }
 
     /* ═══════════════════════════════════════════════════
