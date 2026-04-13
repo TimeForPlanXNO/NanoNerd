@@ -3427,6 +3427,8 @@ let _currentWallpaper     = localStorage.getItem('xp-wallpaper')      || '/wallp
 let _currentWallpaperType = localStorage.getItem('xp-wallpaper-type') || 'image';
 let _ttsVoice             = localStorage.getItem('xp-tts-voice')      || 'female';
 let _ttsSpeakingBtn       = null;
+let _ttsResumeInterval    = null;   /* Chrome Android pause-bug keepalive */
+let _ttsPrimed            = false;  /* iOS TTS audio session unlocked flag */
 let _wpPickerOpen = false;
 
 function _applyWallpaper(src, type = 'image') {
@@ -4276,8 +4278,50 @@ function _pickBestVoice(gender) {
   /* 3 — any Google voice as a catch-all neural fallback */
   const google = voices.find(v => v.name.startsWith('Google'));
   if (google) return google;
-  /* 4 — first available voice */
+  /* 4 — English voice whose name hints at the requested gender */
+  const genderHint = gender === 'female'
+    ? ['female','woman','girl','she','her']
+    : ['male','man','guy','he','him'];
+  const hinted = voices.find(v =>
+    v.lang.startsWith('en') && genderHint.some(h => v.name.toLowerCase().includes(h)));
+  if (hinted) return hinted;
+  /* 5 — any English voice (guarantee we don't return a non-English voice) */
+  const en = voices.find(v => v.lang.startsWith('en'));
+  if (en) return en;
+  /* 6 — absolute last resort */
   return voices[0];
+}
+
+/* ── iOS TTS pre-warm ───────────────────────────────────────────────────────
+   iOS Safari requires speechSynthesis.speak() to be called synchronously
+   from a user gesture to unlock the audio session. We fire a silent utterance
+   on the first pointerdown so subsequent async speak() calls work.           */
+function _primeTTS() {
+  if (_ttsPrimed || !window.speechSynthesis) return;
+  _ttsPrimed = true;
+  try {
+    const u  = new SpeechSynthesisUtterance('\u200b'); /* zero-width space */
+    u.volume = 0;
+    u.rate   = 10;
+    window.speechSynthesis.speak(u);
+  } catch (_) {}
+}
+document.addEventListener('pointerdown', _primeTTS, { once: true });
+
+/* ── Voices-ready helper ─────────────────────────────────────────────────────
+   Calls cb() as soon as voices are available.  Uses onvoiceschanged as the
+   fast path, with a 1 500 ms timeout fallback for platforms where the event
+   never fires (some Android Chrome builds).                                  */
+function _withVoices(cb) {
+  if (window.speechSynthesis.getVoices().length) { cb(); return; }
+  let fired = false;
+  const done = () => { if (!fired) { fired = true; cb(); } };
+  const prev = window.speechSynthesis.onvoiceschanged;
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.onvoiceschanged = prev || null;
+    done();
+  };
+  setTimeout(done, 1500);
 }
 
 /* ── Cancel any active speech (called on reset / close / history switch) ── */
@@ -4287,6 +4331,7 @@ function _cancelTTS() {
     _ttsSpeakingBtn.classList.remove('speaking');
     _ttsSpeakingBtn = null;
   }
+  if (_ttsResumeInterval) { clearInterval(_ttsResumeInterval); _ttsResumeInterval = null; }
   window.speechSynthesis.cancel();
 }
 
@@ -4317,6 +4362,16 @@ function _speakText(rawHtml, btn) {
 
   if (btn) { btn.classList.add('speaking'); _ttsSpeakingBtn = btn; }
 
+  /* Chrome Android pauses speech synthesis after ~10–15 s of inactivity.
+     A periodic pause+resume kick keeps the engine alive.                    */
+  _ttsResumeInterval = setInterval(() => {
+    if (!window.speechSynthesis.speaking) {
+      clearInterval(_ttsResumeInterval); _ttsResumeInterval = null; return;
+    }
+    window.speechSynthesis.pause();
+    window.speechSynthesis.resume();
+  }, 10000);
+
   let idx = 0;
   function speakNext() {
     /* Abort if cancelled externally (reset/close/history switch) */
@@ -4325,12 +4380,14 @@ function _speakText(rawHtml, btn) {
       /* All sentences spoken — clean up */
       if (btn) btn.classList.remove('speaking');
       if (_ttsSpeakingBtn === btn) _ttsSpeakingBtn = null;
+      if (_ttsResumeInterval) { clearInterval(_ttsResumeInterval); _ttsResumeInterval = null; }
       return;
     }
     const utt    = new SpeechSynthesisUtterance(sentences[idx++]);
-    utt.rate     = 0.95;    /* slightly below 1.0 → clearer without sounding slow */
-    utt.pitch    = 1.0;     /* neutral — robotic effect comes from non-1.0 pitch;
-                               gender difference is carried by the voice itself    */
+    utt.lang     = 'en-US';  /* force English so mobile uses the correct voice */
+    utt.rate     = 0.95;     /* slightly below 1.0 → clearer without sounding slow */
+    utt.pitch    = 1.0;      /* neutral — robotic effect comes from non-1.0 pitch;
+                                gender difference is carried by the voice itself   */
     utt.volume   = 1.0;
     const v = _pickBestVoice(_ttsVoice);
     if (v) utt.voice = v;
@@ -4338,19 +4395,13 @@ function _speakText(rawHtml, btn) {
     utt.onerror = () => {
       if (btn) btn.classList.remove('speaking');
       if (_ttsSpeakingBtn === btn) _ttsSpeakingBtn = null;
+      if (_ttsResumeInterval) { clearInterval(_ttsResumeInterval); _ttsResumeInterval = null; }
     };
     window.speechSynthesis.speak(utt);
   }
 
-  /* Chrome populates voices asynchronously on first call — wait if needed */
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = () => {
-      window.speechSynthesis.onvoiceschanged = null;
-      speakNext();
-    };
-  } else {
-    speakNext();
-  }
+  /* Wait for voices to be available — uses onvoiceschanged + timeout fallback */
+  _withVoices(speakNext);
 }
 
 /* Style panel closes only via its own ✕ or the 🎨 button — no outside-click close
@@ -7969,6 +8020,13 @@ function _applyIconLayout() {
       } else {
         pos = def;
       }
+      /* Clamp to viewport — default and mobileLandscape positions are not
+         pre-checked; on short landscape phones (dh ~300–340 px) a default
+         like y:246 + IH:76 = 322 would overflow and clip the label.       */
+      pos = {
+        x: Math.min(Math.max(0, pos.x), Math.max(0, dw - IW_FIXED)),
+        y: Math.min(Math.max(0, pos.y), Math.max(0, dh - IH)),
+      };
       el.style.left  = pos.x + 'px';
       el.style.top   = pos.y + 'px';
       el.style.width = '';   /* clear any portrait inline width on orientation change */
