@@ -8723,8 +8723,9 @@ function _updateDonateHeaderLabelColor() {
    on light-bar materials (silver/copper/glass/water/sand/bright custom) → white when opacity
    < 50% (bar nearly transparent), black when opacity ≥ 50% (bar clearly visible). */
 function _updateWifiIconColor() {
-  const wifiImg = document.querySelector('#mac-wifi-btn img');
-  if (!wifiImg) return;
+  const wifiImg    = document.querySelector('#mac-wifi-btn img');
+  const xpWifiImg  = document.querySelector('#wifi-btn img');
+  if (!wifiImg && !xpWifiImg) return;
   const level = _macMode ? _macUiLevel : _uiLevel;
   let isLightBar = false;
   let strictThreshold = false; /* custom colour: black only when level > 50; material: >= 50 */
@@ -8743,7 +8744,9 @@ function _updateWifiIconColor() {
      Custom colour spec: black only when level > 50; material spec: black when level >= 50.
      Dark bar: always white regardless of opacity. */
   const showBlack = isLightBar && (strictThreshold ? level > 50 : level >= 50);
-  wifiImg.style.filter = showBlack ? 'grayscale(1)' : 'brightness(0) invert(1)';
+  const filter = showBlack ? 'grayscale(1)' : 'brightness(0) invert(1)';
+  if (wifiImg)   wifiImg.style.filter   = filter;
+  if (xpWifiImg) xpWifiImg.style.filter = filter;
 }
 
 function setUiLevel(v) {
