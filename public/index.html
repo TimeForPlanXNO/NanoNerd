@@ -8680,6 +8680,9 @@ function _cpGradRgba(base) {
   };
 }
 
+/* Custom dock/taskbar colour (overrides material); null = use material dark flag */
+let _dockCustomColor = null;
+
 /* Apply a colour to taskbar + title bars + all themed buttons */
 function applyThemeColor(hex, isReset, skipMacSync) {
   const g = _cpGradRgba(hex);  /* rgba stops honour --mat-alpha for Level slider */
@@ -9969,8 +9972,6 @@ function _applyDockMaterial(id) {
 }
 
 /* ── Custom dock colour (overrides material) ── */
-let _dockCustomColor = null;
-
 function _applyDockCustomColor(hex) {
   /* Leaving glass via custom colour: restore pre-glass opacity */
   if (_dockMaterial === 'glass' && _preGlassLevel !== null) {
