@@ -3620,7 +3620,9 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
   let txCount      = 0;
   let lastHash     = null;
   let _dpr         = 1;              /* current devicePixelRatio — updated in resize()  */
-  let _hadLiveTx   = false;          /* true once first non-replay TX arrives           */
+  let _hadLiveTx      = false;        /* true once first non-replay TX arrives           */
+  let _lastActiveTs   = 0;           /* timestamp of last frame that had anyActive=true */
+  let _lastReconnectAt = 0;          /* timestamp of last SSE reconnect attempt         */
   const _liveTimes = [];             /* timestamps of LIVE TXs for rolling CPS window  */
   const _seen      = new Set();
 
@@ -3703,6 +3705,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
   let evtSrc = null;
   function connectSSE() {
     if (evtSrc) { try { evtSrc.close(); } catch {} }
+    _overlayCleared = false;           /* allow instant-clear to fire after reconnect */
     evtSrc = new EventSource('/api/nano-stream');
     evtSrc.onopen = () => {
       wsConnected = true;
@@ -3801,11 +3804,12 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
     ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = '#00cc44';
     ctx.font = 'bold 13px "Courier New",monospace';
-    ctx.fillText(
-      wsConnected ? `${spin} Waiting for first confirmed Nano block…`
-                  : `${spin} Connecting to blocklattice.io…`,
-      w / 2, h / 2,
-    );
+    const _statusMsg = wsConnected
+      ? `${spin} Waiting for first confirmed Nano block…`
+      : (_hadLiveTx
+          ? `${spin} Connection lost — reconnecting to Nano network…`
+          : `${spin} Connecting to blocklattice.io…`);
+    ctx.fillText(_statusMsg, w / 2, h / 2);
     ctx.restore();
   }
 
@@ -3892,8 +3896,25 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
       }
     }
 
-    /* Status overlay — shown until the first LIVE block triggers a falling column */
-    if (!anyActive && !_hadLiveTx) _drawStatus();
+    /* Status overlay + idle/disconnect auto-reconnect */
+    if (anyActive) {
+      _lastActiveTs = Date.now();       /* heartbeat: record when columns were last active */
+    } else if (!_hadLiveTx) {
+      /* Pre-first-TX: show "Waiting…" / "Connecting…" overlay */
+      _drawStatus();
+    } else {
+      /* Post-first-TX: canvas idle — detect black screen and auto-reconnect */
+      const _idleMs = _lastActiveTs > 0 ? Date.now() - _lastActiveTs : 0;
+      if (!wsConnected || _idleMs > 5000) {
+        /* Show overlay when disconnected OR canvas idle > 5 s */
+        _drawStatus();
+      }
+      if ((!wsConnected || _idleMs > 15000) && Date.now() - _lastReconnectAt > 30000) {
+        /* Auto-reconnect: immediate on first drop (lastReconnectAt=0), then ≤once/30 s */
+        _lastReconnectAt = Date.now();
+        connectSSE();
+      }
+    }
 
     frame = requestAnimationFrame(draw);
   }
