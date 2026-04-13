@@ -2075,8 +2075,8 @@
       .sm-header        { padding: 6px 10px; }
       .sm-header h2     { font-size: 11px; }
       .sm-header p      { display: none; }
-      .sm-body          { padding: 8px 10px; gap: 7px; }
-      .sm-qr img        { width: 120px !important; height: 120px !important; }
+      .sm-body          { padding: min(8px, 2vh) 10px; gap: min(7px, 1.8vh); }
+      .sm-qr img        { width: min(120px, 28vh) !important; height: min(120px, 28vh) !important; }
       .sm-footer        { padding: 4px 8px; }
       .sm-footer img    { width: 36px !important; height: 36px !important; }
       /* NanoNerd settings dialog: tighter pane height so it stays within window */
@@ -2109,10 +2109,12 @@
       .wp-dialog-head         { padding: 5px 8px; }
       .wp-dialog-body         { padding: 6px 8px; }
       .wp-dialog-foot         { padding: 5px 8px; }
-      /* Donate popup: proportionally compact on short landscape screens */
+      /* Donate popup: proportionally compact on short landscape screens.
+         max-height: calc(100vh - 38px) gives the full usable height below the 30px
+         menu bar with an 8px safety margin — more room than the old min(80vh,...) cap. */
       .mac-donate-popup {
         width: min(262px, calc(100vw - 12px));
-        max-height: min(80vh, calc(100vh - 38px));
+        max-height: calc(100vh - 38px);
         top: max(30px, env(safe-area-inset-top));
         overflow-y: auto;
       }
@@ -2120,12 +2122,13 @@
       .mdp-header             { padding: min(6px, 1.5vh) 10px; gap: 2px; }
       .mdp-header h3          { font-size: min(11px, 3.5vh); }
       .mdp-header p           { font-size: min(9px, 2.5vh); }
-      .mdp-body               { padding: min(6px, 1.5vh) 10px; gap: min(5px, 1.2vh); }
+      .mdp-body               { padding: min(5px, 1.2vh) 10px; gap: min(4px, 1vh); }
       .mdp-qr img             { width: min(100px, 26vh); height: min(100px, 26vh); }
       .mdp-addr               { font-size: min(8px, 2.2vh); padding: min(3px, 0.8vh) 6px; }
-      .mdp-credits            { padding: min(5px, 1.2vh) 10px; gap: min(6px, 1.5vh); }
-      .mdp-credits img        { width: min(28px, 7vh); height: min(28px, 7vh); }
+      .mdp-credits            { padding: min(4px, 1vh) 10px; gap: min(5px, 1.2vh); }
+      .mdp-credits img        { width: min(24px, 6vh); height: min(24px, 6vh); }
       .mdp-credits-text       { font-size: min(9px, 2.5vh); }
+      .mdp-github             { padding: min(5px, 1.2vh) 12px; font-size: min(11px, 2.8vh); }
     }
 
     /* ═══════════════════════════════════════════════════
