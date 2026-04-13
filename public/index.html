@@ -2517,7 +2517,7 @@
     }
     .mdp-qr:hover { border-color: #00aadd; }
     .mdp-addr {
-      font-size: 8.5px; color: #1a1a1a; word-break: break-all;
+      font-size: 8.5px; color: var(--mdp-body-label-color,#1a1a1a); word-break: break-all;
       text-align: center; cursor: pointer; padding: 4px 6px;
       background: rgba(0,0,0,.05); border-radius: 4px;
       font-family: monospace; line-height: 1.4; transition: background .12s;
@@ -2529,8 +2529,8 @@
       padding: 10px 12px; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,max(0.18,min(0.88,var(--mat-alpha,1))));
     }
     .mdp-credits img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--mdp-qr-border,#4a5a8a); }
-    .mdp-credits-text { font-size: 10px; color: #444; line-height: 1.5; text-shadow: 0 1px 3px rgba(0,0,0,.35), 0 0 6px rgba(255,255,255,.5); }
-    .mdp-credits-text a { color: #3a4a9a; font-weight: 700; text-decoration: none; }
+    .mdp-credits-text { font-size: 10px; color: var(--mdp-credits-label-color,#444); line-height: 1.5; text-shadow: 0 1px 3px rgba(0,0,0,.35), 0 0 6px rgba(255,255,255,.5); }
+    .mdp-credits-text a { color: var(--mdp-credits-link-color,#3a4a9a); font-weight: 700; text-decoration: none; }
     .mdp-credits-text a:hover { text-decoration: underline; }
     .mdp-github {
       display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -8586,12 +8586,19 @@ function _applyUiLevel(v) {
 }
 
 /* macOS donate header label: black when sand/glass material AND opacity < 50%, white otherwise.
-   Custom colour overrides always use white since the header gradient can be any tint. */
+   Custom colour overrides always use white since the header gradient can be any tint.
+   Body labels (address + credits): white when macOS AND level < 50, dark otherwise. */
 function _updateDonateHeaderLabelColor() {
+  const root = document.documentElement;
   const isLightMat = !_dockCustomColor && (_dockMaterial === 'sand' || _dockMaterial === 'glass');
   const level = _macMode ? _macUiLevel : _uiLevel;
-  const color = (isLightMat && level < 50) ? '#1a1a1a' : '#fff';
-  document.documentElement.style.setProperty('--mdp-header-label-color', color);
+  /* Header */
+  root.style.setProperty('--mdp-header-label-color', (isLightMat && level < 50) ? '#1a1a1a' : '#fff');
+  /* Body labels — white at low opacity so text is legible against semi-transparent white bg */
+  const bodyLow = _macMode && level < 50;
+  root.style.setProperty('--mdp-body-label-color',    bodyLow ? '#fff'     : '#1a1a1a');
+  root.style.setProperty('--mdp-credits-label-color', bodyLow ? 'rgba(255,255,255,.85)' : '#444');
+  root.style.setProperty('--mdp-credits-link-color',  bodyLow ? '#aac4ff'  : '#3a4a9a');
 }
 
 function setUiLevel(v) {
