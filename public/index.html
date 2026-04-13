@@ -8726,22 +8726,24 @@ function _updateWifiIconColor() {
   const wifiImg = document.querySelector('#mac-wifi-btn img');
   if (!wifiImg) return;
   const level = _macMode ? _macUiLevel : _uiLevel;
-  let isLightBar;
+  let isLightBar = false;
+  let strictThreshold = false; /* custom colour: black only when level > 50; material: >= 50 */
   if (_dockCustomColor) {
     const hex = _dockCustomColor;
     const rv = parseInt(hex.slice(1,3),16), gv = parseInt(hex.slice(3,5),16), bv = parseInt(hex.slice(5,7),16);
     isLightBar = (.299*rv + .587*gv + .114*bv) > 148;
+    strictThreshold = true;
   } else {
     const t = _MAT_THEME[_dockMaterial] || _MAT_THEME.silver;
     /* Light bar = material text is dark (silver/copper/glass/water/sand/stone)
        Dark bar  = material text is white (gold/wood/grass) */
     isLightBar = (t.text !== '#fff');
   }
-  /* Light bar: black icon when opaque enough, white when transparent */
-  /* Dark bar:  always white regardless of opacity */
-  wifiImg.style.filter = (isLightBar && level >= 50)
-    ? 'grayscale(1)'
-    : 'brightness(0) invert(1)';
+  /* Light bar: black icon when bar is visible, white when nearly transparent.
+     Custom colour spec: black only when level > 50; material spec: black when level >= 50.
+     Dark bar: always white regardless of opacity. */
+  const showBlack = isLightBar && (strictThreshold ? level > 50 : level >= 50);
+  wifiImg.style.filter = showBlack ? 'grayscale(1)' : 'brightness(0) invert(1)';
 }
 
 function setUiLevel(v) {
@@ -9821,6 +9823,7 @@ function _applyDockMaterial(id) {
   root.style.setProperty('--mac-menu-bar',   t.menu);
   root.style.setProperty('--mac-menu-text',  t.text);
   root.style.setProperty('--mac-menu-hover', t.hover);
+  _dockCustomColor = null; /* ensure stale custom colour does not influence wifi icon */
   _updateWifiIconColor();
   /* Set taskbar label contrast from material */
   const label = _MAT_LABEL[id] || '#fff';
