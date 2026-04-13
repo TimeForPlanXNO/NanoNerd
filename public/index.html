@@ -4336,13 +4336,28 @@ function _withVoices(cb) {
 /* ── Startup voice pre-warm ──────────────────────────────────────────────────
    Kick off voice loading immediately so that by the time the user taps 🔈
    the first time, getVoices() already returns a non-empty list and
-   _withVoices() takes the synchronous zero-delay fast-path.                 */
+   _withVoices() takes the synchronous zero-delay fast-path.
+
+   We register onvoiceschanged permanently (not just once) so the cache is
+   always repopulated whenever new voices become available — even if the 300ms
+   timeout in _withVoices already fired before voices finished loading.        */
 function _warmTTSVoices() {
   if (!window.speechSynthesis) return;
-  _withVoices(() => {
+  const _fillVoiceCache = () => {
+    if (!window.speechSynthesis.getVoices().length) return; /* not ready yet */
     _ttsVoiceCache.female = _pickBestVoice('female');
     _ttsVoiceCache.male   = _pickBestVoice('male');
-  });
+  };
+  _fillVoiceCache(); /* synchronous fast-path when voices already available */
+  /* Keep onvoiceschanged installed so late-loading voices (e.g. Android)
+     always trigger a cache refresh regardless of the timeout path.           */
+  const _prevVoicesChanged = window.speechSynthesis.onvoiceschanged;
+  window.speechSynthesis.onvoiceschanged = () => {
+    _fillVoiceCache();
+    if (_prevVoicesChanged) _prevVoicesChanged();
+  };
+  /* Also use _withVoices as a belt-and-suspenders timeout path */
+  _withVoices(_fillVoiceCache);
 }
 _warmTTSVoices();
 
@@ -4412,8 +4427,10 @@ function _speakText(rawHtml, btn) {
                                 gender difference is carried by the voice itself   */
     utt.volume   = 1.0;
     /* Use the pre-warmed cache — avoids re-running the full priority list on
-       every sentence.  Falls back to live lookup if cache missed.            */
-    const v = _ttsVoiceCache[_ttsVoice] || _pickBestVoice(_ttsVoice);
+       every sentence.  Falls back to live lookup if cache missed, and writes
+       the result back into the cache so subsequent sentences are instant.    */
+    let v = _ttsVoiceCache[_ttsVoice];
+    if (!v) { v = _pickBestVoice(_ttsVoice); if (v) _ttsVoiceCache[_ttsVoice] = v; }
     if (v) utt.voice = v;
     utt.onend   = speakNext;
     utt.onerror = () => {
