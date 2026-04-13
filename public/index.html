@@ -3623,6 +3623,7 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
   let _hadLiveTx      = false;        /* true once first non-replay TX arrives           */
   let _lastActiveTs   = 0;           /* timestamp of last frame that had anyActive=true */
   let _lastReconnectAt = 0;          /* timestamp of last SSE reconnect attempt         */
+  let _overlayCleared  = false;      /* one-shot: clear status overlay when rain starts */
   const _liveTimes = [];             /* timestamps of LIVE TXs for rolling CPS window  */
   const _seen      = new Set();
 
@@ -3815,7 +3816,6 @@ function _startMatrixRain(canvas, { wallpaperMode = false, onStatus, onHover } =
 
   /* ── Draw loop ── */
   let frame, lastTs = 0;
-  let _overlayCleared = false;  /* one-shot: clear status overlay the moment rain starts */
   function draw(ts) {
     if (!running) return;
     /* Re-apply DPR transform every frame — setting canvas.width/height (in resize or
