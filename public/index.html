@@ -2057,7 +2057,7 @@
       /* ── Popup menus: fit inside the short landscape viewport ── */
       /* Stats: hug right edge, 8px buffer from top */
       .stats-popup {
-        max-height: calc(100vh - 48px);
+        max-height: calc(100vh - 76px);
         width: min(240px, calc(100vw - 20px));
         right: max(4px, env(safe-area-inset-right));
       }
@@ -2092,8 +2092,8 @@
       .wp-dialog-foot { justify-content: space-between; }
       .wp-foot-btn    { flex: 1; text-align: center; padding: 5px 8px; }
       /* macOS variants anchored from top — same height budget */
-      body.macos .stats-popup,
-      body.macos .wifi-popup { max-height: calc(100vh - 36px); }
+      body.macos .stats-popup { max-height: calc(100vh - 60px); }
+      body.macos .wifi-popup  { max-height: calc(100vh - 36px); }
       body.macos .wp-dialog  {
         max-height: calc(100vh - 90px);
         width: min(460px, calc(100vw - 16px));
@@ -10152,6 +10152,13 @@ document.addEventListener('click', function(e) {
   _buildMacDock();
   _buildDockMaterials();
 
+  /* Set UI mode BEFORE applying colour/material so _macMode is correct when
+     _syncMacDockFromHex() runs — it branches on _macMode to choose between
+     the CSS-var liquid-glass path (macOS) and the inline gradient path (XP).
+     Without this, colour/material would be applied with _macMode=false and the
+     macOS dock would get an XP-style inline gradient instead of CSS-var tinting. */
+  setUiMode(savedMode === 'macos' ? 'macos' : 'xp', true); /* noAnim on startup */
+
   /* Apply saved colour — custom colour takes priority over material */
   if (savedCustom && /^#[0-9a-f]{6}$/i.test(savedCustom)) {
     _applyDockCustomColor(savedCustom);
@@ -10172,9 +10179,6 @@ document.addEventListener('click', function(e) {
   }
   const sizeVal = document.getElementById('dsp-size-val');
   if (sizeVal) sizeVal.textContent = _dockIconSize + 'px';
-
-  /* Set UI mode last (needs dock built) */
-  setUiMode(savedMode === 'macos' ? 'macos' : 'xp', true); /* noAnim on startup */
 
   /* Init dock auto-hide (desktop); handle listeners bound inside _buildMacDock() */
   _initDockAutoHide();
