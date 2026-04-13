@@ -8719,7 +8719,7 @@ function applyThemeColor(hex, isReset, skipMacSync) {
   /* Track active custom colour for wifi icon (skip when called from material path) */
   if (!skipMacSync) _dockCustomColor = hex;
   /* XP mode: fire icon update directly (macOS mode does it via _syncMacDockFromHex below) */
-  if (typeof _macMode !== 'undefined' && !_macMode && typeof _uiLevel !== 'undefined') _updateWifiIconColor();
+  if (typeof _macMode !== 'undefined' && !_macMode) _updateWifiIconColor();
   /* In macOS mode, sync dock + menu bar + window bars from the same colour */
   if (typeof _macMode !== 'undefined' && _macMode && !skipMacSync) {
     _syncMacDockFromHex(hex);
@@ -8754,6 +8754,10 @@ function _closeCpPopup()  { _closeDockSettings(); }
   });
 })();
 
+/* UI level vars needed by _updateWifiIconColor() which applyThemeColor() calls below */
+let _uiLevel    = 80;   /* XP default:   80 = mostly opaque */
+let _macUiLevel = 20;   /* macOS default: 20 = translucent Liquid Glass */
+
 /* Restore saved theme colour on startup */
 (function() {
   const saved = localStorage.getItem('xp-theme-color');
@@ -8785,8 +8789,7 @@ let _dockIconSize    = 52;
 let _dockMaterial = 'silver';
 
 /* ── UI Level (transparency vs opacity) — 0 = fully transparent, 100 = fully opaque ── */
-let _uiLevel    = 80;   /* XP default:   80 = mostly opaque */
-let _macUiLevel = 20;   /* macOS default: 20 = translucent Liquid Glass */
+/* _uiLevel / _macUiLevel declared earlier (before the saved-colour startup IIFE) */
 let _preGlassLevel = null; /* opacity saved just before glass is selected; restored on leaving glass */
 
 function _applyUiLevel(v) {
