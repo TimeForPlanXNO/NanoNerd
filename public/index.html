@@ -2135,9 +2135,9 @@
       /* Hide "Scan to send XNO" subtitle in landscape — saves ~14px */
       .mdp-header p           { display: none; }
       .mdp-body               { padding: min(5px, 1.2vh) 10px; gap: min(4px, 1vh); flex-shrink: 1; min-height: 0; }
-      /* QR: vh fallback then svh — shrinks relative to true visible height */
-      .mdp-qr img             { width: min(100px, 13vh); height: min(100px, 13vh); }
-      .mdp-qr img             { width: min(100px, 13svh); height: min(100px, 13svh); }
+      /* QR: vh fallback then svh — 50% larger than Task #112 baseline (13→20 units, 100→150px cap) */
+      .mdp-qr img             { width: min(150px, 20vh); height: min(150px, 20vh); }
+      .mdp-qr img             { width: min(150px, 20svh); height: min(150px, 20svh); }
       /* Hide the long address string in landscape — Copy Address button still works */
       .mdp-addr               { display: none; }
       .mdp-credits            { padding: min(4px, 1vh) 10px; gap: min(5px, 1.2vh); flex-shrink: 1; min-height: 0; }
