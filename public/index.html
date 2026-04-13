@@ -8714,8 +8714,24 @@ function applyThemeColor(hex, isReset, skipMacSync) {
     document.documentElement.style.setProperty('--taskbar-label', luma > 150 ? '#1a1a1a' : '#fff');
     _setDonateTheme(rv, gv, bv);
   }
-  if (!isReset) localStorage.setItem('xp-theme-color', hex);
-  else          localStorage.removeItem('xp-theme-color');
+  /* Keep xp-theme-color, dock-custom-color, and dock-material in sync for mutual exclusivity.
+     skipMacSync=true is the internal material path — only touch xp-theme-color there. */
+  if (!skipMacSync) {
+    if (!isReset) {
+      localStorage.setItem('xp-theme-color',   hex);
+      localStorage.setItem('dock-custom-color', hex); /* macInit uses this — colour wins over material */
+      localStorage.removeItem('dock-material');        /* colour overrides any active material */
+    } else {
+      /* Reset clears all three — first-launch defaults re-apply on next load */
+      localStorage.removeItem('xp-theme-color');
+      localStorage.removeItem('dock-custom-color');
+      localStorage.removeItem('dock-material');
+    }
+  } else {
+    /* Internal call from material path — only touch xp-theme-color */
+    if (!isReset) localStorage.setItem('xp-theme-color', hex);
+    else          localStorage.removeItem('xp-theme-color');
+  }
   /* Track active custom colour for wifi icon (skip when called from material path) */
   if (!skipMacSync) _dockCustomColor = hex;
   /* XP mode: fire icon update directly (macOS mode does it via _syncMacDockFromHex below) */
@@ -8761,8 +8777,16 @@ let _macUiLevel = 67;   /* macOS default: 67% opacity */
 /* Restore saved theme colour on startup */
 (function() {
   const saved = localStorage.getItem('xp-theme-color');
-  if (saved) applyThemeColor(saved);
-  else applyThemeColor(_CP_DEFAULT);   /* first launch — apply XP Blue */
+  const savedMat = localStorage.getItem('dock-material');
+  if (saved) {
+    applyThemeColor(saved);
+  } else if (!savedMat) {
+    /* True first launch — no colour AND no material saved yet — apply XP Blue default */
+    applyThemeColor(_CP_DEFAULT);
+  } else {
+    /* User has an active material — just pre-fill the input without overwriting the material */
+    document.getElementById('cp-input').value = _CP_DEFAULT;
+  }
 })();
 
 /* Apply saved wallpaper on load */
@@ -9915,6 +9939,8 @@ function _injectMacMatStyle(txUrl, winGrad, menuGrad) {
 function _applyDockMaterial(id) {
   const _prevMat = _dockMaterial;
   _dockMaterial = id;
+  /* Material wins — remove saved colour so the colour IIFE won't fight this on reload */
+  localStorage.removeItem('xp-theme-color');
   /* Track active material on body so CSS selectors like body.mat-silver can target it */
   [...document.body.classList].filter(c => c.startsWith('mat-')).forEach(c => document.body.classList.remove(c));
   document.body.classList.add('mat-' + id);
@@ -9969,7 +9995,9 @@ function _applyDockMaterial(id) {
   /* Inject ::before texture+gradient for macOS window/menu bars so opacity var controls both */
   const _mt = _MAT_THEME[id];
   _injectMacMatStyle(_MAT_TEXTURE_URL[id] || '', _mt ? _mt.win : '', _mt ? _mt.menu : '');
-  /* Re-apply active state (applyThemeColor in _applyXpMaterial clears it for non-metallic) */
+  /* Deselect all colour swatches — material and colour are mutually exclusive */
+  document.querySelectorAll('.cp-swatch').forEach(sw => sw.classList.remove('active'));
+  /* Re-apply material active state (applyThemeColor in _applyXpMaterial clears it for non-metallic) */
   document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.matId === id);
   });
