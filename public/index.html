@@ -2373,6 +2373,33 @@
       grid-column: 1 / -1; text-align: center;
       color: rgba(255,255,255,.4); font-size: 13px; padding: 24px;
     }
+    /* ── Wallet popup: Faucets subfolder ── */
+    #wallet-popup { position: relative; }
+    .wallet-back-btn {
+      display: none; position: absolute; top: 12px; left: 12px;
+      background: none; border: none; color: rgba(255,255,255,.85);
+      font-size: 20px; cursor: pointer; padding: 2px 6px;
+      border-radius: 6px; line-height: 1;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .12s;
+    }
+    .wallet-back-btn:hover { background: rgba(255,255,255,.12); }
+    #wallet-popup.wallet-folder-open .wallet-back-btn { display: block; }
+    .wallet-folder-card { cursor: pointer; }
+    .wallet-folder-card .wallet-icon-wrap {
+      background: linear-gradient(145deg,#4fc3f7,#1565c0) !important;
+      font-size: 28px; display: flex; align-items: center; justify-content: center;
+    }
+    @keyframes wallet-grid-in {
+      from { opacity: 0; transform: translateX(18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes wallet-grid-back {
+      from { opacity: 0; transform: translateX(-18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .wallet-grid.anim-in   { animation: wallet-grid-in  .22s ease forwards; }
+    .wallet-grid.anim-back { animation: wallet-grid-back .22s ease forwards; }
 
     /* ── macOS window title bars ── */
     body.macos .xp-win {
@@ -3143,9 +3170,10 @@
   <!-- Wallet Popup Overlay -->
   <div id="wallet-popup-overlay" onclick="closeWalletPopup(event)">
     <div id="wallet-popup">
+      <button class="wallet-back-btn" id="wallet-back-btn" onclick="_showWalletsView()">🔙</button>
       <div class="wallet-popup-header">
-        <div class="wallet-popup-title">Nano Wallets</div>
-        <div class="wallet-popup-sub">Store your XNO securely</div>
+        <div class="wallet-popup-title" id="wallet-popup-title">Nano Wallets</div>
+        <div class="wallet-popup-sub" id="wallet-popup-sub">Store your XNO securely</div>
       </div>
       <div class="wallet-grid" id="wallet-grid">
         <div class="wallet-loading-msg">Loading wallets…</div>
@@ -7067,13 +7095,21 @@ document.addEventListener('click', e => {
 ══════════════════════════════════════════ */
 let _walletLoaded = false;
 let _walletCloseTimer = null;
+let _walletCardsCached = '';
+let _faucetLoaded = false;
+let _faucetCache  = [];
 
 function openWalletPopup() {
   clearTimeout(_walletCloseTimer);
   const ov = document.getElementById('wallet-popup-overlay');
   ov.classList.remove('closing');
   ov.classList.add('open');
-  if (!_walletLoaded) _loadWallets();
+  if (!_walletLoaded) {
+    _loadWallets();
+  } else if (document.getElementById('wallet-popup').classList.contains('wallet-folder-open')) {
+    /* Reset to wallets view each time the popup reopens */
+    _showWalletsView();
+  }
 }
 
 function closeWalletPopup(e) {
@@ -7102,25 +7138,77 @@ async function _loadWallets() {
       grid.innerHTML = '<div class="wallet-loading-msg">No wallets found.</div>';
       return;
     }
-    grid.innerHTML = wallets.map(w => {
-      let domain = w.url;
-      try { domain = new URL(w.url).hostname; } catch { /**/ }
-      const favicon  = domain === 'natrium.io'  ? '/natrium-icon.png'
-        : domain === 'xnap.xyz'    ? '/xnap-icon.png'
-        : domain === 'nautilus.io' ? '/nautilus-icon.png'
-        : `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
-      const safeUrl  = w.url.replace(/"/g, '');
-      const safeName = w.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      return `<a class="wallet-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer" title="${safeName}">
-        <div class="wallet-icon-wrap">
-          <img src="${favicon}" alt="${safeName}" loading="lazy" onerror="this.src='/wallet-icon.png'">
-        </div>
-        <div class="wallet-card-name">${safeName}</div>
-      </a>`;
-    }).join('');
+    grid.innerHTML = wallets.map(w => _walletCard(w)).join('');
+    /* Append the Faucets folder card at the end */
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="wallet-card wallet-folder-card" onclick="_showFaucetsView()" title="Faucets">
+        <div class="wallet-icon-wrap">📁</div>
+        <div class="wallet-card-name">Faucets</div>
+      </div>`);
+    _walletCardsCached = grid.innerHTML;
   } catch {
     grid.innerHTML = '<div class="wallet-loading-msg">Could not load wallets.</div>';
   }
+}
+
+function _walletCard(w) {
+  let domain = w.url;
+  try { domain = new URL(w.url).hostname; } catch { /**/ }
+  const favicon  = domain === 'natrium.io'  ? '/natrium-icon.png'
+    : domain === 'xnap.xyz'    ? '/xnap-icon.png'
+    : domain === 'nautilus.io' ? '/nautilus-icon.png'
+    : `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
+  const safeUrl  = w.url.replace(/"/g, '');
+  const safeName = w.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<a class="wallet-card" href="${safeUrl}" target="_blank" rel="noopener noreferrer" title="${safeName}">
+    <div class="wallet-icon-wrap">
+      <img src="${favicon}" alt="${safeName}" loading="lazy" onerror="this.src='/wallet-icon.png'">
+    </div>
+    <div class="wallet-card-name">${safeName}</div>
+  </a>`;
+}
+
+function _showFaucetsView() {
+  const popup = document.getElementById('wallet-popup');
+  const grid  = document.getElementById('wallet-grid');
+  document.getElementById('wallet-popup-title').textContent = 'Faucets';
+  document.getElementById('wallet-popup-sub').textContent   = 'Get free XNO';
+  popup.classList.add('wallet-folder-open');
+  grid.innerHTML = '<div class="wallet-loading-msg">Loading faucets…</div>';
+  grid.classList.remove('anim-back');
+  void grid.offsetWidth;
+  grid.classList.add('anim-in');
+  _loadFaucets();
+}
+
+async function _loadFaucets() {
+  const grid = document.getElementById('wallet-grid');
+  try {
+    if (!_faucetLoaded) {
+      const res  = await fetch('/api/faucets');
+      _faucetCache  = await res.json();
+      _faucetLoaded = true;
+    }
+    if (!_faucetCache.length) {
+      grid.innerHTML = '<div class="wallet-loading-msg">No faucets found.</div>';
+      return;
+    }
+    grid.innerHTML = _faucetCache.map(f => _walletCard(f)).join('');
+  } catch {
+    grid.innerHTML = '<div class="wallet-loading-msg">Could not load faucets.</div>';
+  }
+}
+
+function _showWalletsView() {
+  const popup = document.getElementById('wallet-popup');
+  const grid  = document.getElementById('wallet-grid');
+  document.getElementById('wallet-popup-title').textContent = 'Nano Wallets';
+  document.getElementById('wallet-popup-sub').textContent   = 'Store your XNO securely';
+  popup.classList.remove('wallet-folder-open');
+  grid.classList.remove('anim-in');
+  void grid.offsetWidth;
+  grid.classList.add('anim-back');
+  grid.innerHTML = _walletCardsCached || '<div class="wallet-loading-msg">Loading wallets…</div>';
 }
 
 /* ══════════════════════════════════════════

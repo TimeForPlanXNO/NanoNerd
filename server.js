@@ -390,6 +390,45 @@ app.get('/api/wallets', (_req, res) => {
   }).on('error', () => res.json(_WALLET_FALLBACK));
 });
 
+/* ── Nano Faucets (scraped from hub.nano.org/faucets) ── */
+const _FAUCET_FALLBACK = [
+  { name: 'NanoDrop',    url: 'https://nanodrop.io/' },
+  { name: 'Nano Faucet', url: 'https://nano-faucet.org/' },
+  { name: 'Free Nano',   url: 'https://freenano.win/' },
+  { name: 'Nano Button', url: 'https://nanobutton.io/' },
+];
+
+app.get('/api/faucets', (_req, res) => {
+  https.get({
+    hostname: 'hub.nano.org',
+    path: '/faucets',
+    headers: { 'User-Agent': 'NanoNerd/1.0', 'Accept': 'text/html' }
+  }, (upstream) => {
+    const chunks = [];
+    let stream = upstream;
+    const enc = upstream.headers['content-encoding'] || '';
+    if (enc === 'gzip')    stream = upstream.pipe(zlib.createGunzip());
+    else if (enc === 'br') stream = upstream.pipe(zlib.createBrotliDecompress());
+    stream.on('data', c => chunks.push(c));
+    stream.on('end', () => {
+      try {
+        const html = Buffer.concat(chunks).toString('utf8');
+        const faucets = [];
+        const nameRe  = /"name":"([^"]+)"/g;
+        const urlRe   = /"url":"(https?:\/\/[^"]+)"/g;
+        const names = [...html.matchAll(nameRe)].map(m => m[1]);
+        const urls  = [...html.matchAll(urlRe)].map(m => m[1]);
+        const len   = Math.min(names.length, urls.length);
+        for (let i = 0; i < len; i++) faucets.push({ name: names[i], url: urls[i] });
+        res.json(faucets.length ? faucets : _FAUCET_FALLBACK);
+      } catch {
+        res.json(_FAUCET_FALLBACK);
+      }
+    });
+    stream.on('error', () => res.json(_FAUCET_FALLBACK));
+  }).on('error', () => res.json(_FAUCET_FALLBACK));
+});
+
 /* ── Translate suggestions ── */
 app.post("/api/translate-suggestions", async (req, res) => {
   const { lang, suggestions } = req.body;
