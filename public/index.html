@@ -9568,75 +9568,82 @@ function _updateDockDot(id) {
   const dock = document.getElementById('mac-dock');
   if (!dock) return;
 
-  /* Cache natural centre-X of every icon wrap once on mouseenter,
-     before any animation has run. This prevents the feedback loop
-     where reading BoundingClientRect mid-transition returns a
-     moving value, causing icons to jump as the cursor moves. */
+  /* Disable CSS width/height transitions on hover-enter so each mousemove
+     update is instant — no "catching up" lag that fights rapid movements.
+     Transitions are re-enabled on mouseleave for smooth shrink-back. */
   dock.addEventListener('mouseenter', function() {
     if (window.matchMedia('(pointer:coarse)').matches) return;
-    dock.querySelectorAll('.dock-icon-wrap').forEach(wrap => {
-      const r = wrap.getBoundingClientRect();
-      wrap._cx = r.left + r.width / 2;
+    dock.querySelectorAll('.dock-icon').forEach(ic => {
+      ic.style.transition = 'none';
     });
   });
 
   dock.addEventListener('mousemove', function(e) {
-    const isCoarse = window.matchMedia('(pointer:coarse)').matches;
-    if (isCoarse) return;
-    const wraps = dock.querySelectorAll('.dock-icon-wrap');
+    if (window.matchMedia('(pointer:coarse)').matches) return;
+    const wraps = [...dock.querySelectorAll('.dock-icon-wrap')];
     const BASE  = _dockIconSize;
     const PEAK  = BASE * _dockMagnifySize;
-    const RANGE = BASE * 2.2;   /* proportional to icon size */
-    wraps.forEach(wrap => {
-      /* Use the stable cached centre; fall back to live rect only if
-         mouseenter somehow didn't fire (e.g. focus-entered via keyboard). */
-      const cx = wrap._cx !== undefined
-        ? wrap._cx
-        : (wrap.getBoundingClientRect().left + BASE / 2);
-      const d  = Math.abs(e.clientX - cx);
+    const RANGE = BASE * 3.2;   /* wider wave — ~3 neighbours on each side */
 
-      /* Magnification — change .dock-icon width/height so the flex slot
-         grows, pushing neighbours apart (no visual overlap). */
+    /* ── Read pass: batch ALL BoundingClientRect reads BEFORE any writes ──
+       Reading mid-CSS-transition returns a moving value and creates a
+       feedback loop (blink/glitch). Reading first from the settled previous
+       frame, then writing, breaks the loop cleanly.                        */
+    const centers = wraps.map(wrap => {
+      const ic = wrap.querySelector('.dock-icon');
+      const r  = (ic || wrap).getBoundingClientRect();
+      return r.left + r.width / 2;
+    });
+
+    /* ── Write pass ── */
+    wraps.forEach((wrap, i) => {
+      const d = Math.abs(e.clientX - centers[i]);
+
       if (_dockMagnify) {
-        /* Cosine falloff: smooth ease-in at edges, peak at centre. */
-        const t      = d < RANGE ? Math.cos((d / RANGE) * Math.PI / 2) : 0;
-        const sc     = 1 + (PEAK / BASE - 1) * t;
-        /* Slot size drives dock-bar growth (30% of full expansion = 70% less dock growth). */
-        const slotSc = 1 + (sc - 1) * 0.30;
-        const slotSz = (BASE * slotSc).toFixed(1) + 'px';
-        /* Visual scale: scale the whole .dock-icon element (background square + icon)
-           so the rounded tile always wraps the icon at every magnification level. */
-        const imgSc  = (sc / slotSc).toFixed(3);
-        const icon   = wrap.querySelector('.dock-icon');
-        if (icon) {
-          icon.style.width           = slotSz;
-          icon.style.height          = slotSz;
-          icon.style.transform       = `scale(${imgSc})`;
-          icon.style.transformOrigin = 'bottom center';
+        /* Cosine falloff: smooth ease at edges, full PEAK at cursor centre */
+        const t  = d < RANGE ? Math.cos((d / RANGE) * (Math.PI / 2)) : 0;
+        const sc = 1 + (PEAK / BASE - 1) * t;
+        const sz = (BASE * sc).toFixed(1) + 'px';
+        const ic = wrap.querySelector('.dock-icon');
+        if (ic) {
+          /* Full slot growth — no separate scale() transform, so there is
+             no overflow beyond the CSS box. Flex neighbours are pushed fully
+             proportional to both _dockIconSize and _dockMagnifySize.       */
+          ic.style.width           = sz;
+          ic.style.height          = sz;
+          ic.style.transform       = '';
+          ic.style.transformOrigin = '';
         }
-        wrap.style.transform = '';
       }
 
-      /* Tooltip — always on non-coarse pointer regardless of _dockMagnify
-         state, so labels remain accessible even when magnification is off. */
+      /* Tooltip: show label when cursor is within half the effect range */
       if (d < RANGE / 2) wrap.classList.add('tooltip-visible');
       else               wrap.classList.remove('tooltip-visible');
     });
   });
 
+  /* Smooth return-to-base-size when cursor leaves the dock */
   dock.addEventListener('mouseleave', function() {
     dock.querySelectorAll('.dock-icon-wrap').forEach(w => {
-      const icon = w.querySelector('.dock-icon');
-      if (icon) {
-        icon.style.width           = '';
-        icon.style.height          = '';
-        icon.style.transform       = '';
-        icon.style.transformOrigin = '';
+      const ic = w.querySelector('.dock-icon');
+      if (ic) {
+        /* Re-enable transition so icons animate back to their base size */
+        ic.style.transition      = 'width .18s ease-out, height .18s ease-out';
+        ic.style.width           = '';
+        ic.style.height          = '';
+        ic.style.transform       = '';
+        ic.style.transformOrigin = '';
       }
       w.style.transform = '';
       w._cx = undefined;
       w.classList.remove('tooltip-visible');
     });
+    /* Clear inline transition override after animation completes (restores CSS rule) */
+    setTimeout(() => {
+      dock.querySelectorAll('.dock-icon').forEach(ic => {
+        ic.style.transition = '';
+      });
+    }, 200);
   });
 })();
 
