@@ -1362,7 +1362,7 @@
     .sm-body {
       padding: 14px 12px;
       display: flex; flex-direction: column; align-items: center; gap: 10px;
-      background: rgba(240,237,232,var(--mat-alpha,1));
+      background: rgba(255,255,255,max(0.18,min(0.88,var(--mat-alpha,1))));
     }
 
     .sm-qr {
@@ -1432,6 +1432,17 @@
       padding: 6px 10px;
       display: flex; justify-content: flex-end;
     }
+    .sm-github {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 7px 10px; width: 100%; box-sizing: border-box;
+      background: #d4d0c8; color: #1a1a1a; font-size: 11px; font-weight: 600;
+      font-family: "Tahoma", "Segoe UI", sans-serif; text-decoration: none; cursor: pointer;
+      border-top: 1px solid #bbb;
+      border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;
+      transition: background .12s;
+    }
+    .sm-github:hover { background: #bcb9b0; }
+    .sm-github svg { flex-shrink: 0; }
 
     .sm-close-btn {
       font-size: 10px; padding: 3px 10px;
@@ -2494,8 +2505,8 @@
       align-items: center; gap: 4px;
       transition: background .2s;
     }
-    .mdp-header h3 { color: #fff; font-size: 13px; font-weight: 700; }
-    .mdp-header p  { color: rgba(255,255,255,.75); font-size: 10px; font-style: italic; }
+    .mdp-header h3 { color: var(--mdp-header-label-color,#fff); font-size: 13px; font-weight: 700; }
+    .mdp-header p  { color: var(--mdp-header-label-color,rgba(255,255,255,.75)); opacity: .85; font-size: 10px; font-style: italic; }
     .mdp-body {
       padding: 12px; display: flex; flex-direction: column;
       align-items: center; gap: 8px; background: rgba(245,245,245,var(--mat-alpha,1));
@@ -2510,6 +2521,7 @@
       text-align: center; cursor: pointer; padding: 4px 6px;
       background: rgba(0,0,0,.05); border-radius: 4px;
       font-family: monospace; line-height: 1.4; transition: background .12s;
+      text-shadow: 0 1px 3px rgba(0,0,0,.35), 0 0 8px rgba(255,255,255,.5);
     }
     .mdp-addr:hover { background: rgba(0,0,0,.1); }
     .mdp-sep { width: 100%; height: 1px; background: rgba(0,0,0,.1); }
@@ -2517,7 +2529,7 @@
       padding: 10px 12px; display: flex; align-items: center; gap: 8px; background: rgba(245,245,245,var(--mat-alpha,1));
     }
     .mdp-credits img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--mdp-qr-border,#4a5a8a); }
-    .mdp-credits-text { font-size: 10px; color: #444; line-height: 1.5; }
+    .mdp-credits-text { font-size: 10px; color: #444; line-height: 1.5; text-shadow: 0 1px 3px rgba(0,0,0,.35), 0 0 6px rgba(255,255,255,.5); }
     .mdp-credits-text a { color: #3a4a9a; font-weight: 700; text-decoration: none; }
     .mdp-credits-text a:hover { text-decoration: underline; }
     .mdp-github {
@@ -3154,6 +3166,10 @@
         </div>
       </div>
     </div>
+    <a class="sm-github" href="https://github.com/TimeForPlanXNO/NanoNerd" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="#333" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      View on GitHub
+    </a>
   </div>
 
   <!-- macOS Dock -->
@@ -8565,6 +8581,15 @@ function _applyUiLevel(v) {
   /* Below 50% opacity the bars are nearly transparent — force white labels so
      dark-themed text (gold/silver/sand materials) stays legible on the wallpaper */
   document.body.classList.toggle('ui-low-opacity', t < 0.50);
+  _updateDonateHeaderLabelColor();
+}
+
+/* macOS donate header label: black when sand/glass material AND opacity < 50%, white otherwise */
+function _updateDonateHeaderLabelColor() {
+  const isLightMat = _dockMaterial === 'sand' || _dockMaterial === 'glass';
+  const level = _macMode ? _macUiLevel : _uiLevel;
+  const color = (isLightMat && level < 50) ? '#1a1a1a' : '#fff';
+  document.documentElement.style.setProperty('--mdp-header-label-color', color);
 }
 
 function setUiLevel(v) {
@@ -9690,6 +9715,8 @@ function _applyDockMaterial(id) {
   document.querySelectorAll('#dsp-materials .dsp-mat-swatch').forEach(sw => {
     sw.classList.toggle('active', sw.dataset.matId === id);
   });
+  /* Sync donate-header label colour for new material (glass path already does this via setUiLevel) */
+  _updateDonateHeaderLabelColor();
 }
 
 /* ── Custom dock colour (overrides material) ── */
