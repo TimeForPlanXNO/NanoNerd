@@ -3429,6 +3429,7 @@ let _ttsVoice             = localStorage.getItem('xp-tts-voice')      || 'female
 let _ttsSpeakingBtn       = null;
 let _ttsResumeInterval    = null;   /* Chrome Android pause-bug keepalive */
 let _ttsPrimed            = false;  /* iOS TTS audio session unlocked flag */
+let _ttsVoiceCache        = { female: null, male: null }; /* pre-selected voice per gender */
 let _wpPickerOpen = false;
 
 function _applyWallpaper(src, type = 'image') {
@@ -4228,6 +4229,12 @@ function setTtsVoice(gender) {
   _ttsVoice = gender;
   localStorage.setItem('xp-tts-voice', gender);
   _updateVoiceBtns();
+  /* Refresh the voice cache so the next tap uses the newly selected gender
+     instantly, without re-running the full priority-list search.            */
+  if (window.speechSynthesis) {
+    _ttsVoiceCache.female = _pickBestVoice('female');
+    _ttsVoiceCache.male   = _pickBestVoice('male');
+  }
 }
 
 /* ── Text-to-speech engine ──────────────────────────────────────────────────
@@ -4310,8 +4317,10 @@ document.addEventListener('pointerdown', _primeTTS, { once: true });
 
 /* ── Voices-ready helper ─────────────────────────────────────────────────────
    Calls cb() as soon as voices are available.  Uses onvoiceschanged as the
-   fast path, with a 1 500 ms timeout fallback for platforms where the event
-   never fires (some Android Chrome builds).                                  */
+   fast path, with a 300 ms timeout fallback for platforms where the event
+   never fires (some Android Chrome builds).  300 ms is sufficient because
+   _warmTTSVoices() below pre-loads voices at startup — by the time the user
+   taps the button, voices are almost always already cached.                  */
 function _withVoices(cb) {
   if (window.speechSynthesis.getVoices().length) { cb(); return; }
   let fired = false;
@@ -4321,8 +4330,21 @@ function _withVoices(cb) {
     window.speechSynthesis.onvoiceschanged = prev || null;
     done();
   };
-  setTimeout(done, 1500);
+  setTimeout(done, 300);
 }
+
+/* ── Startup voice pre-warm ──────────────────────────────────────────────────
+   Kick off voice loading immediately so that by the time the user taps 🔈
+   the first time, getVoices() already returns a non-empty list and
+   _withVoices() takes the synchronous zero-delay fast-path.                 */
+function _warmTTSVoices() {
+  if (!window.speechSynthesis) return;
+  _withVoices(() => {
+    _ttsVoiceCache.female = _pickBestVoice('female');
+    _ttsVoiceCache.male   = _pickBestVoice('male');
+  });
+}
+_warmTTSVoices();
 
 /* ── Cancel any active speech (called on reset / close / history switch) ── */
 function _cancelTTS() {
@@ -4389,7 +4411,9 @@ function _speakText(rawHtml, btn) {
     utt.pitch    = 1.0;      /* neutral — robotic effect comes from non-1.0 pitch;
                                 gender difference is carried by the voice itself   */
     utt.volume   = 1.0;
-    const v = _pickBestVoice(_ttsVoice);
+    /* Use the pre-warmed cache — avoids re-running the full priority list on
+       every sentence.  Falls back to live lookup if cache missed.            */
+    const v = _ttsVoiceCache[_ttsVoice] || _pickBestVoice(_ttsVoice);
     if (v) utt.voice = v;
     utt.onend   = speakNext;
     utt.onerror = () => {
