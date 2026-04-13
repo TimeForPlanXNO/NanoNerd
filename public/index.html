@@ -8061,11 +8061,13 @@ function _applyWindowsLayout() {
       win.style.bottom = 'auto';
     } else if (_macMode) {
       const botOffL = _macDockH();
-      const hL      = Math.max(200, ar.height - botOffL - 8);
-      win.style.width  = ar.width + 'px';
-      win.style.height = hL + 'px';
-      win.style.left   = '0';
-      win.style.top    = '8px';
+      const availH  = ar.height - botOffL;
+      const winW    = Math.max(400, Math.round(ar.width  * 0.48));
+      const winH    = Math.max(300, Math.round(availH    * 0.48));
+      win.style.width  = winW + 'px';
+      win.style.height = winH + 'px';
+      win.style.left   = Math.round((ar.width - winW) / 2) + 'px';
+      win.style.top    = Math.max(8, Math.round((availH - winH) / 2)) + 'px';
       win.style.right  = 'auto';
       win.style.bottom = 'auto';
     } else {
