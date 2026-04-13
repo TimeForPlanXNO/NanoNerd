@@ -8713,6 +8713,10 @@ function applyThemeColor(hex, isReset, skipMacSync) {
   }
   if (!isReset) localStorage.setItem('xp-theme-color', hex);
   else          localStorage.removeItem('xp-theme-color');
+  /* Track active custom colour for wifi icon (skip when called from material path) */
+  if (!skipMacSync) _dockCustomColor = hex;
+  /* XP mode: fire icon update directly (macOS mode does it via _syncMacDockFromHex below) */
+  if (typeof _macMode !== 'undefined' && !_macMode) _updateWifiIconColor();
   /* In macOS mode, sync dock + menu bar + window bars from the same colour */
   if (typeof _macMode !== 'undefined' && _macMode && !skipMacSync) {
     _syncMacDockFromHex(hex);
