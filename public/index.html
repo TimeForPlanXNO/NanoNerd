@@ -8612,7 +8612,8 @@ function _setDockVisible(v) {
   if (wrap) wrap.classList.toggle('dock-hidden', !v);
   _syncDockRestoreBtn();
   if (!v) {
-    /* Hiding: CSS var to 0 immediately, then relayout all windows */
+    /* Hiding: re-fit before the slide-out so measurements are fresh for next show */
+    _fitDockToScreen();
     _updateDockCssVar();
     _applyWindowsLayout();
   } else {
@@ -9269,14 +9270,15 @@ function _updateDockDot(id) {
         /* Slot size drives dock-bar growth (30% of full expansion = 70% less dock growth). */
         const slotSc = 1 + (sc - 1) * 0.30;
         const slotSz = (BASE * slotSc).toFixed(1) + 'px';
-        /* Visual scale: icon overflows upward to appear at full PEAK size. */
+        /* Visual scale: scale the whole .dock-icon element (background square + icon)
+           so the rounded tile always wraps the icon at every magnification level. */
         const imgSc  = (sc / slotSc).toFixed(3);
         const icon   = wrap.querySelector('.dock-icon');
         if (icon) {
-          icon.style.width  = slotSz;
-          icon.style.height = slotSz;
-          const img = icon.querySelector('img, svg, .di-emoji');
-          if (img) { img.style.transform = `scale(${imgSc})`; img.style.transformOrigin = 'bottom center'; }
+          icon.style.width           = slotSz;
+          icon.style.height          = slotSz;
+          icon.style.transform       = `scale(${imgSc})`;
+          icon.style.transformOrigin = 'bottom center';
         }
         wrap.style.transform = '';
       }
@@ -9292,10 +9294,10 @@ function _updateDockDot(id) {
     dock.querySelectorAll('.dock-icon-wrap').forEach(w => {
       const icon = w.querySelector('.dock-icon');
       if (icon) {
-        icon.style.width  = '';
-        icon.style.height = '';
-        const img = icon.querySelector('img, svg, .di-emoji');
-        if (img) { img.style.transform = ''; img.style.transformOrigin = ''; }
+        icon.style.width           = '';
+        icon.style.height          = '';
+        icon.style.transform       = '';
+        icon.style.transformOrigin = '';
       }
       w.style.transform = '';
       w._cx = undefined;
@@ -9422,7 +9424,10 @@ function _maxFittingDockSize() {
   const fixedContrib = naturalW - padH - gap * (allVis.length - 1) - n * _dockIconSize;
   /* Solve: maxFit*n + gap*(allVis.length-1) + padH + fixedContrib <= available */
   const maxFit = Math.floor((available - gap * (allVis.length - 1) - padH - fixedContrib) / n);
-  return Math.max(36, Math.min(80, maxFit));
+  /* In landscape, also cap icon size so dock height fits comfortably on short screens */
+  const isLandscape = window.innerWidth > window.innerHeight;
+  const maxFitH = isLandscape ? Math.floor(window.innerHeight * 0.38) : 80;
+  return Math.max(36, Math.min(80, maxFit, maxFitH));
 }
 
 function setDockIconSize(px) {
