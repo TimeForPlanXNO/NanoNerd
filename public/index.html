@@ -7181,6 +7181,14 @@ function _showFaucetsView() {
   _loadFaucets();
 }
 
+const _FAUCET_CLIENT_FALLBACK = [
+  { name: 'NanoDrop',       url: 'https://nanodrop.io/' },
+  { name: 'Nano Faucet',    url: 'https://nano-faucet.org/' },
+  { name: 'Free Nano',      url: 'https://freenano.win/' },
+  { name: 'Nano Button',    url: 'https://nanobutton.io/' },
+  { name: 'Nanswap Faucet', url: 'https://nanswap.com/get-free-nano' },
+];
+
 async function _loadFaucets() {
   const grid = document.getElementById('wallet-grid');
   try {
@@ -7189,13 +7197,11 @@ async function _loadFaucets() {
       _faucetCache  = await res.json();
       _faucetLoaded = true;
     }
-    if (!_faucetCache.length) {
-      grid.innerHTML = '<div class="wallet-loading-msg">No faucets found.</div>';
-      return;
-    }
-    grid.innerHTML = _faucetCache.map(f => _walletCard(f)).join('');
+    const list = _faucetCache.length ? _faucetCache : _FAUCET_CLIENT_FALLBACK;
+    grid.innerHTML = list.map(f => _walletCard(f)).join('');
   } catch {
-    grid.innerHTML = '<div class="wallet-loading-msg">Could not load faucets.</div>';
+    /* Network failure — render client-side fallback so user always sees something */
+    grid.innerHTML = _FAUCET_CLIENT_FALLBACK.map(f => _walletCard(f)).join('');
   }
 }
 
